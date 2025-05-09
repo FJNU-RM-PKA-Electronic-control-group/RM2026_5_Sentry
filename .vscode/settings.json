@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "chassis.h": "c",
+        "bsp_log.h": "c",
+        "dji_motor.h": "c",
+        "arm_math.h": "c",
+        "custom_arm_math.h": "c"
+    }
+}

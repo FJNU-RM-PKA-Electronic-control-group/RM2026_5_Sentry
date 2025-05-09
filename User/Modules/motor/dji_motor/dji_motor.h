@@ -23,13 +23,12 @@
 #define DJI_MOTOR_CNT 12
 
 /* 滤波系数设置为1的时候即关闭滤波 */
-#define SPEED_SMOOTH_COEF 0.85f      // 最好大于0.85
-#define CURRENT_SMOOTH_COEF 0.9f     // 必须大于0.9
-#define ECD_ANGLE_COEF_DJI 0.043945f // (360/8192),将编码器值转化为角度制
+#define SPEED_SMOOTH_COEF   0.85f     // 最好大于0.85
+#define CURRENT_SMOOTH_COEF 0.9f      // 必须大于0.9
+#define ECD_ANGLE_COEF_DJI  0.043945f // (360/8192),将编码器值转化为角度制
 
 /* DJI电机CAN反馈信息*/
-typedef struct
-{
+typedef struct {
     uint16_t last_ecd;        // 上一次读取的编码器值
     uint16_t ecd;             // 0-8191,刻度总共有8192格
     float angle_single_round; // 单圈角度
@@ -37,21 +36,20 @@ typedef struct
     int16_t real_current;     // 实际电流
     uint8_t temperature;      // 温度 Celsius
 
-    float total_angle;   // 总角度,注意方向
-    int32_t total_round; // 总圈数,注意方向
+    float total_angle;        // 总角度,注意方向
+    int32_t total_round;      // 总圈数,注意方向
 } DJI_Motor_Measure_s;
 
 /**
  * @brief DJI intelligent motor typedef
  *
  */
-typedef struct
-{
+typedef struct {
     DJI_Motor_Measure_s measure;            // 电机测量值
     Motor_Control_Setting_s motor_settings; // 电机设置
     Motor_Controller_s motor_controller;    // 电机控制器
 
-    CANInstance *motor_can_instance; // 电机CAN实例
+    CANInstance *motor_can_instance;        // 电机CAN实例
     // 分组发送设置
     uint8_t sender_group;
     uint8_t message_num;

@@ -6,7 +6,6 @@
 #include "main.h"
 #include "task.h"
 
-
 #include "INS_task.h"
 #include "daemon.h"
 #include "gimbal.h"
@@ -14,12 +13,10 @@
 #include "robot.h"
 #include "vision.h"
 
-
 #include "buzzer.h"
 
 #include "bsp_dwt.h"
 #include "bsp_log.h"
-
 
 #include "calibrate.h"
 //------------

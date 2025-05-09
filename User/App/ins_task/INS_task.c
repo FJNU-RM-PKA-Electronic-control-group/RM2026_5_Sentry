@@ -105,7 +105,7 @@ void INS_task(void) {
         //		ist8310_read_mag(mag);
         MahonyAHRSupdateIMU(INS.q, INS.Gyro[IMU_X], INS.Gyro[IMU_Y], INS.Gyro[IMU_Z], INS.Accel[IMU_X], INS.Accel[IMU_Y], INS.Accel[IMU_Z]);
         //		MahonyAHRSupdate(INS.q,INS.Gyro[IMU_X], INS.Gyro[IMU_Y], INS.Gyro[IMU_Z], INS.Accel[IMU_X], INS.Accel[IMU_Y], INS.Accel[IMU_Z], mag.x,
-        //mag.y, mag.z);
+        // mag.y, mag.z);
 
         // 机体系基向量转换到导航坐标系，本例选取惯性系为导航系
         BodyFrameToEarthFrame(xb, INS.xn, INS.q);

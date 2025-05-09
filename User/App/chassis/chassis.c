@@ -22,24 +22,34 @@
 #include "bsp_dwt.h"
 #include "controller.h"
 // #include "referee_UI.h"
+#include "Custom_arm_math.h"
 #include "arm_math.h"
 
 /* 根据robot_def.h中的macro自动计算的参数 */
 #define HALF_WHEEL_BASE  (WHEEL_BASE / 2.0f)     // 半轴距
 #define HALF_TRACK_WIDTH (TRACK_WIDTH / 2.0f)    // 半轮距
 #define PERIMETER_WHEEL  (RADIUS_WHEEL * 2 * PI) // 轮子周长
+#define Square(x)        (x) * (x)
+
+#define VECTOR 0
+
+#define LF 0
+#define RF 1
+#define LB 3
+#define RB 2
 
 /* 底盘应用包含的模块和信息存储,底盘是单例模式,因此不需要为底盘建立单独的结构体 */
 static Publisher_t *chassis_pub;                    // 用于发布底盘的数据
-static Subscriber_t *chassis_sub;                   // 用于订阅底盘的控制命令                                             // !ONE_BOARD
+static Subscriber_t *chassis_sub;                   // 用于订阅底盘的控制命令 // !ONE_BOARD
 Chassis_Ctrl_Cmd_s chassis_cmd_recv;                // 底盘接收到的控制命令
 static Chassis_Upload_Data_s chassis_feedback_data; // 底盘回传的反馈数据
 
 // static referee_info_t* referee_data; // 用于获取裁判系统的数据
-// static Referee_Interactive_info_t ui_data; // UI数据，将底盘中的数据传入此结构体的对应变量中，UI会自动检测是否变化，对应显示UI
+// static Referee_Interactive_info_t ui_data; //
+// UI数据，将底盘中的数据传入此结构体的对应变量中，UI会自动检测是否变化，对应显示UI
 
 // static SuperCapInstance *cap;                                       // 超级电容
-DJIMotorInstance *motor_lf, *motor_rf, *motor_lb, *motor_rb; // left right forward back
+DJIMotorInstance *speed_motor[4], *vector_motor[4]; // left right forward back
 PIDInstance follow_pid;
 DJIMotorInstance DEBUG_CHASSIS;
 
@@ -47,12 +57,12 @@ DJIMotorInstance DEBUG_CHASSIS;
 // static float t;
 
 /* 私有函数计算的中介变量,设为静态避免参数传递的开销 */
-static float chassis_vx, chassis_vy;     // 将云台系的速度投影到底盘
-static float vt_lf, vt_rf, vt_lb, vt_rb; // 底盘速度解算后的临时输出,待进行限幅
+static float chassis_vx, chassis_vy; // 将云台系的速度投影到底盘
+static float vt[4], anglet[4];       // 底盘速度解算后的临时输出,待进行限幅
 
 void ChassisInit(void) {
     // 四个轮子的参数一样,改tx_id和反转标志位即可
-    Motor_Init_Config_s chassis_motor_config = {
+    Motor_Init_Config_s chassis_speed_motor_config = {
         .can_init_config.can_handle = &hcan2,
         .controller_param_init_config =
             {
@@ -62,8 +72,10 @@ void ChassisInit(void) {
                         .Ki            = 0,    // 0
                         .Kd            = 0.01, // 0
                         .IntegralLimit = 3000,
-                        .Improve       = (PID_Improvement_e)(PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement),
-                        .MaxOut        = 12000,
+                        .Improve =
+                            (PID_Improvement_e)(PID_Trapezoid_Intergral | PID_Integral_Limit |
+                                                PID_Derivative_On_Measurement),
+                        .MaxOut = 12000,
                     },
                 .current_PID =
                     {
@@ -71,8 +83,10 @@ void ChassisInit(void) {
                         .Ki            = 0,   // 0
                         .Kd            = 0,
                         .IntegralLimit = 3000,
-                        .Improve       = (PID_Improvement_e)(PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement),
-                        .MaxOut        = 15000,
+                        .Improve =
+                            (PID_Improvement_e)(PID_Trapezoid_Intergral | PID_Integral_Limit |
+                                                PID_Derivative_On_Measurement),
+                        .MaxOut = 15000,
                     },
             },
         .controller_setting_init_config =
@@ -84,22 +98,83 @@ void ChassisInit(void) {
             },
         .motor_type = M3508,
     };
-    //  @todo: 当前还没有设置电机的正反转,仍然需要手动添加reference的正负号,需要电机module的支持,待修改.
-    chassis_motor_config.can_init_config.tx_id                             = 1;
-    chassis_motor_config.controller_setting_init_config.motor_reverse_flag = MOTOR_DIRECTION_REVERSE;
-    motor_lf                                                               = DJIMotorInit(&chassis_motor_config);
+    Motor_Init_Config_s chassis_vector_motor_config = {
+        .can_init_config.can_handle = &hcan2,
+        .controller_param_init_config =
+            {
+                .speed_PID =
+                    {
+                        .Kp            = 4,    // 4.5
+                        .Ki            = 0,    // 0
+                        .Kd            = 0.01, // 0
+                        .IntegralLimit = 3000,
+                        .Improve =
+                            (PID_Improvement_e)(PID_Trapezoid_Intergral | PID_Integral_Limit |
+                                                PID_Derivative_On_Measurement),
+                        .MaxOut = 12000,
+                    },
+                .current_PID =
+                    {
+                        .Kp            = 0.5, // 0.4
+                        .Ki            = 0,   // 0
+                        .Kd            = 0,
+                        .IntegralLimit = 3000,
+                        .Improve =
+                            (PID_Improvement_e)(PID_Trapezoid_Intergral | PID_Integral_Limit |
+                                                PID_Derivative_On_Measurement),
+                        .MaxOut = 15000,
+                    },
+            },
+        .controller_setting_init_config =
+            {
+                .angle_feedback_source = MOTOR_FEED,
+                .speed_feedback_source = MOTOR_FEED,
+                .outer_loop_type       = ANGLE_LOOP,
+                .close_loop_type       = (Closeloop_Type_e)(SPEED_LOOP | ANGLE_LOOP),
+            },
+        .motor_type = GM6020,
+    };
+    //  @todo:
+    //  当前还没有设置电机的正反转,仍然需要手动添加reference的正负号,需要电机module的支持,待修改.
+    chassis_speed_motor_config.can_init_config.tx_id = 5;
+    chassis_speed_motor_config.controller_setting_init_config.motor_reverse_flag =
+        MOTOR_DIRECTION_REVERSE;
+    speed_motor[LF] = DJIMotorInit(&chassis_speed_motor_config);
 
-    chassis_motor_config.can_init_config.tx_id                             = 2;
-    chassis_motor_config.controller_setting_init_config.motor_reverse_flag = MOTOR_DIRECTION_REVERSE;
-    motor_rf                                                               = DJIMotorInit(&chassis_motor_config);
+    chassis_speed_motor_config.can_init_config.tx_id = 6;
+    chassis_speed_motor_config.controller_setting_init_config.motor_reverse_flag =
+        MOTOR_DIRECTION_REVERSE;
+    speed_motor[RF] = DJIMotorInit(&chassis_speed_motor_config);
 
-    chassis_motor_config.can_init_config.tx_id                             = 4;
-    chassis_motor_config.controller_setting_init_config.motor_reverse_flag = MOTOR_DIRECTION_REVERSE;
-    motor_lb                                                               = DJIMotorInit(&chassis_motor_config);
+    chassis_speed_motor_config.can_init_config.tx_id = 8;
+    chassis_speed_motor_config.controller_setting_init_config.motor_reverse_flag =
+        MOTOR_DIRECTION_REVERSE;
+    speed_motor[LB] = DJIMotorInit(&chassis_speed_motor_config);
 
-    chassis_motor_config.can_init_config.tx_id                             = 3;
-    chassis_motor_config.controller_setting_init_config.motor_reverse_flag = MOTOR_DIRECTION_REVERSE;
-    motor_rb                                                               = DJIMotorInit(&chassis_motor_config);
+    chassis_speed_motor_config.can_init_config.tx_id = 7;
+    chassis_speed_motor_config.controller_setting_init_config.motor_reverse_flag =
+        MOTOR_DIRECTION_REVERSE;
+    speed_motor[RB] = DJIMotorInit(&chassis_speed_motor_config);
+
+    chassis_vector_motor_config.can_init_config.tx_id = 1;
+    chassis_vector_motor_config.controller_setting_init_config.motor_reverse_flag =
+        MOTOR_DIRECTION_NORMAL;
+    vector_motor[LF] = DJIMotorInit(&chassis_vector_motor_config);
+
+    chassis_vector_motor_config.can_init_config.tx_id = 2;
+    chassis_vector_motor_config.controller_setting_init_config.motor_reverse_flag =
+        MOTOR_DIRECTION_NORMAL;
+    vector_motor[RF] = DJIMotorInit(&chassis_vector_motor_config);
+
+    chassis_vector_motor_config.can_init_config.tx_id = 4;
+    chassis_vector_motor_config.controller_setting_init_config.motor_reverse_flag =
+        MOTOR_DIRECTION_NORMAL;
+    vector_motor[LB] = DJIMotorInit(&chassis_vector_motor_config);
+
+    chassis_vector_motor_config.can_init_config.tx_id = 3;
+    chassis_vector_motor_config.controller_setting_init_config.motor_reverse_flag =
+        MOTOR_DIRECTION_NORMAL;
+    vector_motor[LB] = DJIMotorInit(&chassis_vector_motor_config);
 
     //    referee_data = UITaskInit(&huart6,&ui_data); // 裁判系统初始化,会同时初始化UI
 
@@ -116,7 +191,8 @@ void ChassisInit(void) {
         .Ki            = 5,   // 0
         .Kd            = 0,
         .IntegralLimit = 3000,
-        .Improve       = (PID_Improvement_e)(PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement),
+        .Improve       = (PID_Improvement_e)(PID_Trapezoid_Intergral | PID_Integral_Limit |
+                                       PID_Derivative_On_Measurement),
         .MaxOut        = 15000,
     };
     PIDInit(&follow_pid, &pid_config);
@@ -126,19 +202,62 @@ void ChassisInit(void) {
     chassis_pub = PubRegister("chassis_feed", sizeof(Chassis_Upload_Data_s));
 }
 
-#define LF_CENTER ((HALF_TRACK_WIDTH + CENTER_GIMBAL_OFFSET_X + HALF_WHEEL_BASE - CENTER_GIMBAL_OFFSET_Y) * DEGREE_2_RAD)
-#define RF_CENTER ((HALF_TRACK_WIDTH - CENTER_GIMBAL_OFFSET_X + HALF_WHEEL_BASE - CENTER_GIMBAL_OFFSET_Y) * DEGREE_2_RAD)
-#define LB_CENTER ((HALF_TRACK_WIDTH + CENTER_GIMBAL_OFFSET_X + HALF_WHEEL_BASE + CENTER_GIMBAL_OFFSET_Y) * DEGREE_2_RAD)
-#define RB_CENTER ((HALF_TRACK_WIDTH - CENTER_GIMBAL_OFFSET_X + HALF_WHEEL_BASE + CENTER_GIMBAL_OFFSET_Y) * DEGREE_2_RAD)
+#define LF_CENTER                                                                                  \
+    ((HALF_TRACK_WIDTH + CENTER_GIMBAL_OFFSET_X + HALF_WHEEL_BASE - CENTER_GIMBAL_OFFSET_Y) *      \
+     DEGREE_2_RAD)
+#define RF_CENTER                                                                                  \
+    ((HALF_TRACK_WIDTH - CENTER_GIMBAL_OFFSET_X + HALF_WHEEL_BASE - CENTER_GIMBAL_OFFSET_Y) *      \
+     DEGREE_2_RAD)
+#define LB_CENTER                                                                                  \
+    ((HALF_TRACK_WIDTH + CENTER_GIMBAL_OFFSET_X + HALF_WHEEL_BASE + CENTER_GIMBAL_OFFSET_Y) *      \
+     DEGREE_2_RAD)
+#define RB_CENTER                                                                                  \
+    ((HALF_TRACK_WIDTH - CENTER_GIMBAL_OFFSET_X + HALF_WHEEL_BASE + CENTER_GIMBAL_OFFSET_Y) *      \
+     DEGREE_2_RAD)
 /**
  * @brief 计算每个轮毂电机的输出,正运动学解算
  *        用宏进行预替换减小开销,运动解算具体过程参考教程
  */
 static void MecanumCalculate(void) {
-    vt_lf = -chassis_vx - chassis_vy - chassis_cmd_recv.wz * LF_CENTER;
-    vt_rf = -chassis_vx + chassis_vy - chassis_cmd_recv.wz * RF_CENTER;
-    vt_lb = chassis_vx - chassis_vy - chassis_cmd_recv.wz * LB_CENTER;
-    vt_rb = chassis_vx + chassis_vy - chassis_cmd_recv.wz * RB_CENTER;
+    // vt_lf = -chassis_vx - chassis_vy - chassis_cmd_recv.wz * LF_CENTER;
+    // vt_rf = -chassis_vx + chassis_vy - chassis_cmd_recv.wz * RF_CENTER;
+    // vt_lb = chassis_vx - chassis_vy - chassis_cmd_recv.wz * LB_CENTER;
+    // vt_rb = chassis_vx + chassis_vy - chassis_cmd_recv.wz * RB_CENTER;
+}
+/**
+ * @brief 舵轮运动学正解
+ *
+ * @todo 确定轮组方向,加好正负号,轮向电机,舵向电机
+ */
+static void SteeringWheelCalculate(void) {
+    arm_atan2_f32(chassis_vy - (chassis_cmd_recv.wz * HALF_WHEEL_BASE),
+                  chassis_vx + (chassis_cmd_recv.wz * HALF_TRACK_WIDTH), &anglet[LF]);
+    arm_atan2_f32(chassis_vy - (chassis_cmd_recv.wz * HALF_WHEEL_BASE),
+                  chassis_vx - (chassis_cmd_recv.wz * HALF_TRACK_WIDTH), &anglet[RF]);
+    arm_atan2_f32(chassis_vy + (chassis_cmd_recv.wz * HALF_WHEEL_BASE),
+                  chassis_vx + (chassis_cmd_recv.wz * HALF_TRACK_WIDTH), &anglet[LB]);
+    arm_atan2_f32(chassis_vy + (chassis_cmd_recv.wz * HALF_WHEEL_BASE),
+                  chassis_vx - (chassis_cmd_recv.wz * HALF_TRACK_WIDTH), &anglet[RB]);
+
+    // 轮向电机速度解算
+    arm_sqrt_f32(Square(chassis_vx + (chassis_cmd_recv.wz * HALF_TRACK_WIDTH)) +
+                     Square(chassis_vy - (chassis_cmd_recv.wz * HALF_WHEEL_BASE)),
+                 &vt[LF]);
+    arm_sqrt_f32(Square(chassis_vx - (chassis_cmd_recv.wz * HALF_TRACK_WIDTH)) +
+                     Square(chassis_vy - (chassis_cmd_recv.wz * HALF_WHEEL_BASE)),
+                 &vt[RF]);
+    arm_sqrt_f32(Square(chassis_vx + (chassis_cmd_recv.wz * HALF_TRACK_WIDTH)) +
+                     Square(chassis_vy + (chassis_cmd_recv.wz * HALF_WHEEL_BASE)),
+                 &vt[LB]);
+    arm_sqrt_f32(Square(chassis_vx - (chassis_cmd_recv.wz * HALF_TRACK_WIDTH)) +
+                     Square(chassis_vy + (chassis_cmd_recv.wz * HALF_WHEEL_BASE)),
+                 &vt[RB]);
+    for (uint8_t i = 0; i <= 3; i++) {
+        vt[i] /= RADIUS_WHEEL;
+        anglet[i] /= DEGREE_2_RAD;
+        if (abs((fp32)vector_motor[i]->measure.angle_single_round - anglet[i]) > 90)
+            ;
+    }
 }
 
 /**
@@ -151,10 +270,14 @@ static void LimitChassisOutput(void) {
     // referee_data->PowerHeatData.chassis_power_buffer;
 
     // 完成功率限制后进行电机参考输入设定
-    DJIMotorSetRef(motor_lf, vt_lf);
-    DJIMotorSetRef(motor_rf, vt_rf);
-    DJIMotorSetRef(motor_lb, vt_lb);
-    DJIMotorSetRef(motor_rb, vt_rb);
+    DJIMotorSetRef(speed_motor[LF], vt[LF]);
+    DJIMotorSetRef(speed_motor[RF], vt[RF]);
+    DJIMotorSetRef(speed_motor[LB], vt[LB]);
+    DJIMotorSetRef(speed_motor[RB], vt[RB]);
+    DJIMotorSetRef(vector_motor[LF], anglet[LF]);
+    DJIMotorSetRef(vector_motor[RF], anglet[RF]);
+    DJIMotorSetRef(vector_motor[LB], anglet[LB]);
+    DJIMotorSetRef(vector_motor[RB], anglet[RB]);
 }
 
 /**
@@ -173,19 +296,30 @@ void ChassisTask(void) {
     // 后续增加没收到消息的处理(双板的情况)
     // 获取新的控制信息
     SubGetMessage(chassis_sub, &chassis_cmd_recv);
-    DEBUG_CHASSIS = *motor_lf;
+    DEBUG_CHASSIS = *speed_motor[LF];
 
-    if (chassis_cmd_recv.chassis_mode == CHASSIS_ZERO_FORCE) { // 如果出现重要模块离线或遥控器设置为急停,让电机停止
-        DJIMotorStop(motor_lf);
-        DJIMotorStop(motor_rf);
-        DJIMotorStop(motor_lb);
-        DJIMotorStop(motor_rb);
+    if (chassis_cmd_recv.chassis_mode ==
+        CHASSIS_ZERO_FORCE) { // 如果出现重要模块离线或遥控器设置为急停,让电机停止
+        DJIMotorStop(speed_motor[LF]);
+        DJIMotorStop(speed_motor[RF]);
+        DJIMotorStop(speed_motor[LB]);
+        DJIMotorStop(speed_motor[RB]);
+
+        DJIMotorStop(vector_motor[LF]);
+        DJIMotorStop(vector_motor[RF]);
+        DJIMotorStop(vector_motor[LB]);
+        DJIMotorStop(vector_motor[RB]);
     }
     else { // 正常工作
-        DJIMotorEnable(motor_lf);
-        DJIMotorEnable(motor_rf);
-        DJIMotorEnable(motor_lb);
-        DJIMotorEnable(motor_rb);
+        DJIMotorEnable(speed_motor[LF]);
+        DJIMotorEnable(speed_motor[RF]);
+        DJIMotorEnable(speed_motor[LB]);
+        DJIMotorEnable(speed_motor[RB]);
+
+        DJIMotorEnable(vector_motor[LF]);
+        DJIMotorEnable(vector_motor[RF]);
+        DJIMotorEnable(vector_motor[LB]);
+        DJIMotorEnable(vector_motor[RB]);
     }
 
     // 根据控制模式设定旋转速度
@@ -194,7 +328,9 @@ void ChassisTask(void) {
         chassis_cmd_recv.wz = 0;
         break;
     case CHASSIS_FOLLOW_GIMBAL_YAW: // 跟随云台,不单独设置pid,以误差角度平方为速度输出
-                                    //          chassis_cmd_recv.wz = -2.5f * chassis_cmd_recv.offset_angle * abs(chassis_cmd_recv.offset_angle);
+                                    //          chassis_cmd_recv.wz = -2.5f *
+                                    //          chassis_cmd_recv.offset_angle *
+                                    //          abs(chassis_cmd_recv.offset_angle);
         if (!chassis_cmd_recv.wz) {
             chassis_cmd_recv.wz = PIDCalculate(&follow_pid, 0, -chassis_cmd_recv.offset_angle);
         }
@@ -215,7 +351,7 @@ void ChassisTask(void) {
     chassis_vy = chassis_cmd_recv.vx * sin_theta + chassis_cmd_recv.vy * cos_theta;
 
     // 根据控制模式进行正运动学解算,计算底盘输出
-    MecanumCalculate();
+    SteeringWheelCalculate();
 
     // 根据裁判系统的反馈数据和电容数据对输出限幅并设定闭环参考值
     LimitChassisOutput();
@@ -227,8 +363,9 @@ void ChassisTask(void) {
     // // 我方颜色id小于7是红色,大于7是蓝色,注意这里发送的是对方的颜色, 0:blue , 1:red
     // chassis_feedback_data.enemy_color = referee_data->GameRobotState.robot_id > 7 ? 1 : 0;
     // // 当前只做了17mm热量的数据获取,后续根据robot_def中的宏切换双枪管和英雄42mm的情况
-    // chassis_feedback_data.bullet_speed = referee_data->GameRobotState.shooter_id1_17mm_speed_limit;
-    // chassis_feedback_data.rest_heat = referee_data->PowerHeatData.shooter_heat0;
+    // chassis_feedback_data.bullet_speed =
+    // referee_data->GameRobotState.shooter_id1_17mm_speed_limit; chassis_feedback_data.rest_heat =
+    // referee_data->PowerHeatData.shooter_heat0;
 
     // 推送反馈消息
     PubPushMessage(chassis_pub, (void *)&chassis_feedback_data);

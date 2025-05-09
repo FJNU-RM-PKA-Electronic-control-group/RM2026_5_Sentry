@@ -1,7 +1,6 @@
 #include "robot_def.h"
 #include "shoot.h"
 
-
 #include "bsp_dwt.h"
 #include "dji_motor.h"
 #include "message_center.h"
@@ -19,40 +18,39 @@ static Subscriber_t *shoot_sub;
 static Shoot_Upload_Data_s shoot_feedback_data; // 来自cmd的发射控制信息
 
 void ShootInit(void) {
-    Motor_Init_Config_s friction_config   = {.can_init_config =
-                                                 {
-                                                     .can_handle = &hcan1,
-                                               },
-                                             .controller_param_init_config =
-                                                 {
-                                                     .speed_PID =
-                                                       {
-                                                             .Kp            = 2,   // 20
-                                                             .Ki            = 0.5, // 1
-                                                             .Kd            = 0.001,
-                                                             .Improve       = PID_Integral_Limit,
-                                                             .IntegralLimit = 200,
-                                                             .MaxOut        = 15000,
-                                                       },
-                                                     .current_PID =
-                                                       {
-                                                             .Kp            = 0.4, // 0.7
-                                                             .Ki            = 0.1, // 0.1
-                                                             .Kd            = 0.001,
-                                                             .Improve       = PID_Integral_Limit,
-                                                             .IntegralLimit = 100,
-                                                             .MaxOut        = 15000,
-                                                       },
-                                               },
-                                             .controller_setting_init_config =
-                                                 {
-                                                     .angle_feedback_source = MOTOR_FEED,
-                                                     .speed_feedback_source = MOTOR_FEED,
-                                                     .outer_loop_type       = SPEED_LOOP,
-                                                     .close_loop_type       = (Closeloop_Type_e)(SPEED_LOOP | CURRENT_LOOP),
-                                                     .motor_reverse_flag    = MOTOR_DIRECTION_NORMAL,
-                                               },
-                                             .motor_type = M3508};
+    Motor_Init_Config_s friction_config   = {
+        .can_init_config = {
+                 .can_handle = &hcan1,
+            },
+        .controller_param_init_config = {
+                 .speed_PID =
+                   {
+                         .Kp            = 2,   // 20
+                         .Ki            = 0.5, // 1
+                         .Kd            = 0.001,
+                         .Improve       = PID_Integral_Limit,
+                         .IntegralLimit = 200,
+                         .MaxOut        = 15000,
+                   },
+                 .current_PID =
+                   {
+                         .Kp            = 0.4, // 0.7
+                         .Ki            = 0.1, // 0.1
+                         .Kd            = 0.001,
+                         .Improve       = PID_Integral_Limit,
+                         .IntegralLimit = 100,
+                         .MaxOut        = 15000,
+                   },
+           },
+         .controller_setting_init_config =
+             {
+                 .angle_feedback_source = MOTOR_FEED,
+                 .speed_feedback_source = MOTOR_FEED,
+                 .outer_loop_type       = SPEED_LOOP,
+                 .close_loop_type       = (Closeloop_Type_e)(SPEED_LOOP | CURRENT_LOOP),
+                 .motor_reverse_flag    = MOTOR_DIRECTION_NORMAL,
+           },
+         .motor_type = M3508};
     friction_config.can_init_config.tx_id = 5, // 前左摩擦轮
         friction_fl                       = DJIMotorInit(&friction_config);
 

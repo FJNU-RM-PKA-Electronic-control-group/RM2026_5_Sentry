@@ -14,7 +14,7 @@
  ******************************************************************************
  */
 #include "QuaternionEKF.h"
-
+// clang-format off
 QEKF_INS_t QEKF_INS;
 
 const float IMU_QuaternionEKF_F[36] = {1, 0, 0, 0, 0, 0,
@@ -490,3 +490,4 @@ static float invSqrt(float x)
     y = y * (1.5f - (halfx * y * y));
     return y;
 }
+// clang-format on

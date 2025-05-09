@@ -1,8 +1,9 @@
+#include "bsp_dwt.h"
 #include "bsp_pwm.h"
 #include "buzzer.h"
-#include "bsp_dwt.h"
-#include "string.h"
 #include "stdlib.h"
+#include "string.h"
+
 
 PWMInstance *buzzer;
 // static uint8_t idx;
@@ -12,20 +13,18 @@ static BuzzzerInstance *buzzer_list[BUZZER_DEVICE_CNT] = {0};
  * @brief 蜂鸣器初始化
  *
  */
-void BuzzerInit()
-{
+void BuzzerInit() {
     PWM_Init_Config_s buzzer_config = {
-        .htim = &htim4,
-        .channel = TIM_CHANNEL_3,
+        .htim      = &htim4,
+        .channel   = TIM_CHANNEL_3,
         .dutyratio = 0,
-        .period = 0.001,
+        .period    = 0.001,
     };
     buzzer = PWMRegister(&buzzer_config);
 }
 
-BuzzzerInstance *BuzzerRegister(Buzzer_config_s *config)
-{
-	static int cnt = 0;
+BuzzzerInstance *BuzzerRegister(Buzzer_config_s *config) {
+    static int cnt = 0;
     if (config->alarm_level > BUZZER_DEVICE_CNT) // 超过最大实例数,考虑增加或查看是否有内存泄漏
         while (1)
             ;
@@ -33,43 +32,34 @@ BuzzzerInstance *BuzzerRegister(Buzzer_config_s *config)
     memset(buzzer_temp, 0, sizeof(BuzzzerInstance));
 
     buzzer_temp->alarm_level = config->alarm_level;
-    buzzer_temp->loudness = config->loudness;
-    buzzer_temp->octave = config->octave;
+    buzzer_temp->loudness    = config->loudness;
+    buzzer_temp->octave      = config->octave;
     buzzer_temp->alarm_state = ALARM_OFF;
 
     buzzer_list[cnt] = buzzer_temp;
-	cnt++;
+    cnt++;
     return buzzer_temp;
 }
 
-void AlarmSetStatus(AlarmState_e state)
-{
-    if(state == ALARM_ON)
-		PWMSetDutyRatio(buzzer,1);
-	else
-		PWMSetDutyRatio(buzzer,0);
+void AlarmSetStatus(AlarmState_e state) {
+    if (state == ALARM_ON)
+        PWMSetDutyRatio(buzzer, 1);
+    else
+        PWMSetDutyRatio(buzzer, 0);
 }
 
-void AlarmSetOctave(float octave)
-{
-	PWMSetPeriod(buzzer,octave);
-}
+void AlarmSetOctave(float octave) { PWMSetPeriod(buzzer, octave); }
 
-void BuzzerTask()
-{
+void BuzzerTask() {
     BuzzzerInstance *buzz;
-    for (size_t i = 0; i < BUZZER_DEVICE_CNT; ++i)
-    {
+    for (size_t i = 0; i < BUZZER_DEVICE_CNT; ++i) {
         buzz = buzzer_list[i];
-        if (buzz->alarm_state == ALARM_OFF)
-        {
+        if (buzz->alarm_state == ALARM_OFF) {
             PWMSetDutyRatio(buzzer, 0);
         }
-        else
-        {
+        else {
             PWMSetDutyRatio(buzzer, buzz->loudness);
             PWMSetPeriod(buzzer, buzz->octave);
-
         }
     }
 }
