@@ -33,10 +33,11 @@
 
 #define VECTOR 0
 
-#define LF 0
-#define RF 1
-#define LB 3
-#define RB 2
+#define LF          0
+#define RF          1
+#define LB          3
+#define RB          2
+#define WHEEL_COUNT 4
 
 /* 底盘应用包含的模块和信息存储,底盘是单例模式,因此不需要为底盘建立单独的结构体 */
 static Publisher_t *chassis_pub;                    // 用于发布底盘的数据
@@ -224,12 +225,29 @@ static void MecanumCalculate(void) {
     // vt_lb = chassis_vx - chassis_vy - chassis_cmd_recv.wz * LB_CENTER;
     // vt_rb = chassis_vx + chassis_vy - chassis_cmd_recv.wz * RB_CENTER;
 }
+
+/**
+ * @brief 将舵轮的角度格式化为[-180,180]之间，使用inline函数避免函数调用的开销
+ *
+ * @param angle 格式化前角度
+ * @return float 格式化后角度
+ */
+static inline float SteeringWheel_AngleFormat(float angle) {
+    if (angle > 180) {
+        angle -= 360;
+    }
+    else if (angle < -180) {
+        angle += 360;
+    }
+    return angle;
+}
 /**
  * @brief 舵轮运动学正解
  *
  * @todo 确定轮组方向,加好正负号,轮向电机,舵向电机
  */
-static void SteeringWheelCalculate(void) {
+static void SteeringWheel_Calculate(void) {
+    // 舵向电机角度解算
     arm_atan2_f32(chassis_vy - (chassis_cmd_recv.wz * HALF_WHEEL_BASE),
                   chassis_vx + (chassis_cmd_recv.wz * HALF_TRACK_WIDTH), &anglet[LF]);
     arm_atan2_f32(chassis_vy - (chassis_cmd_recv.wz * HALF_WHEEL_BASE),
@@ -239,7 +257,7 @@ static void SteeringWheelCalculate(void) {
     arm_atan2_f32(chassis_vy + (chassis_cmd_recv.wz * HALF_WHEEL_BASE),
                   chassis_vx - (chassis_cmd_recv.wz * HALF_TRACK_WIDTH), &anglet[RB]);
 
-    // 轮向电机速度解算
+    // 轮向电机速度解算，就是求个模
     arm_sqrt_f32(Square(chassis_vx + (chassis_cmd_recv.wz * HALF_TRACK_WIDTH)) +
                      Square(chassis_vy - (chassis_cmd_recv.wz * HALF_WHEEL_BASE)),
                  &vt[LF]);
@@ -252,11 +270,26 @@ static void SteeringWheelCalculate(void) {
     arm_sqrt_f32(Square(chassis_vx - (chassis_cmd_recv.wz * HALF_TRACK_WIDTH)) +
                      Square(chassis_vy + (chassis_cmd_recv.wz * HALF_WHEEL_BASE)),
                  &vt[RB]);
-    for (uint8_t i = 0; i <= 3; i++) {
-        vt[i] /= RADIUS_WHEEL;
-        anglet[i] /= DEGREE_2_RAD;
-        if (abs((fp32)vector_motor[i]->measure.angle_single_round - anglet[i]) > 90)
-            ;
+
+    // 将输出值化为电机需要的单位，同时做一个舵向电机就近转向优化
+    for (uint8_t i = 0; i < WHEEL_COUNT; i++) {
+        fp32 DeltaAngle =
+            abs(vector_motor[i]->measure.angle_single_round - anglet[i]); // 计算舵向电机的角度差
+        vt[i] /= RADIUS_WHEEL;                                            // 将线速度化为角速度
+        anglet[i] /= DEGREE_2_RAD;                                        // 将弧度化为角度
+        // 就近转向判断
+        if (DeltaAngle > 90) {
+            // 先将结构体内容保存为本地局部变量，增强可读性，同时避免多次访问
+            Motor_Reverse_Flag_e LocalReverseFlag =
+                speed_motor[i]->motor_settings.motor_reverse_flag;
+            LocalReverseFlag = (LocalReverseFlag == MOTOR_DIRECTION_NORMAL)
+                                   ? MOTOR_DIRECTION_REVERSE
+                                   : MOTOR_DIRECTION_NORMAL; // 反转电机
+            anglet[i] -= 180;
+            SteeringWheel_AngleFormat(anglet[i]);            // 将角度格式化为[-180,180]
+            speed_motor[i]->motor_settings.motor_reverse_flag =
+                LocalReverseFlag;                            // 将本地变量返回到结构体中
+        }
     }
 }
 
@@ -351,7 +384,7 @@ void ChassisTask(void) {
     chassis_vy = chassis_cmd_recv.vx * sin_theta + chassis_cmd_recv.vy * cos_theta;
 
     // 根据控制模式进行正运动学解算,计算底盘输出
-    SteeringWheelCalculate();
+    SteeringWheel_Calculate();
 
     // 根据裁判系统的反馈数据和电容数据对输出限幅并设定闭环参考值
     LimitChassisOutput();
