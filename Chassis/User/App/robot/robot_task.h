@@ -1,0 +1,183 @@
+#ifndef __ROBOT_TASK_H
+#define __ROBOT_TASK_H
+
+/* ע����ļ�Ӧֻ���������ʼ��,ֻ�ܱ�robot.c����*/
+
+#include "FreeRTOS.h"
+#include "cmsis_os.h"
+#include "main.h"
+#include "task.h"
+
+#include "bsp_dwt.h"
+#include "daemon.h"
+#include "motor_task.h"
+#include "referee_task.h"
+#include "robot.h"
+
+// ����ֲ�ļ�
+#include "buzzer.h"
+#include "mpu6500.h"
+
+// #include "bsp_log.h"
+// #include "bsp_dwt.h"
+// #include "calibrate.h"//�ؽ�У׼Ҫ��ֲ
+
+//------------
+
+osThreadId insTaskHandle;
+osThreadId motorTaskHandle;
+osThreadId daemonTaskHandle;
+osThreadId robotTaskHandle;
+osThreadId uiTaskHandle;
+
+// ����ֲ��Ŀ
+void StartINSTASK(void const *argument);
+void StartMOTORTASK(void const *argument);
+void StartDAEMONTASK(void const *argument);
+void StartROBOTTASK(void const *argument);
+void StartUITASK(void const *argument);
+
+/**
+ * @brief
+ * ��ʼ������������,���г������е������������ʼ��?
+ *
+ */
+void OSTaskInit(void) {
+    osThreadDef(instask, StartINSTASK, osPriorityRealtime, 0, 1024);
+    insTaskHandle = osThreadCreate(
+        osThread(instask),
+        NULL); // ������������ȡ������,Ϊ��̬�������ýϸ����ȼ�,ȷ����1khz��Ƶ��ִ��
+
+    osThreadDef(motortask, StartMOTORTASK, osPriorityNormal, 0, 256);
+    motorTaskHandle = osThreadCreate(osThread(motortask), NULL);
+
+    osThreadDef(daemontask, StartDAEMONTASK, osPriorityNormal, 0, 128);
+    daemonTaskHandle = osThreadCreate(osThread(daemontask), NULL);
+
+    osThreadDef(robottask, StartROBOTTASK, osPriorityNormal, 0, 1024);
+    robotTaskHandle = osThreadCreate(osThread(robottask), NULL);
+
+    //     osThreadDef(uitask, StartUITASK, osPriorityNormal, 0, 512);
+    //     uiTaskHandle = osThreadCreate(osThread(uitask), NULL);
+}
+
+/**
+ *
+ * @todo �޸�������Ϊmpu6500
+ *
+ */
+
+__attribute__((noreturn)) void StartINSTASK(void const *argument) {
+    static float ins_start;
+    static float ins_dt;
+    INS_Init(); // ȷ��MPU6500����ȷ��ʼ��.
+    //   LOGINFO("[freeRTOS] INS Task Start");
+    for (;;) {
+        // 1kHz
+        ins_start = DWT_GetTimeline_ms();
+        INS_Task();
+        // //		vision_sendmessage(ENEMY_RED);
+        ins_dt = DWT_GetTimeline_ms() - ins_start;
+        //        if (ins_dt > 1)
+        //            LOGERROR("[freeRTOS] INS Task is being DELAY! dt = [%f]", &ins_dt);
+        ////        VisionSend(); //
+        /// ������ɺ����Ӿ�����?,���ǵ�ǰ��ʵ�ֲ�̫����,����������Ӳ��������Ҫ���¿��ǽṹ����֯
+        osDelay(1);
+    }
+}
+
+__attribute__((noreturn)) void StartMOTORTASK(void const *argument) {
+    static float motor_dt;
+    static float motor_start;
+    //    LOGINFO("[freeRTOS] MOTOR Task Start");
+    for (;;) {
+        motor_start = DWT_GetTimeline_ms();
+        MotorControlTask();
+        motor_dt = DWT_GetTimeline_ms() - motor_start;
+        //        if (motor_dt > 1)
+        //            LOGERROR("[freeRTOS] MOTOR Task is being DELAY! dt = [%f]", &motor_dt);
+        osDelay(1);
+    }
+}
+
+__attribute__((noreturn)) void StartDAEMONTASK(void const *argument) {
+    static float daemon_dt;
+    static float daemon_start;
+    // BuzzerInit();
+
+    //    LOGINFO("[freeRTOS] Daemon Task Start");
+    for (;;) {
+        // 100Hz
+        // daemon_start = DWT_GetTimeline_ms();
+        // DaemonTask();
+        BuzzerTask();
+        // daemon_dt = DWT_GetTimeline_ms() - daemon_start;
+        //        if (daemon_dt > 10)
+        //            LOGERROR("[freeRTOS] Daemon Task is being DELAY! dt = [%f]", &daemon_dt);
+        osDelay(10);
+    }
+}
+
+__attribute__((noreturn)) void StartROBOTTASK(void const *argument) {
+    static float robot_dt;
+    static float robot_start;
+    //    LOGINFO("[freeRTOS] ROBOT core Task Start");
+    // 200Hz-500Hz,���ж���Ŀ���������ƽ�ⲽ���������?������1kHz
+    for (;;) {
+        robot_start = DWT_GetTimeline_ms();
+        RobotTask();
+        robot_dt = DWT_GetTimeline_ms() - robot_start;
+        //        if (robot_dt > 2)
+        //            LOGERROR("[freeRTOS] ROBOT core Task is being DELAY! dt = [%f]", &robot_dt);
+        osDelay(2);
+    }
+}
+
+__attribute__((noreturn)) void StartUITASK(void const *argument) {
+    MyUIInit();
+    for (;;) {
+        // ÿ������ϵͳ����һ�����ݻ����һ��?,���UITask������refereeSend()
+        UITask();
+        osDelay(
+            1); // ��ʹû���κ�UI��Ҫˢ��,Ҳ����һ��,��ֹ����UITask���޷��л�
+    }
+}
+
+// ȷ�����ú�����?ɾ��
+//  __attribute__((noreturn)) void StartMOTORTASK(void const *argument)
+//  {
+
+//     for (;;)
+//     {
+// 		MotorControlTask();
+//         osDelay(1);
+//     }
+// }
+
+// __attribute__((noreturn)) void StartDAEMONTASK(void const *argument)
+// {
+
+//     for (;;)
+//     {
+//         // 100Hz
+//         DaemonTask();
+// //        BuzzerTask();
+//         osDelay(10);
+//     }
+// }
+
+// __attribute__((noreturn)) void StartROBOTTASK(void const *argument)
+// {
+
+//     //
+//     200Hz-500Hz,���ж���Ŀ���������ƽ�ⲽ���������?������1kHz
+//     for (;;)
+//     {
+
+//         RobotTask();
+
+//         osDelay(2);
+//     }
+// }
+
+#endif

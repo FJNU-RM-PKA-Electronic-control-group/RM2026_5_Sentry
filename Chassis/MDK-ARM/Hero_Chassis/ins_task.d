@@ -1,0 +1,64 @@
+hero_chassis\ins_task.o: ..\User\App\INS_task\INS_task.c
+hero_chassis\ins_task.o: ../Core/Inc/main.h
+hero_chassis\ins_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h
+hero_chassis\ins_task.o: ../Core/Inc/stm32f4xx_hal_conf.h
+hero_chassis\ins_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h
+hero_chassis\ins_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_def.h
+hero_chassis\ins_task.o: ../Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f4xx.h
+hero_chassis\ins_task.o: ../Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f427xx.h
+hero_chassis\ins_task.o: ../Drivers/CMSIS/Include/core_cm4.h
+hero_chassis\ins_task.o: D:\keil5\keli4 arm\ARM\ARMCC\Bin\..\include\stdint.h
+hero_chassis\ins_task.o: ../Drivers/CMSIS/Include/cmsis_version.h
+hero_chassis\ins_task.o: ../Drivers/CMSIS/Include/cmsis_compiler.h
+hero_chassis\ins_task.o: ../Drivers/CMSIS/Include/cmsis_armcc.h
+hero_chassis\ins_task.o: ../Drivers/CMSIS/Include/mpu_armv7.h
+hero_chassis\ins_task.o: ../Drivers/CMSIS/Device/ST/STM32F4xx/Include/system_stm32f4xx.h
+hero_chassis\ins_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h
+hero_chassis\ins_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h
+hero_chassis\ins_task.o: D:\keil5\keli4 arm\ARM\ARMCC\Bin\..\include\stddef.h
+hero_chassis\ins_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc_ex.h
+hero_chassis\ins_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_gpio.h
+hero_chassis\ins_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_gpio_ex.h
+hero_chassis\ins_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_exti.h
+hero_chassis\ins_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dma.h
+hero_chassis\ins_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dma_ex.h
+hero_chassis\ins_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_cortex.h
+hero_chassis\ins_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_adc.h
+hero_chassis\ins_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_ll_adc.h
+hero_chassis\ins_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_adc_ex.h
+hero_chassis\ins_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_can.h
+hero_chassis\ins_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_crc.h
+hero_chassis\ins_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash.h
+hero_chassis\ins_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ex.h
+hero_chassis\ins_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ramfunc.h
+hero_chassis\ins_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_i2c.h
+hero_chassis\ins_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_i2c_ex.h
+hero_chassis\ins_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr.h
+hero_chassis\ins_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h
+hero_chassis\ins_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rng.h
+hero_chassis\ins_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_spi.h
+hero_chassis\ins_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h
+hero_chassis\ins_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h
+hero_chassis\ins_task.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
+hero_chassis\ins_task.o: ..\User\App\INS_task\INS_task.h
+hero_chassis\ins_task.o: ../Core/Inc/FreeRTOSConfig.h
+hero_chassis\ins_task.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h
+hero_chassis\ins_task.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h
+hero_chassis\ins_task.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/portable.h
+hero_chassis\ins_task.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/deprecated_definitions.h
+hero_chassis\ins_task.o: ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F/portmacro.h
+hero_chassis\ins_task.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/mpu_wrappers.h
+hero_chassis\ins_task.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/task.h
+hero_chassis\ins_task.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/list.h
+hero_chassis\ins_task.o: ..\User\Modules\mpu6500\mpu6500.h
+hero_chassis\ins_task.o: ../User/Bsp/dwt/bsp_dwt.h
+hero_chassis\ins_task.o: ..\User\Bsp\spi\bsp_spi.h
+hero_chassis\ins_task.o: ../Core/Inc/spi.h
+hero_chassis\ins_task.o: ../Core/Inc/gpio.h
+hero_chassis\ins_task.o: ..\User\Modules\algorithm\QuaternionEKF.h
+hero_chassis\ins_task.o: ..\User\Modules\algorithm\kalman_filter.h
+hero_chassis\ins_task.o: ../User/Modules/arm_math/arm_math.h
+hero_chassis\ins_task.o: ../Drivers/CMSIS/Include/core_cm4.h
+hero_chassis\ins_task.o: D:\keil5\keli4 arm\ARM\ARMCC\Bin\..\include\string.h
+hero_chassis\ins_task.o: D:\keil5\keli4 arm\ARM\ARMCC\Bin\..\include\math.h
+hero_chassis\ins_task.o: D:\keil5\keli4 arm\ARM\ARMCC\Bin\..\include\stdlib.h

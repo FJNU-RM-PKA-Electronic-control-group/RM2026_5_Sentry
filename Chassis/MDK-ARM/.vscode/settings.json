@@ -1,0 +1,15 @@
+{
+    "files.associations": {
+        "custom_arm_math.h": "c",
+        "stm32f427xx.h": "c",
+        "arm_math.h": "c",
+        "bsp_dwt.h": "c",
+        "controller.h": "c",
+        "dji_motor.h": "c",
+        "robot_def.h": "c",
+        "time.h": "c",
+        "main.h": "c",
+        "math.h": "c",
+        "user_lib.h": "c"
+    }
+}
