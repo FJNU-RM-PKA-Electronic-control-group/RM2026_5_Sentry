@@ -624,7 +624,7 @@
         <Ww>
           <count>33</count>
           <WinNumber>2</WinNumber>
-          <ItemText>sender_assignment</ItemText>
+          <ItemText>debug_anglet</ItemText>
         </Ww>
       </WatchWindow2>
       <MemoryWindow1>
@@ -1481,7 +1481,7 @@
 
   <Group>
     <GroupName>Modules</GroupName>
-    <tvExp>0</tvExp>
+    <tvExp>1</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <RteFlg>0</RteFlg>

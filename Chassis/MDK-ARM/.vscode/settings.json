@@ -10,6 +10,13 @@
         "time.h": "c",
         "main.h": "c",
         "math.h": "c",
-        "user_lib.h": "c"
+        "user_lib.h": "c",
+        "array": "c",
+        "functional": "c",
+        "istream": "c",
+        "ostream": "c",
+        "tuple": "c",
+        "type_traits": "c",
+        "utility": "c"
     }
 }

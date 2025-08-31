@@ -253,7 +253,13 @@ void DJIMotorOuterLoop(DJIMotorInstance *motor, Closeloop_Type_e outer_loop) {
 // ???¨°¦Ï??
 void DJIMotorSetRef(DJIMotorInstance *motor, float ref) { motor->motor_controller.pid_ref = ref; }
 
-float DJIMotorGetAngle(DJIMotorInstance *motor) { return motor->measure.total_angle; }
+float DJIMotorGetAngle(DJIMotorInstance *motor) {
+    if (motor->motor_settings.pid_mode == MOTOR_PID_MUTILOOP)
+        return motor->measure.total_angle;
+    else if (motor->motor_settings.pid_mode == MOTOR_PID_SINGLELOOP)
+        return AngleFormatfp(motor->measure.angle_single_round -
+                             motor->motor_controller.zero_point_offset);
+}
 
 void DJIMotorCali(DJIMotorInstance *motor) { motor->stop_flag = MOTOR_CALI; }
 //???????????

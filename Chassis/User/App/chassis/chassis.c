@@ -135,9 +135,9 @@ void ChassisInit(void) {
                     },
                 .speed_PID =
                     {
-                        .Kp            = 40, // 0.4
+                        .Kp            = 25, // 0.4
                         .Ki            = 0,  // 0
-                        .Kd            = 0.9,
+                        .Kd            = 0.3,
                         .IntegralLimit = 3000,
                         .Improve =
                             (PID_Improvement_e)(PID_Trapezoid_Intergral | PID_Integral_Limit |
@@ -166,7 +166,7 @@ void ChassisInit(void) {
     chassis_speed_motor_config.can_init_config.tx_id = 2;
     // chassis_speed_motor_config.can_init_config.rx_id = 2;
     chassis_speed_motor_config.controller_setting_init_config.motor_reverse_flag =
-        MOTOR_DIRECTION_REVERSE;
+        MOTOR_DIRECTION_NORMAL;
     speed_motor[RF] = DJIMotorInit(&chassis_speed_motor_config);
 
     chassis_speed_motor_config.can_init_config.tx_id = 4;
@@ -178,7 +178,7 @@ void ChassisInit(void) {
     chassis_speed_motor_config.can_init_config.tx_id = 3;
     // chassis_speed_motor_config.can_init_config.rx_id = 3;
     chassis_speed_motor_config.controller_setting_init_config.motor_reverse_flag =
-        MOTOR_DIRECTION_REVERSE;
+        MOTOR_DIRECTION_NORMAL;
     speed_motor[RB] = DJIMotorInit(&chassis_speed_motor_config);
 
     // 舵向电机
@@ -266,12 +266,6 @@ void ChassisInit(void) {
  * @todo 确定轮组方向,加好正负号,轮向电机,舵向电机
  */
 static void SteeringWheel_Calculate(void) {
-    static float anglet_prev[4];
-    const float anglet_offset[4] = {VECTORMOTOR_OFFSET_LF, VECTORMOTOR_OFFSET_RF,
-                                    VECTORMOTOR_OFFSET_RB, VECTORMOTOR_OFFSET_LB};
-    for (uint8_t i = 0; i < WHEEL_COUNT; i++) {
-        anglet_prev[i] = anglet[i];
-    }
     // 舵向电机角度解算
     anglet[LF] = atan2f(chassis_vy - (chassis_cmd_recv.wz * HALF_WHEEL_BASE),
                         chassis_vx + (chassis_cmd_recv.wz * HALF_TRACK_WIDTH));
@@ -295,30 +289,37 @@ static void SteeringWheel_Calculate(void) {
     arm_sqrt_f32(Square(chassis_vx - (chassis_cmd_recv.wz * HALF_TRACK_WIDTH)) +
                      Square(chassis_vy + (chassis_cmd_recv.wz * HALF_WHEEL_BASE)),
                  &vt[RB]);
+    vt[RB] = -vt[RB];
+    vt[RF] = -vt[RF];
 
     // 将输出值化为电机需要的单位，同时做一个舵向电机就近转向优化
     for (uint8_t i = 0; i < WHEEL_COUNT; i++) {
-        vt[i] /= RADIUS_WHEEL; // 将线速度化为角速度
+        float angle_single_round = DJIMotorGetAngle(vector_motor[i]);
+        // vt[i] /= RADIUS_WHEEL; // 将线速度化为角速度
         anglet[i] /= DEGREE_2_RAD;
-        debug_anglet[i]   = anglet[i];
-        anglet[i]         = loop_float_constrain(anglet[i], 0, 360);
-        float delta_angle = anglet[i] - vector_motor[i]->measure.angle_single_round;
-        // float DeltaAngle =
-        //     abs(vector_motor[i]->measure.angle_single_round - anglet[i]); //
-        //     计算舵向电机的角度差
-        // // 就近转向判断
-        // if (DeltaAngle > 90) {
+        anglet[i] = AngleFormatfp(anglet[i]);
+        //  计算舵向电机的角度差
+        // float delta_angle = anglet[i] - vector_motor[i]->measure.angle_single_round;
+        float delta_angle = anglet[i] - angle_single_round;
+        // 就近转向判断
+        // if (abs(delta_angle) > 90) {
         //     // 先将结构体内容保存为本地局部变量，增强可读性，同时避免多次访问
         //     Motor_Reverse_Flag_e LocalReverseFlag =
         //         speed_motor[i]->motor_settings.motor_reverse_flag;
         //     LocalReverseFlag = (LocalReverseFlag == MOTOR_DIRECTION_NORMAL)
         //                            ? MOTOR_DIRECTION_REVERSE
         //                            : MOTOR_DIRECTION_NORMAL; // 反转电机
-        //     anglet[i] -= 180;
-        //     loop_float_constrain(anglet[i], 0, 360);         // 将角度格式化为[0,360]
         //     speed_motor[i]->motor_settings.motor_reverse_flag =
         //         LocalReverseFlag;                            // 将本地变量返回到结构体中
         // }
+        // 伦向电机换向
+        debug_anglet[i] = delta_angle;
+        if (abs(NearbyErrFormat((delta_angle), 180.0F)) > 90)
+            speed_motor[i]->motor_settings.motor_reverse_flag = MOTOR_DIRECTION_REVERSE;
+        else
+            speed_motor[i]->motor_settings.motor_reverse_flag = MOTOR_DIRECTION_NORMAL;
+        // 舵向电机就近转向
+        anglet[i] = AngleFormatfp(angle_single_round + NearbyErrFormat(delta_angle, 90.0f));
     }
 }
 
@@ -356,16 +357,16 @@ static void EstimateSpeed(void) {
  * @brief 计算校准好零点的反馈值
  *
  */
-static void VectorFeedbackCheck() {
-    vector_feedback[LF] = loop_float_constrain(
-        vector_motor[LF]->measure.angle_single_round - VECTORMOTOR_OFFSET_LF, 0, 360);
-    vector_feedback[RF] = loop_float_constrain(
-        vector_motor[RF]->measure.angle_single_round - VECTORMOTOR_OFFSET_RF, 0, 360);
-    vector_feedback[LB] = loop_float_constrain(
-        vector_motor[LB]->measure.angle_single_round - VECTORMOTOR_OFFSET_LB, 0, 360);
-    vector_feedback[RB] = loop_float_constrain(
-        vector_motor[RB]->measure.angle_single_round - VECTORMOTOR_OFFSET_RB, 0, 360);
-}
+// static void VectorFeedbackCheck() {
+//     vector_feedback[LF] = loop_float_constrain(
+//         vector_motor[LF]->measure.angle_single_round - VECTORMOTOR_OFFSET_LF, 0, 360);
+//     vector_feedback[RF] = loop_float_constrain(
+//         vector_motor[RF]->measure.angle_single_round - VECTORMOTOR_OFFSET_RF, 0, 360);
+//     vector_feedback[LB] = loop_float_constrain(
+//         vector_motor[LB]->measure.angle_single_round - VECTORMOTOR_OFFSET_LB, 0, 360);
+//     vector_feedback[RB] = loop_float_constrain(
+//         vector_motor[RB]->measure.angle_single_round - VECTORMOTOR_OFFSET_RB, 0, 360);
+// }
 
 static float VectorPIDCalculate(PIDInstance *pid_config, float measure, float ref) {}
 /* 机器人底盘控制核心任务 */
@@ -375,7 +376,7 @@ void ChassisTask(void) {
     SubGetMessage(chassis_sub, &chassis_cmd_recv);
     DEBUG_CHASSIS = *speed_motor[LF];
 
-    VectorFeedbackCheck();
+    // VectorFeedbackCheck();
 
     if (chassis_cmd_recv.chassis_mode ==
         CHASSIS_ZERO_FORCE) { // 如果出现重要模块离线或遥控器设置为急停,让电机停止

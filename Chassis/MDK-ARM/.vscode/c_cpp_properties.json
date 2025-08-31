@@ -11,7 +11,6 @@
                 "C:/Keil_v5/ARM/ARMCC/include/arm_linux_compat",
                 "C:/Keil_v5/ARM/ARMCC/include/rw",
                 "RTE/_Hero_Chassis",
-                "d:/HalProject/RM2026_5_Sentry/Chassis/MDK-ARM/RTE/_Hero_Chassis",
                 "d:/HalProject/RM2026_5_Sentry/Chassis/Core/Inc",
                 "d:/HalProject/RM2026_5_Sentry/Chassis/Drivers/STM32F4xx_HAL_Driver/Inc",
                 "d:/HalProject/RM2026_5_Sentry/Chassis/Drivers/STM32F4xx_HAL_Driver/Inc/Legacy",
