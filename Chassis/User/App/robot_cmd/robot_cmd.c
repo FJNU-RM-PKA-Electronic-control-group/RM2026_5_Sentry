@@ -195,11 +195,21 @@ static void RemoteControlSet(void) {
     // robotarm_cmd_send.robotarm_mode = current_mode;
 
     // 底盘参数,目前没有加入小陀螺(调试似乎暂时没有必要),系数需要调整，可能要调硬一点
-    abslute_vx = 10.0f * (float)rc_data->rc.rocker_r_;         // _水平方向
-    abslute_vy = 10.0f * (float)rc_data->rc.rocker_r1;         // 1数值方向
+    if (chassis_cmd_send.chassis_mode == CHASSIS_SPIN) {
+        abslute_vx = 6.0f * (float)rc_data->rc.rocker_r1; // _水平方向
+        abslute_vy = 6.0f * (float)rc_data->rc.rocker_r_; // 1数值方向
 
-    chassis_cmd_send.vx = 6.0f * (float)rc_data->rc.rocker_r1; // _水平方向
-    chassis_cmd_send.vy = 6.0f * (float)rc_data->rc.rocker_r_; // 1数值方向
+        float sin_theta     = arm_sin_f32(-RadFormat(ins_data->Yaw * DEGREE_2_RAD));
+        float cos_theta     = arm_cos_f32(RadFormat(ins_data->Yaw * DEGREE_2_RAD));
+        chassis_cmd_send.vy = abslute_vy * cos_theta - abslute_vx * sin_theta;
+        chassis_cmd_send.vx = abslute_vy * sin_theta + abslute_vx * cos_theta;
+        chassis_cmd_send.wz = 0.05f * (float)rc_data->rc.rocker_l_;
+    }
+    else {
+        chassis_cmd_send.vx = 6.0f * (float)rc_data->rc.rocker_r1; // _水平方向
+        chassis_cmd_send.vy = 6.0f * (float)rc_data->rc.rocker_r_; // 1数值方向
+        chassis_cmd_send.wz = 0.05f * (float)rc_data->rc.rocker_l_;
+    }
     // if (last_mode != robotarm_cmd_send.gimbal_mode &&
     //     robotarm_cmd_send.gimbal_mode == GIMBAL_NO_FOLLOW) {
     //     robotarm_cmd_send.yaw   = *robotarm_fetch_data.yaw_total_angle;
@@ -216,10 +226,6 @@ static void RemoteControlSet(void) {
     //         robotarm_cmd_send.pitch - PitchLimit(0.001f * (float)rc_data->rc.rocker_l1);
     //     robotarm_cmd_send.yaw = robotarm_cmd_send.yaw - 0.001f * (float)rc_data->rc.rocker_l_;
     // }
-    // float sin_theta     = arm_sin_f32(-RadFormat(ins_data->Yaw * DEGREE_2_RAD));
-    // float cos_theta     = arm_cos_f32(RadFormat(ins_data->Yaw * DEGREE_2_RAD));
-    // chassis_cmd_send.vx = abslute_vx * cos_theta - abslute_vy * sin_theta;
-    // chassis_cmd_send.vy = abslute_vx * sin_theta + abslute_vy * cos_theta;
 
     // robotarm_cmd_send.yaw_total_angle_current = ins_data->YawTotalAngle;
     // robotarm_cmd_send.yaw_gyro_current        = ins_data->Gyro[2];

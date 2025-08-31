@@ -1,5 +1,13 @@
-Load "Hero_Chassis\\Hero_Chassis.axf" 
-_____^
-*** error 56: cannot open file
-Error: Flash Download failed  -  Could not load file 'Hero_Chassis\Hero_Chassis.axf'
-Flash Load finished at 22:12:12
+*** Using Compiler 'V5.06 update 7 (build 960)', folder: 'C:\Keil_v5\ARM\ARMCC\Bin'
+Build target 'Hero_Chassis'
+compiling robot_cmd.c...
+../User/Modules/airpump/airpump.h(45): warning:  #1295-D: Deprecated declaration AirPumpTask - give arg types
+  void AirPumpTask();
+..\User\App\robot_cmd\robot_cmd.c(99): warning:  #177-D: function "PitchLimit"  was declared but never referenced
+  static float PitchLimit(float origin) {
+..\User\App\robot_cmd\robot_cmd.c: 2 warnings, 0 errors
+linking...
+Program Size: Code=70900 RO-data=3508 RW-data=1540 ZI-data=59356  
+FromELF: creating hex file...
+"Hero_Chassis\Hero_Chassis.axf" - 0 Error(s), 2 Warning(s).
+Build Time Elapsed:  00:00:03

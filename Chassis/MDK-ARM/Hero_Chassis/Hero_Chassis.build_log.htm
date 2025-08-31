@@ -27,18 +27,16 @@ Project File Date:  08/14/2025
 <h2>Output:</h2>
 *** Using Compiler 'V5.06 update 7 (build 960)', folder: 'C:\Keil_v5\ARM\ARMCC\Bin'
 Build target 'Hero_Chassis'
-compiling chassis.c...
-..\User\App\chassis\chassis.c(371): warning:  #940-D: missing return statement at end of non-void function "VectorPIDCalculate" 
-  static float VectorPIDCalculate(PIDInstance *pid_config, float measure, float ref) {}
-..\User\App\chassis\chassis.c(351): warning:  #177-D: function "EstimateSpeed"  was declared but never referenced
-  static void EstimateSpeed(void) {
-..\User\App\chassis\chassis.c(371): warning:  #177-D: function "VectorPIDCalculate"  was declared but never referenced
-  static float VectorPIDCalculate(PIDInstance *pid_config, float measure, float ref) {}
-..\User\App\chassis\chassis.c: 3 warnings, 0 errors
+compiling robot_cmd.c...
+../User/Modules/airpump/airpump.h(45): warning:  #1295-D: Deprecated declaration AirPumpTask - give arg types
+  void AirPumpTask();
+..\User\App\robot_cmd\robot_cmd.c(99): warning:  #177-D: function "PitchLimit"  was declared but never referenced
+  static float PitchLimit(float origin) {
+..\User\App\robot_cmd\robot_cmd.c: 2 warnings, 0 errors
 linking...
-Program Size: Code=70704 RO-data=3508 RW-data=1540 ZI-data=59356  
+Program Size: Code=70936 RO-data=3508 RW-data=1540 ZI-data=59356  
 FromELF: creating hex file...
-"Hero_Chassis\Hero_Chassis.axf" - 0 Error(s), 3 Warning(s).
+"Hero_Chassis\Hero_Chassis.axf" - 0 Error(s), 2 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -62,7 +60,7 @@ Package Vendor: Keil
 
    * Component: ARM::CMSIS:CORE@6.1.0
       Include file:  CMSIS/Core/Include/tz_context.h
-Build Time Elapsed:  00:00:02
+Build Time Elapsed:  00:00:03
 </pre>
 </body>
 </html>
