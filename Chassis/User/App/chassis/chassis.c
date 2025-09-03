@@ -267,14 +267,14 @@ void ChassisInit(void) {
  */
 static void SteeringWheel_Calculate(void) {
     // 舵向电机角度解算
-    anglet[LF] = atan2f(chassis_vy + (chassis_cmd_recv.wz * HALF_WHEEL_BASE),
-                        chassis_vx + (chassis_cmd_recv.wz * HALF_TRACK_WIDTH));
-    anglet[RF] = atan2f(chassis_vy + (chassis_cmd_recv.wz * HALF_WHEEL_BASE),
-                        chassis_vx - (chassis_cmd_recv.wz * HALF_TRACK_WIDTH));
-    anglet[LB] = atan2f(chassis_vy - (chassis_cmd_recv.wz * HALF_WHEEL_BASE),
-                        chassis_vx + (chassis_cmd_recv.wz * HALF_TRACK_WIDTH));
-    anglet[RB] = atan2f(chassis_vy - (chassis_cmd_recv.wz * HALF_WHEEL_BASE),
-                        chassis_vx - (chassis_cmd_recv.wz * HALF_TRACK_WIDTH));
+    anglet[LF] = atan2f(chassis_vx + (chassis_cmd_recv.wz * HALF_WHEEL_BASE),
+                        chassis_vy + (chassis_cmd_recv.wz * HALF_TRACK_WIDTH));
+    anglet[RF] = atan2f(chassis_vx + (chassis_cmd_recv.wz * HALF_WHEEL_BASE),
+                        chassis_vy - (chassis_cmd_recv.wz * HALF_TRACK_WIDTH));
+    anglet[LB] = atan2f(chassis_vx - (chassis_cmd_recv.wz * HALF_WHEEL_BASE),
+                        chassis_vy + (chassis_cmd_recv.wz * HALF_TRACK_WIDTH));
+    anglet[RB] = atan2f(chassis_vx - (chassis_cmd_recv.wz * HALF_WHEEL_BASE),
+                        chassis_vy - (chassis_cmd_recv.wz * HALF_TRACK_WIDTH));
 
     // 轮向电机速度解算，就是求个模长
     arm_sqrt_f32(Square(chassis_vx + (chassis_cmd_recv.wz * HALF_TRACK_WIDTH)) +
@@ -392,7 +392,7 @@ void ChassisTask(void) {
         // }
         break;
     case CHASSIS_SPIN: // 自旋,同时保持全向机动;当前wz维持定值,后续增加不规则的变速策略
-        // chassis_cmd_recv.wz = 20;
+        chassis_cmd_recv.wz = 20;
         break;
     default:
         break;
