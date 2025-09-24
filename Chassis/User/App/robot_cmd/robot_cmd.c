@@ -146,8 +146,11 @@ static void CalcOffsetAngle() {
 uint8_t debug_mode1;
 uint8_t debug_mode2;
 static void RemoteControlSet(void) {
-    static uint8_t last_mode = ROBOTARM_ZERO_FORCE;
-    last_mode                = robotarm_cmd_send.gimbal_mode;
+    static uint8_t last_mode         = ROBOTARM_ZERO_FORCE;
+    static uint8_t last_chassis_mode = CHASSIS_ZERO_FORCE;
+    static float yaw_offset          = 0;
+    last_mode                        = robotarm_cmd_send.gimbal_mode;
+    last_chassis_mode                = chassis_cmd_send.chassis_mode;
     uint8_t current_mode;
     debug_mode2 = current_mode;
     if (robot_state != ROBOT_AUTO) {
@@ -196,11 +199,14 @@ static void RemoteControlSet(void) {
 
     // 底盘参数,目前没有加入小陀螺(调试似乎暂时没有必要),系数需要调整，可能要调硬一点
     if (chassis_cmd_send.chassis_mode == CHASSIS_SPIN) {
+        if (last_chassis_mode != CHASSIS_SPIN)
+            yaw_offset = ins_data->Yaw;
+
         abslute_vx = 6.0f * (float)rc_data->rc.rocker_r_; // _水平方向
         abslute_vy = 6.0f * (float)rc_data->rc.rocker_r1; // 1数值方向
 
-        float sin_theta     = arm_sin_f32(-RadFormat(ins_data->Yaw * DEGREE_2_RAD));
-        float cos_theta     = arm_cos_f32(RadFormat(ins_data->Yaw * DEGREE_2_RAD));
+        float sin_theta     = arm_sin_f32(RadFormat((yaw_offset - ins_data->Yaw) * DEGREE_2_RAD));
+        float cos_theta     = arm_cos_f32(RadFormat((yaw_offset - ins_data->Yaw) * DEGREE_2_RAD));
         chassis_cmd_send.vx = abslute_vx * cos_theta - abslute_vy * sin_theta;
         chassis_cmd_send.vy = abslute_vx * sin_theta + abslute_vy * cos_theta;
         chassis_cmd_send.wz = 0.05f * (float)rc_data->rc.rocker_l_;

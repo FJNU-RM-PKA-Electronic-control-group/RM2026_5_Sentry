@@ -22,24 +22,27 @@
 /* 机器人重要参数定�?,注意根据不同机器人进行修�?,�?点数需要以.0或f结尾,无�?�号�?u结尾
  */
 
-// 机器人底盘修改的参数,单位为mm(�?�?)
-#define WHEEL_BASE  284 // �����־�(ǰ�����˷���)
-#define TRACK_WIDTH 284 // �����־�(����ƽ�Ʒ���)
+// ��е�۵����޸ĵĲ�������λΪmm(����)
+#define WHEEL_BASE  294.51 // �����־�(ǰ�����˷���)
+#define TRACK_WIDTH 294.51 // �����־�(����ƽ�Ʒ���)
 #define CENTER_GIMBAL_OFFSET_X                                                                     \
     0 // 云台旋转�?心距底盘几何�?心的距�??,前后方向,云台位于正中心时默�?��?�为0
 #define CENTER_GIMBAL_OFFSET_Y                                                                     \
     0 // 云台旋转�?心距底盘几何�?心的距�??,左右方向,云台位于正中心时默�?��?�为0
-#define RADIUS_WHEEL 5 // �?子半�?
+#define RADIUS_WHEEL 58 // ���Ӱ뾶
 #define REDUCTION_RATIO_WHEEL                                                                      \
     19.0f // 电机减速比,因为编码器量测的�?�?子的速度而不�?输出轴的速度故需进�?�转�?
 
 // ��ȥȷ��
 #define GYRO2GIMBAL_DIR_YAW                                                                        \
-    1           // 陀螺仪数据相较于云台的yaw的方�?,1为相�?,-1为相�?
+    1 // 陀螺仪数据相较于云台的yaw的方�?,1为相�?,-1为相�?
 #define GYRO2GIMBAL_DIR_PITCH                                                                      \
-    1           // 陀螺仪数据相较于云台的pitch的方�?,1为相�?,-1为相�?
+    1 // 陀螺仪数据相较于云台的pitch的方�?,1为相�?,-1为相�?
 #define GYRO2GIMBAL_DIR_ROLL                                                                       \
-    1           // 陀螺仪数据相较于云台的roll的方�?,1为相�?,-1为相�?
+    1 // 陀螺仪数据相较于云台的roll的方�?,1为相�?,-1为相�?
+
+#define SQRT2 1.4142135623730950488016887242097
+#define SIN45 SQRT2 / 2
 
 #pragma pack(1) // 压缩结构�?,取消字节对齐,下面的数�?都可能�??传输
 

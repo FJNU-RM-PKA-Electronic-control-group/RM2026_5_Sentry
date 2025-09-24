@@ -53,7 +53,7 @@
 #define WHEEL_COUNT           4
 #define VECTORMOTOR_OFFSET_LF 195.731033
 #define VECTORMOTOR_OFFSET_RF 44.9996796
-#define VECTORMOTOR_OFFSET_LB 195.906815
+#define VECTORMOTOR_OFFSET_LB 43.7692184
 #define VECTORMOTOR_OFFSET_RB 74.310997
 
 /* 底盘应用包含的模块和信息存储,底盘是单例模式,因此不需要为底盘建立单独的结构体 */
@@ -67,10 +67,10 @@ static Chassis_Upload_Data_s chassis_feedback_data; // 底盘回传的反馈数据
 // UI数据，将底盘中的数据传入此结构体的对应变量中，UI会自动检测是否变化，对应显示UI
 
 // static SuperCapInstance *cap;                                       // 超级电容
-DJIMotorInstance *speed_motor[4], *vector_motor[4]; // left right forward back
+static DJIMotorInstance *speed_motor[4], *vector_motor[4]; // left right forward back
 PIDInstance follow_pid;
 DJIMotorInstance DEBUG_CHASSIS;
-
+float chassis_vx_feedback[4], chassis_vy_feedback[4], chassis_vx_FK, chassis_vy_FK, chassis_wz_FK;
 /* 用于自旋变速策略的时间变量 */
 // static float t;
 
@@ -263,31 +263,74 @@ void ChassisInit(void) {
 /**
  * @brief 舵轮运动学正解
  *
- * @todo 确定轮组方向,加好正负号,轮向电机,舵向电机
+ * @todo 看看测试后要不要加个低通滤波
  */
-static void SteeringWheel_Calculate(void) {
+static void SteeringWheelFK(void) {
+    // 用于计算的本地变量，最终输出会输出到chassis_vx_FK和chassis_vy_FK这两个变量里
+    static float vx_output[2], vy_output[2], wz_output[2];
+    // 获取计算所需反馈值
+    for (size_t i = 0; i < 4; i++) {
+        float speed = speed_motor[i]->measure.speed_aps * DEGREE_2_RAD * RADIUS_WHEEL; // aps转mmps
+        float angle = theta_format(DJIMotorGetAngle(&vector_motor[i]));
+        float wheel_sin_theta = arm_sin_f32(angle);
+        float wheel_cos_theta = arm_cos_f32(angle);
+
+        chassis_vx_feedback[i] = speed * wheel_cos_theta;
+        chassis_vy_feedback[i] = speed * wheel_sin_theta;
+    }
+    // 为低通滤波做点小准备，若测试后发现不需要可删除
+    vx_output[1] = vx_output[0];
+    vy_output[1] = vy_output[0];
+    wz_output[1] = wz_output[0];
+    // clang-format off
+    // 解算部分，应该视情况进行加权平均
+    vx_output[0] = (chassis_vx_feedback[LF] + chassis_vx_feedback[RF] + 
+                    chassis_vx_feedback[LB] + chassis_vx_feedback[RB]) / 4;
+
+    vy_output[0] = (chassis_vy_feedback[LF] + chassis_vy_feedback[RF] + 
+                    chassis_vy_feedback[LB] + chassis_vy_feedback[RB]) / 4;
+
+    wz_output[0] = (chassis_vx_feedback[LF] + chassis_vx_feedback[RF] - 
+                    chassis_vx_feedback[RB] - chassis_vx_feedback[LB] + 
+                    chassis_vy_feedback[LF] + chassis_vy_feedback[LB] -
+                    chassis_vy_feedback[RF] - chassis_vy_feedback[RB]) / 8;
+    // clang-format on
+    /* 保留区，在这里添加滤波 */
+
+    /* 保留区，在这里添加滤波 */
+    chassis_vx_FK = vx_output[0];
+    chassis_vy_FK = vy_output[0];
+    chassis_wz_FK = wz_output[0];
+}
+/**
+ * @brief 舵轮动力学逆解
+ *
+ */
+static void SteeringWheelIK(void) {
     // 舵向电机角度解算
-    anglet[LF] = atan2f(chassis_vx + (chassis_cmd_recv.wz * HALF_WHEEL_BASE),
-                        chassis_vy + (chassis_cmd_recv.wz * HALF_TRACK_WIDTH));
-    anglet[RF] = atan2f(chassis_vx + (chassis_cmd_recv.wz * HALF_WHEEL_BASE),
-                        chassis_vy - (chassis_cmd_recv.wz * HALF_TRACK_WIDTH));
-    anglet[LB] = atan2f(chassis_vx - (chassis_cmd_recv.wz * HALF_WHEEL_BASE),
-                        chassis_vy + (chassis_cmd_recv.wz * HALF_TRACK_WIDTH));
-    anglet[RB] = atan2f(chassis_vx - (chassis_cmd_recv.wz * HALF_WHEEL_BASE),
-                        chassis_vy - (chassis_cmd_recv.wz * HALF_TRACK_WIDTH));
+    float wz_projected = chassis_cmd_recv.wz * SIN45;
+
+    anglet[LF] = atan2f(chassis_vx + (wz_projected * HALF_WHEEL_BASE),
+                        chassis_vy + (wz_projected * HALF_TRACK_WIDTH));
+    anglet[RF] = atan2f(chassis_vx + (wz_projected * HALF_WHEEL_BASE),
+                        chassis_vy - (wz_projected * HALF_TRACK_WIDTH));
+    anglet[LB] = atan2f(chassis_vx - (wz_projected * HALF_WHEEL_BASE),
+                        chassis_vy + (wz_projected * HALF_TRACK_WIDTH));
+    anglet[RB] = atan2f(chassis_vx - (wz_projected * HALF_WHEEL_BASE),
+                        chassis_vy - (wz_projected * HALF_TRACK_WIDTH));
 
     // 轮向电机速度解算，就是求个模长
-    arm_sqrt_f32(Square(chassis_vx + (chassis_cmd_recv.wz * HALF_TRACK_WIDTH)) +
-                     Square(chassis_vy + (chassis_cmd_recv.wz * HALF_WHEEL_BASE)),
+    arm_sqrt_f32(Square(chassis_vx + (wz_projected * HALF_TRACK_WIDTH)) +
+                     Square(chassis_vy + (wz_projected * HALF_WHEEL_BASE)),
                  &vt[LF]);
-    arm_sqrt_f32(Square(chassis_vx - (chassis_cmd_recv.wz * HALF_TRACK_WIDTH)) +
-                     Square(chassis_vy + (chassis_cmd_recv.wz * HALF_WHEEL_BASE)),
+    arm_sqrt_f32(Square(chassis_vx + (wz_projected * HALF_TRACK_WIDTH)) +
+                     Square(chassis_vy - (wz_projected * HALF_WHEEL_BASE)),
                  &vt[RF]);
-    arm_sqrt_f32(Square(chassis_vx + (chassis_cmd_recv.wz * HALF_TRACK_WIDTH)) +
-                     Square(chassis_vy - (chassis_cmd_recv.wz * HALF_WHEEL_BASE)),
+    arm_sqrt_f32(Square(chassis_vx - (wz_projected * HALF_TRACK_WIDTH)) +
+                     Square(chassis_vy + (wz_projected * HALF_WHEEL_BASE)),
                  &vt[LB]);
-    arm_sqrt_f32(Square(chassis_vx - (chassis_cmd_recv.wz * HALF_TRACK_WIDTH)) +
-                     Square(chassis_vy - (chassis_cmd_recv.wz * HALF_WHEEL_BASE)),
+    arm_sqrt_f32(Square(chassis_vx - (wz_projected * HALF_TRACK_WIDTH)) +
+                     Square(chassis_vy - (wz_projected * HALF_WHEEL_BASE)),
                  &vt[RB]);
     vt[RF] = -vt[RF];
     vt[RB] = -vt[RB];
@@ -406,8 +449,9 @@ void ChassisTask(void) {
     chassis_vx = chassis_cmd_recv.vx * cos_theta - chassis_cmd_recv.vy * sin_theta;
     chassis_vy = chassis_cmd_recv.vx * sin_theta + chassis_cmd_recv.vy * cos_theta;
 
-    // 根据控制模式进行正运动学解算,计算底盘输出
-    SteeringWheel_Calculate();
+    // 根据控制模式进行运动学解算,计算底盘输出
+    SteeringWheelFK(); // 运动学正解算，获取底盘当前速度状态
+    SteeringWheelIK(); // 动力学逆解算，计算目标所需控制电流
 
     // 根据裁判系统的反馈数据和电容数据对输出限幅并设定闭环参考值
     LimitChassisOutput();
