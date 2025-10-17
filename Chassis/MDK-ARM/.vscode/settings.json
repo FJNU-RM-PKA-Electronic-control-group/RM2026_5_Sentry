@@ -17,6 +17,11 @@
         "ostream": "c",
         "tuple": "c",
         "type_traits": "c",
-        "utility": "c"
+        "utility": "c",
+        "fliter.h": "c",
+        "rmd_motor.h": "c",
+        "cmsis_os.h": "c",
+        "mg996.h": "c",
+        "stdlib.h": "c"
     }
 }

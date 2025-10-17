@@ -31,6 +31,7 @@
 #include "chassis.h"
 #include "controller.h"
 #include "dji_motor.h"
+#include "fliter.h"
 #include "message_center.h"
 #include "referee_UI.h"
 #include "referee_task.h"
@@ -67,10 +68,16 @@ static Chassis_Upload_Data_s chassis_feedback_data; // 底盘回传的反馈数据
 // UI数据，将底盘中的数据传入此结构体的对应变量中，UI会自动检测是否变化，对应显示UI
 
 // static SuperCapInstance *cap;                                       // 超级电容
-static DJIMotorInstance *speed_motor[4], *vector_motor[4]; // left right forward back
+DJIMotorInstance *speed_motor[4], *vector_motor[4]; // left right forward back
 PIDInstance follow_pid;
 DJIMotorInstance DEBUG_CHASSIS;
-float chassis_vx_feedback[4], chassis_vy_feedback[4], chassis_vx_FK, chassis_vy_FK, chassis_wz_FK;
+
+// 用于正解算的变量
+PIDInstance Force_PID_vx, Force_PID_vy, Force_PID_wz;
+LPFliterInstance vx_fliter, vy_fliter, wz_fliter;
+float chassis_vx_FK, chassis_vy_FK, chassis_wz_FK;
+static float chassis_vx_feedback[4], chassis_vy_feedback[4];
+float vx_output, vy_output, wz_output;
 /* 用于自旋变速策略的时间变量 */
 // static float t;
 
@@ -233,8 +240,8 @@ void ChassisInit(void) {
     //    cap = SuperCapInit(&cap_conf); // 超级电容初始化
 
     PID_Init_Config_s pid_config = {
-        .Kp            = 170, // 0.4
-        .Ki            = 5,   // 0
+        .Kp            = 4, // 0.4
+        .Ki            = 0, // 0
         .Kd            = 0,
         .IntegralLimit = 3000,
         .Improve       = (PID_Improvement_e)(PID_Trapezoid_Intergral | PID_Integral_Limit |
@@ -242,6 +249,26 @@ void ChassisInit(void) {
         .MaxOut        = 15000,
     };
     PIDInit(&follow_pid, &pid_config);
+
+    PID_Init_Config_s force_pid_config = {
+        .Kp            = 4, // 0.4
+        .Ki            = 0, // 0
+        .Kd            = 0.05,
+        .IntegralLimit = 3000,
+        .DeadBand      = 0,
+        .Improve       = (PID_Improvement_e)(PID_Trapezoid_Intergral | PID_Integral_Limit |
+                                       PID_Derivative_On_Measurement),
+        .MaxOut        = 10000,
+    };
+    PIDInit(&Force_PID_vx, &force_pid_config);
+    PIDInit(&Force_PID_vy, &force_pid_config);
+    PIDInit(&Force_PID_wz, &force_pid_config);
+
+    Low_Pass_Fliter_Init_Config_s lp_fliter_config;
+    lp_fliter_config.RC = 0.02;
+    LowPassFliterInit(&vx_fliter, &lp_fliter_config);
+    LowPassFliterInit(&vy_fliter, &lp_fliter_config);
+    LowPassFliterInit(&wz_fliter, &lp_fliter_config);
 
     // 发布订阅初始化,如果为双板,则需要can comm来传递消息
     chassis_sub = SubRegister("chassis_cmd", sizeof(Chassis_Ctrl_Cmd_s));
@@ -266,41 +293,40 @@ void ChassisInit(void) {
  * @todo 看看测试后要不要加个低通滤波
  */
 static void SteeringWheelFK(void) {
-    // 用于计算的本地变量，最终输出会输出到chassis_vx_FK和chassis_vy_FK这两个变量里
-    static float vx_output[2], vy_output[2], wz_output[2];
     // 获取计算所需反馈值
     for (size_t i = 0; i < 4; i++) {
         float speed = speed_motor[i]->measure.speed_aps * DEGREE_2_RAD * RADIUS_WHEEL; // aps转mmps
-        float angle = theta_format(DJIMotorGetAngle(&vector_motor[i]));
-        float wheel_sin_theta = arm_sin_f32(angle);
-        float wheel_cos_theta = arm_cos_f32(angle);
-
+        float angle = RadFormat(DJIMotorGetAngle(vector_motor[i]) * DEGREE_2_RAD);
+        float wheel_sin_theta  = arm_sin_f32(angle);
+        float wheel_cos_theta  = arm_cos_f32(angle);
+        debug_anglet[i]        = angle;
         chassis_vx_feedback[i] = speed * wheel_cos_theta;
         chassis_vy_feedback[i] = speed * wheel_sin_theta;
     }
     // 为低通滤波做点小准备，若测试后发现不需要可删除
-    vx_output[1] = vx_output[0];
-    vy_output[1] = vy_output[0];
-    wz_output[1] = wz_output[0];
+    chassis_vx_feedback[RF] *= -1;
+    chassis_vx_feedback[RB] *= -1;
+    chassis_vy_feedback[RF] *= -1;
+    chassis_vy_feedback[RB] *= -1;
+
     // clang-format off
     // 解算部分，应该视情况进行加权平均
-    vx_output[0] = (chassis_vx_feedback[LF] + chassis_vx_feedback[RF] + 
-                    chassis_vx_feedback[LB] + chassis_vx_feedback[RB]) / 4;
+    //注意，因为我希望底盘初始化时3508屁股朝内部，所以RF，RB两个轮向电机速度反馈是负的
+    vx_output = (chassis_vx_feedback[LF] + chassis_vx_feedback[RF] + 
+                chassis_vx_feedback[LB] + chassis_vx_feedback[RB]) / 40;
 
-    vy_output[0] = (chassis_vy_feedback[LF] + chassis_vy_feedback[RF] + 
-                    chassis_vy_feedback[LB] + chassis_vy_feedback[RB]) / 4;
+    vy_output = (chassis_vy_feedback[LF] + chassis_vy_feedback[RF] + 
+                chassis_vy_feedback[LB] + chassis_vy_feedback[RB]) / 40;
 
-    wz_output[0] = (chassis_vx_feedback[LF] + chassis_vx_feedback[RF] - 
-                    chassis_vx_feedback[RB] - chassis_vx_feedback[LB] + 
-                    chassis_vy_feedback[LF] + chassis_vy_feedback[LB] -
-                    chassis_vy_feedback[RF] - chassis_vy_feedback[RB]) / 8;
+    wz_output = (chassis_vx_feedback[LF] + chassis_vx_feedback[LB] - 
+                chassis_vx_feedback[RB] - chassis_vx_feedback[RF] + 
+                chassis_vy_feedback[LF] + chassis_vy_feedback[RB] -
+                chassis_vy_feedback[RF] - chassis_vy_feedback[LB]) / 8;
     // clang-format on
-    /* 保留区，在这里添加滤波 */
 
-    /* 保留区，在这里添加滤波 */
-    chassis_vx_FK = vx_output[0];
-    chassis_vy_FK = vy_output[0];
-    chassis_wz_FK = wz_output[0];
+    chassis_vx_FK = vx_output; // FliterCalcutale((FliterInstance *)&vx_fliter, vx_output);
+    chassis_vy_FK = vy_output; // FliterCalcutale((FliterInstance *)&vy_fliter, vy_output);
+    chassis_wz_FK = wz_output; // FliterCalcutale((FliterInstance *)&wz_fliter, wz_output);
 }
 /**
  * @brief 舵轮动力学逆解
@@ -343,11 +369,16 @@ static void SteeringWheelIK(void) {
         anglet[i] = AngleFormatfp(anglet[i]);
         //  计算舵向电机的角度差
         float delta_angle = anglet[i] - angle_single_round;
-        // 伦向电机换向
-        if (abs(NearbyErrFormat((delta_angle), 180.0F)) > 90)
-            speed_motor[i]->motor_settings.motor_reverse_flag = MOTOR_DIRECTION_REVERSE;
-        else
-            speed_motor[i]->motor_settings.motor_reverse_flag = MOTOR_DIRECTION_NORMAL;
+        // 轮向电机换向，以及防打滑优化
+        // 新写的待测试
+        vt[i] *= arm_cos_f32(NearbyErrFormat((delta_angle), 180.0F) * DEGREE_2_RAD);
+
+        // 旧版
+        //  if (abs(NearbyErrFormat((delta_angle), 180.0F)) > 90)
+        //      speed_motor[i]->motor_settings.motor_reverse_flag = MOTOR_DIRECTION_REVERSE;
+        //  else
+        //      speed_motor[i]->motor_settings.motor_reverse_flag = MOTOR_DIRECTION_NORMAL;
+
         // 舵向电机就近转向
         anglet[i] = AngleFormatfp(angle_single_round + NearbyErrFormat(delta_angle, 90.0f));
     }

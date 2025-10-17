@@ -212,9 +212,9 @@ static void RemoteControlSet(void) {
         chassis_cmd_send.wz = 0.05f * (float)rc_data->rc.rocker_l_;
     }
     else {
-        chassis_cmd_send.vx = 6.0f * (float)rc_data->rc.rocker_r_; // _水平方向
-        chassis_cmd_send.vy = 6.0f * (float)rc_data->rc.rocker_r1; // 1数值方向
-        chassis_cmd_send.wz = 0.05f * (float)rc_data->rc.rocker_l_;
+        chassis_cmd_send.vx = 20.0f * (float)rc_data->rc.rocker_r_; // _水平方向
+        chassis_cmd_send.vy = 20.0f * (float)rc_data->rc.rocker_r1; // 1数值方向
+        chassis_cmd_send.wz = 5.0f * (float)rc_data->rc.rocker_l_;
     }
     // if (last_mode != robotarm_cmd_send.gimbal_mode &&
     //     robotarm_cmd_send.gimbal_mode == GIMBAL_NO_FOLLOW) {

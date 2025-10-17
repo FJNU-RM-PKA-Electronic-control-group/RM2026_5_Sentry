@@ -1,13 +1,65 @@
 *** Using Compiler 'V5.06 update 7 (build 960)', folder: 'C:\Keil_v5\ARM\ARMCC\Bin'
 Build target 'Hero_Chassis'
-compiling robot_cmd.c...
-../User/Modules/airpump/airpump.h(45): warning:  #1295-D: Deprecated declaration AirPumpTask - give arg types
-  void AirPumpTask();
-..\User\App\robot_cmd\robot_cmd.c(99): warning:  #177-D: function "PitchLimit"  was declared but never referenced
-  static float PitchLimit(float origin) {
-..\User\App\robot_cmd\robot_cmd.c: 2 warnings, 0 errors
+compiling chassis.c...
+..\User\App\chassis\chassis.c(337): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+      float wz_projected = chassis_cmd_recv.wz * SIN45;
+..\User\App\chassis\chassis.c(339): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+      anglet[LF] = atan2f(chassis_vx + (wz_projected * HALF_WHEEL_BASE),
+..\User\App\chassis\chassis.c(340): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+                          chassis_vy + (wz_projected * HALF_TRACK_WIDTH));
+..\User\App\chassis\chassis.c(341): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+      anglet[RF] = atan2f(chassis_vx + (wz_projected * HALF_WHEEL_BASE),
+..\User\App\chassis\chassis.c(342): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+                          chassis_vy - (wz_projected * HALF_TRACK_WIDTH));
+..\User\App\chassis\chassis.c(343): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+      anglet[LB] = atan2f(chassis_vx - (wz_projected * HALF_WHEEL_BASE),
+..\User\App\chassis\chassis.c(344): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+                          chassis_vy + (wz_projected * HALF_TRACK_WIDTH));
+..\User\App\chassis\chassis.c(345): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+      anglet[RB] = atan2f(chassis_vx - (wz_projected * HALF_WHEEL_BASE),
+..\User\App\chassis\chassis.c(346): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+                          chassis_vy - (wz_projected * HALF_TRACK_WIDTH));
+..\User\App\chassis\chassis.c(349): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+      arm_sqrt_f32(Square(chassis_vx + (wz_projected * HALF_TRACK_WIDTH)) +
+..\User\App\chassis\chassis.c(349): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+      arm_sqrt_f32(Square(chassis_vx + (wz_projected * HALF_TRACK_WIDTH)) +
+..\User\App\chassis\chassis.c(350): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+                       Square(chassis_vy + (wz_projected * HALF_WHEEL_BASE)),
+..\User\App\chassis\chassis.c(350): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+                       Square(chassis_vy + (wz_projected * HALF_WHEEL_BASE)),
+..\User\App\chassis\chassis.c(352): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+      arm_sqrt_f32(Square(chassis_vx + (wz_projected * HALF_TRACK_WIDTH)) +
+..\User\App\chassis\chassis.c(352): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+      arm_sqrt_f32(Square(chassis_vx + (wz_projected * HALF_TRACK_WIDTH)) +
+..\User\App\chassis\chassis.c(353): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+                       Square(chassis_vy - (wz_projected * HALF_WHEEL_BASE)),
+..\User\App\chassis\chassis.c(353): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+                       Square(chassis_vy - (wz_projected * HALF_WHEEL_BASE)),
+..\User\App\chassis\chassis.c(355): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+      arm_sqrt_f32(Square(chassis_vx - (wz_projected * HALF_TRACK_WIDTH)) +
+..\User\App\chassis\chassis.c(355): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+      arm_sqrt_f32(Square(chassis_vx - (wz_projected * HALF_TRACK_WIDTH)) +
+..\User\App\chassis\chassis.c(356): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+                       Square(chassis_vy + (wz_projected * HALF_WHEEL_BASE)),
+..\User\App\chassis\chassis.c(356): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+                       Square(chassis_vy + (wz_projected * HALF_WHEEL_BASE)),
+..\User\App\chassis\chassis.c(358): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+      arm_sqrt_f32(Square(chassis_vx - (wz_projected * HALF_TRACK_WIDTH)) +
+..\User\App\chassis\chassis.c(358): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+      arm_sqrt_f32(Square(chassis_vx - (wz_projected * HALF_TRACK_WIDTH)) +
+..\User\App\chassis\chassis.c(359): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+                       Square(chassis_vy - (wz_projected * HALF_WHEEL_BASE)),
+..\User\App\chassis\chassis.c(359): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+                       Square(chassis_vy - (wz_projected * HALF_WHEEL_BASE)),
+..\User\App\chassis\chassis.c(415): warning:  #940-D: missing return statement at end of non-void function "VectorPIDCalculate" 
+  static float VectorPIDCalculate(PIDInstance *pid_config, float measure, float ref) {}
+..\User\App\chassis\chassis.c(409): warning:  #177-D: function "EstimateSpeed"  was declared but never referenced
+  static void EstimateSpeed(void) {
+..\User\App\chassis\chassis.c(415): warning:  #177-D: function "VectorPIDCalculate"  was declared but never referenced
+  static float VectorPIDCalculate(PIDInstance *pid_config, float measure, float ref) {}
+..\User\App\chassis\chassis.c: 28 warnings, 0 errors
 linking...
-Program Size: Code=70900 RO-data=3508 RW-data=1540 ZI-data=59356  
+Program Size: Code=73808 RO-data=3552 RW-data=1568 ZI-data=59800  
 FromELF: creating hex file...
-"Hero_Chassis\Hero_Chassis.axf" - 0 Error(s), 2 Warning(s).
+"Hero_Chassis\Hero_Chassis.elf" - 0 Error(s), 28 Warning(s).
 Build Time Elapsed:  00:00:03

@@ -125,9 +125,22 @@ float NormOf3d(float *v);
 void Cross3d(float *v1, float *v2, float *res);
 
 float Dot3d(float *v1, float *v2);
-
+/**
+ * @brief Err闭环
+ *
+ * @param pid_err 输入值
+ * @param max_err Err最大值
+ * @return float  限幅后输出
+ */
 float NearbyErrFormat(float pid_err, float max_err);
 
+/**
+ * @brief 循环限幅弧度版
+
+ *
+ * @param rad 输入弧度
+ * @return float 格式化为-Pi~Pi
+ */
 float RadFormat(float rad);
 
 float RadPositiveFormat(float rad);
