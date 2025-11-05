@@ -45,7 +45,8 @@ hero_chassis\rm_referee.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_ll_usb.
 hero_chassis\rm_referee.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pcd_ex.h
 hero_chassis\rm_referee.o: ..\User\Modules\referee\referee_protocol.h
 hero_chassis\rm_referee.o: ../User/App/robot/robot_def.h
-hero_chassis\rm_referee.o: ../User/Modules/custom_control/custom_drv.h
+hero_chassis\rm_referee.o: ../User/Modules/mpu6500/mpu6500.h
+hero_chassis\rm_referee.o: ../User/Bsp/dwt/bsp_dwt.h
 hero_chassis\rm_referee.o: ../User/Bsp/usart/bsp_usart.h
 hero_chassis\rm_referee.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h
 hero_chassis\rm_referee.o: ../Core/Inc/FreeRTOSConfig.h
@@ -54,8 +55,6 @@ hero_chassis\rm_referee.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/po
 hero_chassis\rm_referee.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/deprecated_definitions.h
 hero_chassis\rm_referee.o: ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F/portmacro.h
 hero_chassis\rm_referee.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/mpu_wrappers.h
-hero_chassis\rm_referee.o: ../User/Modules/mpu6500/mpu6500.h
-hero_chassis\rm_referee.o: ../User/Bsp/dwt/bsp_dwt.h
 hero_chassis\rm_referee.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
 hero_chassis\rm_referee.o: ..\User\Modules\referee\crc_ref.h
 hero_chassis\rm_referee.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/task.h

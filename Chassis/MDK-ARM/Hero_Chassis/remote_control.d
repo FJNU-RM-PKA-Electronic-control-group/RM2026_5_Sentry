@@ -47,7 +47,11 @@ hero_chassis\remote_control.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
 hero_chassis\remote_control.o: ..\User\Modules\remote_control\remote_control.h
 hero_chassis\remote_control.o: ../Core/Inc/usart.h
 hero_chassis\remote_control.o: ../User/App/robot/robot_def.h
-hero_chassis\remote_control.o: ../User/Modules/custom_control/custom_drv.h
+hero_chassis\remote_control.o: ../User/Modules/mpu6500/mpu6500.h
+hero_chassis\remote_control.o: ../User/Bsp/dwt/bsp_dwt.h
+hero_chassis\remote_control.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
+hero_chassis\remote_control.o: ../User/Modules/referee/referee_task.h
+hero_chassis\remote_control.o: ../User/Modules/referee/rm_referee.h
 hero_chassis\remote_control.o: ../User/Modules/referee/referee_protocol.h
 hero_chassis\remote_control.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h
 hero_chassis\remote_control.o: ../Core/Inc/FreeRTOSConfig.h
@@ -56,8 +60,3 @@ hero_chassis\remote_control.o: ../Middlewares/Third_Party/FreeRTOS/Source/includ
 hero_chassis\remote_control.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/deprecated_definitions.h
 hero_chassis\remote_control.o: ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F/portmacro.h
 hero_chassis\remote_control.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/mpu_wrappers.h
-hero_chassis\remote_control.o: ../User/Modules/mpu6500/mpu6500.h
-hero_chassis\remote_control.o: ../User/Bsp/dwt/bsp_dwt.h
-hero_chassis\remote_control.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
-hero_chassis\remote_control.o: ../User/Modules/referee/referee_task.h
-hero_chassis\remote_control.o: ../User/Modules/referee/rm_referee.h

@@ -46,10 +46,8 @@ hero_chassis\robot.o: ../User/App/chassis/chassis.h
 hero_chassis\robot.o: ..\User\App\robot\robot.h
 hero_chassis\robot.o: ../User/App/robot_cmd/robot_cmd.h
 hero_chassis\robot.o: ..\User\App\robot\robot_def.h
-hero_chassis\robot.o: ../User/Modules/custom_control/custom_drv.h
-hero_chassis\robot.o: ../Core/Inc/usart.h
-hero_chassis\robot.o: ../User/Modules/referee/referee_protocol.h
-hero_chassis\robot.o: ../User/Bsp/usart/bsp_usart.h
+hero_chassis\robot.o: ../User/Modules/mpu6500/mpu6500.h
+hero_chassis\robot.o: ..\User\App\robot\robot_task.h
 hero_chassis\robot.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h
 hero_chassis\robot.o: ../Core/Inc/FreeRTOSConfig.h
 hero_chassis\robot.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h
@@ -57,8 +55,6 @@ hero_chassis\robot.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/portabl
 hero_chassis\robot.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/deprecated_definitions.h
 hero_chassis\robot.o: ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F/portmacro.h
 hero_chassis\robot.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/mpu_wrappers.h
-hero_chassis\robot.o: ../User/Modules/mpu6500/mpu6500.h
-hero_chassis\robot.o: ..\User\App\robot\robot_task.h
 hero_chassis\robot.o: ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS/cmsis_os.h
 hero_chassis\robot.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/task.h
 hero_chassis\robot.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/list.h
@@ -71,6 +67,9 @@ hero_chassis\robot.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
 hero_chassis\robot.o: ../User/App/motor_task/motor_task.h
 hero_chassis\robot.o: ../User/Modules/referee/referee_task.h
 hero_chassis\robot.o: ../User/Modules/referee/rm_referee.h
+hero_chassis\robot.o: ../Core/Inc/usart.h
+hero_chassis\robot.o: ../User/Modules/referee/referee_protocol.h
+hero_chassis\robot.o: ../User/Bsp/usart/bsp_usart.h
 hero_chassis\robot.o: ../User/Modules/buzzer/buzzer.h
 hero_chassis\robot.o: ../User/Bsp/pwm/bsp_pwm.h
 hero_chassis\robot.o: ../Core/Inc/tim.h

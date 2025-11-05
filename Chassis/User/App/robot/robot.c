@@ -60,7 +60,7 @@ void RobotInit(void) {
     RobotCmdInit();
     BuzzerInit();
 
-    //	CmdRevInit();//用于A，C板通信，目前觉得没有什么用，后期测试后删除
+    // CmdRevInit(); // 用于A，C板通信，目前觉得没有什么用，后期测试后删除
     ChassisInit();
     // RobotarmInit();
 
@@ -78,6 +78,7 @@ void RobotInit(void) {
 
 void RobotTask(void) {
     RobotCMDTask();
-    RobotarmTask(); //	CmdRevTask();//没什么用，后期删除
+    // RobotarmTask();
+    // CmdRevTask(); // 太有用了，现在恢复
     ChassisTask();
 }

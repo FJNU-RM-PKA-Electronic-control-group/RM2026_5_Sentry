@@ -9,8 +9,6 @@
 #include "bsp_pwm.h"
 #include "bsp_usb.h"
 #include "calibrate.h"
-#include "custom_control.h"
-#include "custom_drv.h"
 #include "motor_def.h"
 #include "rmd_motor.h"
 #include "unitree_motor.h"

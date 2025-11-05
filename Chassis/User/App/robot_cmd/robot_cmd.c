@@ -41,8 +41,6 @@
 // module
 #include "airpump.h"
 #include "buzzer.h"
-#include "custom_control.h"
-#include "custom_drv.h"
 #include "dji_motor.h"
 #include "message_center.h"
 #include "mpu6500.h"
@@ -73,8 +71,6 @@
 RC_ctrl_t *rc_data;                                       // 遥控器数据,初始化时返回
 INS_t *ins_data;                                          // IMU数据,初始化时返回
 cali_data_t *calibrate_data;
-Custom_ctrl *customdate;                                  // 自定义控制器数据
-custom_info_t *custom_referee;
 AirPumpInstance *ee_airpump, left_airpump, right_airpump; // 气泵实例注册
 
 static Publisher_t *chassis_cmd_pub;                      // 底盘控制消息发布者
@@ -191,9 +187,6 @@ static void RemoteControlSet(void) {
         current_mode = ROBOTARM_CALI;
     }
 
-    if (current_mode == ROBOTARM_CUSTOM && last_mode != ROBOTARM_CUSTOM) {
-        CustomReast(custom_referee, customdate);
-    }
 
     // robotarm_cmd_send.robotarm_mode = current_mode;
 
@@ -291,8 +284,6 @@ static void EmergencyHandler(void) {
  */
 void RobotCmdInit(void) {
     ins_data = GetInsData();
-    // calibrate_data = CalibrateInit();
-    //	custom_referee = CustomControlInit(&huart8,customdate);
 
     rc_data = RemoteControlInit(&huart1);
 

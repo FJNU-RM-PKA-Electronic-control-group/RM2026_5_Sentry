@@ -340,7 +340,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F427xx,ARM_MATH_CM4</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32F4xx/Include;../Drivers/CMSIS/Include;../Middlewares/Third_Party/FreeRTOS/Source/include;../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F;../User/App/chassis;../User/Bsp/can;../User/Bsp/dwt;../User/Bsp/usart;../User/Modules/arm_math;../User/Modules/message_center;../User/Modules/motor/dji_motor;../User/Modules/referee;../User/App/motor_task;../User/App/robot_cmd;../User/Modules/daemon;../User/Modules/motor/dm_motor;../User/Modules/motor;../User/Bsp/pwm;../User/Modules/buzzer;../User/Modules/remote_control;../User/Bsp/flash;../User/App/calibrate;../User/Bsp/gpio;../User/Bsp/spi;../User/Modules/algorithm;../User/Modules/mpu6500;../User/Modules/motor/unitree_motor;../User/App/robotarm;../User/App/robot;../User/Modules/custom_control;../User/Modules/airpump;../User/Modules/motor/rmd_motor;../User/Modules/motor/MG996;../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Src;../Middlewares/ST/STM32_USB_Device_Library/Core/Src;../User/Bsp/usb;../USB_DEVICE/App;../USB_DEVICE/Target;../Middlewares/ST/STM32_USB_Device_Library/Core/Inc;../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc;..\User\Modules\fliter</IncludePath>
+              <IncludePath>../Core/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32F4xx/Include;../Drivers/CMSIS/Include;../Middlewares/Third_Party/FreeRTOS/Source/include;../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F;../User/App/chassis;../User/Bsp/can;../User/Bsp/dwt;../User/Bsp/usart;../User/Modules/arm_math;../User/Modules/message_center;../User/Modules/motor/dji_motor;../User/Modules/referee;../User/App/motor_task;../User/App/robot_cmd;../User/Modules/daemon;../User/Modules/motor/dm_motor;../User/Modules/motor;../User/Bsp/pwm;../User/Modules/buzzer;../User/Modules/remote_control;../User/Bsp/flash;../User/App/calibrate;../User/Bsp/gpio;../User/Bsp/spi;../User/Modules/algorithm;../User/Modules/mpu6500;../User/Modules/motor/unitree_motor;../User/App/robotarm;../User/App/robot;../User/Modules/custom_control;../User/Modules/airpump;../User/Modules/motor/rmd_motor;../User/Modules/motor/MG996;../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Src;../Middlewares/ST/STM32_USB_Device_Library/Core/Src;../User/Bsp/usb;../USB_DEVICE/App;../USB_DEVICE/Target;../Middlewares/ST/STM32_USB_Device_Library/Core/Inc;../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc;..\User\Modules\fliter;..\User\App\cmd_receive;..\User\Modules\can_comm</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -2174,16 +2174,6 @@
               <FilePath>..\User\Modules\remote_control\remote_control.c</FilePath>
             </File>
             <File>
-              <FileName>custom_control.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\User\Modules\custom_control\custom_control.c</FilePath>
-            </File>
-            <File>
-              <FileName>custom_drv.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\User\Modules\custom_control\custom_drv.c</FilePath>
-            </File>
-            <File>
               <FileName>airpump.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\User\Modules\airpump\airpump.c</FilePath>
@@ -2207,6 +2197,11 @@
               <FileName>fliter.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\User\Modules\fliter\fliter.c</FilePath>
+            </File>
+            <File>
+              <FileName>can_comm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\Modules\can_comm\can_comm.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -2252,6 +2247,11 @@
               <FileName>robot_def.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\User\App\robot\robot_def.h</FilePath>
+            </File>
+            <File>
+              <FileName>cmd_receive.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\App\cmd_receive\cmd_receive.c</FilePath>
             </File>
           </Files>
         </Group>

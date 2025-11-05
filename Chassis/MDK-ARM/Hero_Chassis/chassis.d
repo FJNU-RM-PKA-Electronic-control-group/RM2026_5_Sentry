@@ -79,8 +79,7 @@ hero_chassis\chassis.o: ../User/Modules/referee/referee_protocol.h
 hero_chassis\chassis.o: ../User/Modules/referee/rm_referee.h
 hero_chassis\chassis.o: ../Core/Inc/usart.h
 hero_chassis\chassis.o: ../User/App/robot/robot_def.h
-hero_chassis\chassis.o: ../User/Modules/custom_control/custom_drv.h
-hero_chassis\chassis.o: ../User/Bsp/usart/bsp_usart.h
 hero_chassis\chassis.o: ../User/Modules/mpu6500/mpu6500.h
+hero_chassis\chassis.o: ../User/Bsp/usart/bsp_usart.h
 hero_chassis\chassis.o: ../User/Modules/referee/referee_task.h
 hero_chassis\chassis.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\time.h
