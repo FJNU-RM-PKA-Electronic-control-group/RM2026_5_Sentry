@@ -74,4 +74,3 @@ hero_chassis\robot.o: ../User/Modules/buzzer/buzzer.h
 hero_chassis\robot.o: ../User/Bsp/pwm/bsp_pwm.h
 hero_chassis\robot.o: ../Core/Inc/tim.h
 hero_chassis\robot.o: ../Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f407xx.h
-hero_chassis\robot.o: ../User/App/robotarm/robotarm.h

@@ -31,7 +31,6 @@
 // 后续需要添加的头文件，具体通过英雄的gimbal移植
 #include "buzzer.h"
 #include "mpu6500.h"
-#include "robotarm.h"
 
 // 待定文件
 //  #include "vision.h"
@@ -62,7 +61,6 @@ void RobotInit(void) {
 
     // CmdRevInit(); // 用于A，C板通信，目前觉得没有什么用，后期测试后删除
     ChassisInit();
-    // RobotarmInit();
 
     OSTaskInit();
 
@@ -78,7 +76,6 @@ void RobotInit(void) {
 
 void RobotTask(void) {
     RobotCMDTask();
-    // RobotarmTask();
     // CmdRevTask(); // 太有用了，现在恢复
     ChassisTask();
 }

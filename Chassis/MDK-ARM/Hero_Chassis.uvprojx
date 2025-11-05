@@ -2239,11 +2239,6 @@
               <FilePath>..\User\App\calibrate\calibrate.c</FilePath>
             </File>
             <File>
-              <FileName>robotarm.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\User\App\robotarm\robotarm.c</FilePath>
-            </File>
-            <File>
               <FileName>robot_def.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\User\App\robot\robot_def.h</FilePath>

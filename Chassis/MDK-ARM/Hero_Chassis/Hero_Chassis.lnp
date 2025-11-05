@@ -93,7 +93,6 @@
 "hero_chassis\motor_task.o"
 "hero_chassis\robot_cmd.o"
 "hero_chassis\calibrate.o"
-"hero_chassis\robotarm.o"
 "hero_chassis\cmd_receive.o"
 "hero_chassis\usb_device.o"
 "hero_chassis\usbd_desc.o"
