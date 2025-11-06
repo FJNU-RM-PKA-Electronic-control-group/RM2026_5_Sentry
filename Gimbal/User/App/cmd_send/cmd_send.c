@@ -5,7 +5,7 @@
 #include "stdlib.h"
 #include "string.h"
 
-CANCommInstance *ins;
+static CANCommInstance *ins;
 static Subscriber_t *cmd_send_sub; // 云台反馈信息订阅者
 static Publisher_t *cmd_send_pub;  // 用于发布底盘的数据
 Chassis_Ctrl_Cmd_s cmd_send_data;  // 从云台获取的反馈信息
