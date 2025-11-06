@@ -2,17 +2,14 @@
 #include "robot_def.h"
 #include "robot_task.h"
 
-
 #include "INS_task.h"
 #include "bsp_delay.h"
 #include "bsp_dwt.h"
 #include "usb_device.h"
 #include "usbd_cdc_if.h"
 
-
 #include "buzzer.h"
 
-#include "chassis.h"
 #include "cmd_send.h"
 #include "gimbal.h"
 #include "robot_cmd.h"
@@ -26,10 +23,10 @@ void RobotInit(void) {
     };
     BuzzerInit();
     RobotCmdInit();
-    GimbalInit();
+    // GimbalInit();
     //	ChassisInit();
-    ShootInit();
-    VisionInit();
+    // ShootInit();
+    // VisionInit();
     CmdRevInit();
 
     OSTaskInit();
@@ -37,8 +34,8 @@ void RobotInit(void) {
 
 void RobotTask(void) {
     RobotCMDTask();
-    GimbalTask();
-    ShootTask();
-    //    ChassisTask();
+    // GimbalTask();
+    // ShootTask();
+    // ChassisTask();
     CmdRevTask();
 }

@@ -119,6 +119,10 @@
       <TargetDriverDllRegistry>
         <SetRegEntry>
           <Number>0</Number>
+          <Key>DLGUARM</Key>
+        </SetRegEntry>
+        <SetRegEntry>
+          <Number>0</Number>
           <Key>ARMRTXEVENTFLAGS</Key>
           <Name>-L70 -Z18 -C0 -M0 -T1</Name>
         </SetRegEntry>
@@ -651,6 +655,26 @@
           <count>39</count>
           <WinNumber>2</WinNumber>
           <ItemText>Force_PID_vx</ItemText>
+        </Ww>
+        <Ww>
+          <count>40</count>
+          <WinNumber>2</WinNumber>
+          <ItemText>data_ptr</ItemText>
+        </Ww>
+        <Ww>
+          <count>41</count>
+          <WinNumber>2</WinNumber>
+          <ItemText>ins</ItemText>
+        </Ww>
+        <Ww>
+          <count>42</count>
+          <WinNumber>2</WinNumber>
+          <ItemText>chassis_get_data</ItemText>
+        </Ww>
+        <Ww>
+          <count>43</count>
+          <WinNumber>2</WinNumber>
+          <ItemText>chassis_fetch_data</ItemText>
         </Ww>
       </WatchWindow2>
       <MemoryWindow1>

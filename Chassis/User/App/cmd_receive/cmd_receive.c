@@ -5,7 +5,7 @@
 #include "stdlib.h"
 #include "string.h"
 
-static CANCommInstance *ins;
+CANCommInstance *ins;
 chassis_data_rev *data_ptr;
 static Publisher_t *chassis_cmd_p;   // 底盘控制消息发布者
 static Subscriber_t *chassis_feed_s; // 底盘反馈信息订阅者
@@ -15,7 +15,7 @@ Chassis_Upload_Data_s
 
 void CmdRevInit(void) {
     CANComm_Init_Config_s cconfig = {
-        .can_config    = {.can_handle = &hcan1, .tx_id = 0x33, .rx_id = 0x22},
+        .can_config    = {.can_handle = &hcan2, .tx_id = 0x33, .rx_id = 0x22},
         .send_data_len = sizeof(Chassis_Upload_Data_s),
         .recv_data_len = sizeof(chassis_data_rev)};
     ins = CANCommInit(&cconfig);

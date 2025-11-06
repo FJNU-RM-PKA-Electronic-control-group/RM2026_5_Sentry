@@ -74,6 +74,7 @@ cali_data_t *calibrate_data;
 AirPumpInstance *ee_airpump, left_airpump, right_airpump; // 气泵实例注册
 
 static Publisher_t *chassis_cmd_pub;                      // 底盘控制消息发布者
+static Publisher_t *chassis_feed_pub;
 static Subscriber_t *chassis_feed_sub;                    // 底盘反馈信息订阅者
 Chassis_Ctrl_Cmd_s chassis_cmd_send; // 发送给底盘应用的信息,包括控制信息和UI绘制相关
 Chassis_Upload_Data_s
@@ -92,19 +93,19 @@ float abslute_vx, abslute_vy;
 
 Robot_Status_e robot_state; // 机器人整体工作状态
 
-static float PitchLimit(float origin) {
-    if (robotarm_cmd_send.gimbal_mode != GIMBAL_ZERO_FORCE) {
-        if (robotarm_cmd_send.imu_data->Pitch <= PITCH_MAX &&
-            robotarm_cmd_send.imu_data->Pitch >= PITCH_MIN) {
-            return origin;
-        }
-        else if (origin * (robotarm_cmd_send.imu_data->Pitch - PITCH_MAX) > 0 ||
-                 origin * (robotarm_cmd_send.imu_data->Pitch - PITCH_MIN) > 0) {
-            return origin;
-        }
-    }
-    return 0;
-}
+// static float PitchLimit(float origin) {
+//     if (robotarm_cmd_send.gimbal_mode != GIMBAL_ZERO_FORCE) {
+//         if (robotarm_cmd_send.imu_data->Pitch <= PITCH_MAX &&
+//             robotarm_cmd_send.imu_data->Pitch >= PITCH_MIN) {
+//             return origin;
+//         }
+//         else if (origin * (robotarm_cmd_send.imu_data->Pitch - PITCH_MAX) > 0 ||
+//                  origin * (robotarm_cmd_send.imu_data->Pitch - PITCH_MIN) > 0) {
+//             return origin;
+//         }
+//     }
+//     return 0;
+// }
 
 /**
  * @brief  计算偏移角度
@@ -142,7 +143,7 @@ static void CalcOffsetAngle() {
 uint8_t debug_mode1;
 uint8_t debug_mode2;
 static void RemoteControlSet(void) {
-    static uint8_t last_mode         = ROBOTARM_ZERO_FORCE;
+    static uint8_t last_mode         = GIMBAL_ZERO_FORCE;
     static uint8_t last_chassis_mode = CHASSIS_ZERO_FORCE;
     static float yaw_offset          = 0;
     last_mode                        = robotarm_cmd_send.gimbal_mode;
@@ -183,14 +184,13 @@ static void RemoteControlSet(void) {
         robotarm_cmd_send.gimbal_mode = GIMBAL_ZERO_FORCE;
     }
 
-    if (current_mode != ROBOTARM_ZERO_FORCE && last_mode == ROBOTARM_ZERO_FORCE) {
-        current_mode = ROBOTARM_CALI;
+    if (current_mode != GIMBAL_ZERO_FORCE && last_mode == GIMBAL_ZERO_FORCE) {
+        current_mode = GIMBAL_CALI;
     }
-
 
     // robotarm_cmd_send.robotarm_mode = current_mode;
 
-    // 底盘参数,目前没有加入小陀螺(调试似乎暂时没有必要),系数需要调整，可能要调硬一点
+    // 遥控器转底盘参数
     if (chassis_cmd_send.chassis_mode == CHASSIS_SPIN) {
         if (last_chassis_mode != CHASSIS_SPIN)
             yaw_offset = ins_data->Yaw;
@@ -209,29 +209,6 @@ static void RemoteControlSet(void) {
         chassis_cmd_send.vy = 20.0f * (float)rc_data->rc.rocker_r1; // 1数值方向
         chassis_cmd_send.wz = 5.0f * (float)rc_data->rc.rocker_l_;
     }
-    // if (last_mode != robotarm_cmd_send.gimbal_mode &&
-    //     robotarm_cmd_send.gimbal_mode == GIMBAL_NO_FOLLOW) {
-    //     robotarm_cmd_send.yaw   = *robotarm_fetch_data.yaw_total_angle;
-    //     robotarm_cmd_send.pitch = ins_data->Pitch;
-    // }
-    // else if (last_mode != robotarm_cmd_send.gimbal_mode &&
-    //          robotarm_cmd_send.gimbal_mode == GIMBAL_FOLLOW_GIMBAL_YAW) {
-    //     robotarm_cmd_send.yaw   = robotarm_cmd_send.imu_data->YawTotalAngle;
-    //     robotarm_cmd_send.pitch = ins_data->Pitch;
-    // }
-
-    // else {
-    //     robotarm_cmd_send.pitch =
-    //         robotarm_cmd_send.pitch - PitchLimit(0.001f * (float)rc_data->rc.rocker_l1);
-    //     robotarm_cmd_send.yaw = robotarm_cmd_send.yaw - 0.001f * (float)rc_data->rc.rocker_l_;
-    // }
-
-    // robotarm_cmd_send.yaw_total_angle_current = ins_data->YawTotalAngle;
-    // robotarm_cmd_send.yaw_gyro_current        = ins_data->Gyro[2];
-    // robotarm_cmd_send.pitch_angle_current     = ins_data->Pitch;
-    // robotarm_cmd_send.debug_speed_set = 0.3 * (float)rc_data[TEMP].rc.rocker_l_;
-
-    // robotarm_cmd_send.custom_referee = custom_referee;
 }
 
 /**
@@ -287,13 +264,14 @@ void RobotCmdInit(void) {
 
     rc_data = RemoteControlInit(&huart1);
 
-    robotarm_cmd_pub            = PubRegister("robotarm_cmd", sizeof(Robotarm_Ctrl_Cmd_s));
-    robotarm_feed_sub           = SubRegister("robotarm_feed", sizeof(Robotarm_Upload_Data_s));
-    chassis_cmd_pub             = PubRegister("chassis_cmd", sizeof(Chassis_Ctrl_Cmd_s));
-    chassis_feed_sub            = SubRegister("chassis_feed", sizeof(Chassis_Upload_Data_s));
-    chassis_fetch_data.imu_data = ins_data;
-    robotarm_cmd_send.imu_data  = ins_data;
-    Vision_message              = USB_RxBufferRegister();
+    robotarm_cmd_pub  = PubRegister("robotarm_cmd", sizeof(Robotarm_Ctrl_Cmd_s));
+    robotarm_feed_sub = SubRegister("robotarm_feed", sizeof(Robotarm_Upload_Data_s));
+    chassis_cmd_pub   = PubRegister("chassis_cmd", sizeof(Chassis_Ctrl_Cmd_s));
+    chassis_feed_sub  = SubRegister("chassis_feed", sizeof(Chassis_Upload_Data_s));
+
+    chassis_feed_pub           = PubRegister("chassis_feed", sizeof(Chassis_Upload_Data_s));
+    robotarm_cmd_send.imu_data = ins_data;
+    Vision_message             = USB_RxBufferRegister();
     // robotarm_cmd_send.customdate = customdate;
 
     //	gimbal_cmd_send.pitch = 0;		作用不明，保留
@@ -317,12 +295,13 @@ void RobotCMDTask(void) {
     RemoteControlSet();
     CalibrateTask(rc_data);
     EmergencyHandler(); // 处理模块离线和遥控器急停等紧急情况
+    chassis_fetch_data.pitch     = ins_data->Pitch;
+    chassis_fetch_data.yaw       = ins_data->Yaw;
+    chassis_fetch_data.roll      = ins_data->Roll;
+    chassis_fetch_data.yaw_total = ins_data->YawTotalAngle;
 
-    // 设置视觉发送数据,还需增加加速度和角速度数据
-    // VisionTask(RadToDeg(ins_data->Roll),-RadToDeg(ins_data->Pitch),RadToDeg(ins_data->Yaw));
-    // chassis_cmd_send.vision_state = vision_fetch_data.vision_state;
     // 其他应用所需的控制数据在remotecontrolsetmode和mousekeysetmode中完成设置
-
+    PubPushMessage(chassis_feed_pub, (void *)&chassis_fetch_data);
     PubPushMessage(chassis_cmd_pub, (void *)&chassis_cmd_send);
     PubPushMessage(robotarm_cmd_pub, (void *)&robotarm_cmd_send);
 }

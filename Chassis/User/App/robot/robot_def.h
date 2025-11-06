@@ -72,40 +72,22 @@ typedef enum
  */
 typedef enum
 {
-    CHASSIS_ZERO_FORCE = 0,    // 电流零输�?
-    CHASSIS_NO_FOLLOW,         // 不跟随，允�?�全向平�?
-    CHASSIS_FOLLOW_GIMBAL_YAW, // 跟随模式，底盘叠加�?�度�?控制
-    CHASSIS_SPIN,
+    CHASSIS_ZERO_FORCE = 0,    // 无力模式
+    CHASSIS_NO_FOLLOW,         // 分离模式
+    CHASSIS_FOLLOW_GIMBAL_YAW, // 跟随模式
+    CHASSIS_SPIN,              // 小陀螺模式
+    CHASSIS_MAXSPEED           // 满速，我还没写，哈哈哈
 
 } chassis_mode_e;
 typedef enum
 {
-    GIMBAL_ZERO_FORCE = 0,    // 电流零输�?
-    GIMBAL_NO_FOLLOW,         // 不跟随，允�?�全向平�?
-    GIMBAL_FOLLOW_GIMBAL_YAW, // 跟随模式，底盘叠加�?�度�?控制
-    GIMBAL_FULL_AUTO,
+    GIMBAL_ZERO_FORCE = 0,    // 无力模式
+    GIMBAL_NO_FOLLOW,         // 分离模式
+    GIMBAL_FOLLOW_GIMBAL_YAW, // 跟随模式
+    GIMBAL_FULL_AUTO,         // 全自动运行(烧饼烧烤中)
+    GIMBAL_CALI,              // 校准中....
 
 } gimbal_mode_e;
-
-// ��̨ģʽ����
-typedef enum
-{
-    ROBOTARM_ZERO_FORCE = 0, // 电流零输�?
-    ROBOTARM_TEACH,          // 示教模式
-    ROBOTARM_CUSTOM,         // �?定义控制器模�?
-    ROBOTARM_CALI,
-} robotarm_mode_e;
-
-// 臂上电机名字
-typedef enum
-{
-    YAW,
-    JOINT1,
-    JOINT2,
-    JOINT3,
-    EE1,
-    EE2,
-} armmotor_name_e;
 
 typedef enum
 {
@@ -175,8 +157,10 @@ typedef struct {
     //     float real_vx;
     //     float real_vy;
     //     float real_wz;
-
-    INS_t *imu_data;
+    float pitch;
+    float yaw;
+    float roll;
+    float yaw_total;
     Enemy_Color_e enemy_color; // 0 for blue, 1 for red
 
 } Chassis_Upload_Data_s;

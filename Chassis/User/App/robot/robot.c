@@ -59,7 +59,7 @@ void RobotInit(void) {
     RobotCmdInit();
     BuzzerInit();
 
-    // CmdRevInit(); // 用于A，C板通信，目前觉得没有什么用，后期测试后删除
+    CmdRevInit(); // 用于A，C板通信
     ChassisInit();
 
     OSTaskInit();
@@ -75,7 +75,7 @@ void RobotInit(void) {
  */
 
 void RobotTask(void) {
-    RobotCMDTask();
-    // CmdRevTask(); // 太有用了，现在恢复
+    RobotCMDTask(); // 传参之类的核心参数
+    CmdRevTask();   // AC板通信，太有用了，现在恢复
     ChassisTask();
 }

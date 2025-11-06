@@ -103,7 +103,7 @@
         <bEvRecOn>1</bEvRecOn>
         <bSchkAxf>0</bSchkAxf>
         <bTchkAxf>0</bTchkAxf>
-        <nTsel>3</nTsel>
+        <nTsel>4</nTsel>
         <sDll></sDll>
         <sDllPa></sDllPa>
         <sDlgDll></sDlgDll>
@@ -135,7 +135,6 @@
         <SetRegEntry>
           <Number>0</Number>
           <Key>DLGUARM</Key>
-          <Name>d</Name>
         </SetRegEntry>
         <SetRegEntry>
           <Number>0</Number>
@@ -295,6 +294,11 @@
           <WinNumber>1</WinNumber>
           <ItemText>lasts</ItemText>
         </Ww>
+        <Ww>
+          <count>29</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>data_send</ItemText>
+        </Ww>
       </WatchWindow1>
       <WatchWindow2>
         <Ww>
@@ -322,6 +326,26 @@
           <WinNumber>2</WinNumber>
           <ItemText>chassis_can_fetch_data</ItemText>
         </Ww>
+        <Ww>
+          <count>5</count>
+          <WinNumber>2</WinNumber>
+          <ItemText>cmd_send_data</ItemText>
+        </Ww>
+        <Ww>
+          <count>6</count>
+          <WinNumber>2</WinNumber>
+          <ItemText>data_send</ItemText>
+        </Ww>
+        <Ww>
+          <count>7</count>
+          <WinNumber>2</WinNumber>
+          <ItemText>chassis_can_fetch_data</ItemText>
+        </Ww>
+        <Ww>
+          <count>8</count>
+          <WinNumber>2</WinNumber>
+          <ItemText>ins</ItemText>
+        </Ww>
       </WatchWindow2>
       <Tracepoint>
         <THDelay>0</THDelay>
@@ -329,7 +353,7 @@
       <DebugFlag>
         <trace>0</trace>
         <periodic>1</periodic>
-        <aLwin>0</aLwin>
+        <aLwin>1</aLwin>
         <aCover>0</aCover>
         <aSer1>0</aSer1>
         <aSer2>0</aSer2>
@@ -1684,18 +1708,6 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\User\App\chassis\chassis.c</PathWithFileName>
-      <FilenameWithoutPath>chassis.c</FilenameWithoutPath>
-      <RteFlg>0</RteFlg>
-      <bShared>0</bShared>
-    </File>
-    <File>
-      <GroupNumber>10</GroupNumber>
-      <FileNumber>104</FileNumber>
-      <FileType>1</FileType>
-      <tvExp>0</tvExp>
-      <tvExpOptDlg>0</tvExpOptDlg>
-      <bDave2>0</bDave2>
       <PathWithFileName>..\User\App\shoot\shoot.c</PathWithFileName>
       <FilenameWithoutPath>shoot.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
@@ -1703,7 +1715,7 @@
     </File>
     <File>
       <GroupNumber>10</GroupNumber>
-      <FileNumber>105</FileNumber>
+      <FileNumber>104</FileNumber>
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
@@ -1715,7 +1727,7 @@
     </File>
     <File>
       <GroupNumber>10</GroupNumber>
-      <FileNumber>106</FileNumber>
+      <FileNumber>105</FileNumber>
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
@@ -1727,7 +1739,7 @@
     </File>
     <File>
       <GroupNumber>10</GroupNumber>
-      <FileNumber>107</FileNumber>
+      <FileNumber>106</FileNumber>
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
@@ -1739,7 +1751,7 @@
     </File>
     <File>
       <GroupNumber>10</GroupNumber>
-      <FileNumber>108</FileNumber>
+      <FileNumber>107</FileNumber>
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
@@ -1751,7 +1763,7 @@
     </File>
     <File>
       <GroupNumber>10</GroupNumber>
-      <FileNumber>109</FileNumber>
+      <FileNumber>108</FileNumber>
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
@@ -1763,7 +1775,7 @@
     </File>
     <File>
       <GroupNumber>10</GroupNumber>
-      <FileNumber>110</FileNumber>
+      <FileNumber>109</FileNumber>
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
@@ -1775,7 +1787,7 @@
     </File>
     <File>
       <GroupNumber>10</GroupNumber>
-      <FileNumber>111</FileNumber>
+      <FileNumber>110</FileNumber>
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
@@ -1787,7 +1799,7 @@
     </File>
     <File>
       <GroupNumber>10</GroupNumber>
-      <FileNumber>112</FileNumber>
+      <FileNumber>111</FileNumber>
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>

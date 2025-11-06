@@ -373,12 +373,6 @@ static void SteeringWheelIK(void) {
         // 新写的待测试
         vt[i] *= arm_cos_f32(NearbyErrFormat((delta_angle), 180.0F) * DEGREE_2_RAD);
 
-        // 旧版
-        //  if (abs(NearbyErrFormat((delta_angle), 180.0F)) > 90)
-        //      speed_motor[i]->motor_settings.motor_reverse_flag = MOTOR_DIRECTION_REVERSE;
-        //  else
-        //      speed_motor[i]->motor_settings.motor_reverse_flag = MOTOR_DIRECTION_NORMAL;
-
         // 舵向电机就近转向
         anglet[i] = AngleFormatfp(angle_single_round + NearbyErrFormat(delta_angle, 90.0f));
     }
@@ -499,5 +493,5 @@ void ChassisTask(void) {
     // chassis_feedback_data.rest_heat = referee_data->PowerHeatData.shooter_heat0;
 
     // 推送反馈消息
-    PubPushMessage(chassis_pub, (void *)&chassis_feedback_data);
+    // PubPushMessage(chassis_pub, (void *)&chassis_feedback_data);
 }

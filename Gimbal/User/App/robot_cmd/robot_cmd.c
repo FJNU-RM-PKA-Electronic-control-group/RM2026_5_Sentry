@@ -19,8 +19,8 @@
 
 // 私有宏,自动将编码器转换成角度值
 // #define YAW_ALIGN_ANGLE (YAW_CHASSIS_ALIGN_ECD * ECD_ANGLE_COEF_DJI) // 对齐时的角度,0-360
-// #define PTICH_HORIZON_ANGLE (PITCH_HORIZON_ECD * ECD_ANGLE_COEF_DJI) // pitch水平时电机的角度,0-360
-// #define USE_VISION_FIRE_CONTROL
+// #define PTICH_HORIZON_ANGLE (PITCH_HORIZON_ECD * ECD_ANGLE_COEF_DJI) //
+// pitch水平时电机的角度,0-360 #define USE_VISION_FIRE_CONTROL
 
 #define YAW_ALIGN_ANGLE     0
 #define PTICH_HORIZON_ANGLE 0
@@ -29,25 +29,26 @@ RC_ctrl_t *rc_data; // 遥控器数据,初始化时返回
 attitude_t *ins_data;
 cali_data_t *calibrate_data;
 
-static Publisher_t *chassis_cmd_pub;      // 底盘控制消息发布者
-static Subscriber_t *chassis_feed_sub;    // 底盘反馈信息订阅者
-Chassis_Ctrl_Cmd_s chassis_cmd_send;      // 发送给底盘应用的信息,包括控制信息和UI绘制相关
-Chassis_Upload_Data_s chassis_fetch_data; // 从底盘应用接收的反馈信息信息,底盘功率枪口热量与底盘运动状态等
+static Publisher_t *chassis_cmd_pub;   // 底盘控制消息发布者
+static Subscriber_t *chassis_feed_sub; // 底盘反馈信息订阅者
+Chassis_Ctrl_Cmd_s chassis_cmd_send;   // 发送给底盘应用的信息,包括控制信息和UI绘制相关
+Chassis_Upload_Data_s
+    chassis_fetch_data;             // 从底盘应用接收的反馈信息信息,底盘功率枪口热量与底盘运动状态等
 
-static Publisher_t *gimbal_cmd_pub;       // 云台控制消息发布者
-static Subscriber_t *gimbal_feed_sub;     // 云台反馈信息订阅者
-Gimbal_Ctrl_Cmd_s gimbal_cmd_send;        // 传递给云台的控制信息
-Gimbal_Upload_Data_s gimbal_fetch_data;   // 从云台获取的反馈信息
+static Publisher_t *gimbal_cmd_pub; // 云台控制消息发布者
+static Subscriber_t *gimbal_feed_sub;   // 云台反馈信息订阅者
+Gimbal_Ctrl_Cmd_s gimbal_cmd_send;      // 传递给云台的控制信息
+Gimbal_Upload_Data_s gimbal_fetch_data; // 从云台获取的反馈信息
 
-static Publisher_t *shoot_cmd_pub;        // 发射控制消息发布者
-static Subscriber_t *shoot_feed_sub;      // 发射反馈信息订阅者
-Shoot_Ctrl_Cmd_s shoot_cmd_send;          // 传递给发射的控制信息
-Shoot_Upload_Data_s shoot_fetch_data;     // 从发射获取的反馈信息
+static Publisher_t *shoot_cmd_pub;      // 发射控制消息发布者
+static Subscriber_t *shoot_feed_sub;    // 发射反馈信息订阅者
+Shoot_Ctrl_Cmd_s shoot_cmd_send;        // 传递给发射的控制信息
+Shoot_Upload_Data_s shoot_fetch_data;   // 从发射获取的反馈信息
 
-static Subscriber_t *vision_feed_sub;     // 视觉反馈信息订阅者
-Vision_Upload_Data_s vision_fetch_data;   // 从视觉获取的反馈信息
+static Subscriber_t *vision_feed_sub;   // 视觉反馈信息订阅者
+Vision_Upload_Data_s vision_fetch_data; // 从视觉获取的反馈信息
 
-static Robot_Status_e robot_state;        // 机器人整体工作状态
+static Robot_Status_e robot_state;      // 机器人整体工作状态
 
 static void CalcOffsetAngle() {
     // 别名angle提高可读性,不然太长了不好看,虽然基本不会动这个函数
@@ -72,7 +73,8 @@ static void CalcOffsetAngle() {
 
 static float PitchLimit(float add) {
     if (gimbal_cmd_send.gimbal_mode != GIMBAL_ZERO_FORCE) {
-        if (gimbal_fetch_data.pitch_ecd_angle <= calibrate_data->max_pitch && gimbal_fetch_data.pitch_ecd_angle >= calibrate_data->min_pitch) {
+        if (gimbal_fetch_data.pitch_ecd_angle <= calibrate_data->max_pitch &&
+            gimbal_fetch_data.pitch_ecd_angle >= calibrate_data->min_pitch) {
             return add;
         }
         else if (add * (gimbal_fetch_data.pitch_ecd_angle - calibrate_data->max_pitch) < 0 ||
@@ -103,7 +105,8 @@ static void RemoteControlSet(void) {
         chassis_cmd_send.chassis_mode = CHASSIS_FOLLOW_GIMBAL_YAW;
         gimbal_cmd_send.gimbal_mode   = GIMBAL_GYRO_MODE;
     }
-    else if (switch_is_mid(rc_data[TEMP].rc.switch_right)) // 右侧开关状态[中],底盘和云台分离,底盘保持不转动
+    else if (switch_is_mid(
+                 rc_data[TEMP].rc.switch_right)) // 右侧开关状态[中],底盘和云台分离,底盘保持不转动
     {
         chassis_cmd_send.chassis_mode = CHASSIS_NO_FOLLOW;
         gimbal_cmd_send.gimbal_mode   = GIMBAL_FREE_MODE;
@@ -116,14 +119,16 @@ static void RemoteControlSet(void) {
         robot_state = ROBOT_READY;
     }
 
-    if (switch_is_down(rc_data[TEMP].rc.switch_left) && switch_is_down(rc_data[TEMP].rc.switch_right)) // 俩侧开关拨下,检测校准条件
+    if (switch_is_down(rc_data[TEMP].rc.switch_left) &&
+        switch_is_down(rc_data[TEMP].rc.switch_right)) // 俩侧开关拨下,检测校准条件
     {
         CalibrateTask(rc_data);
     }
 
     // 云台参数,确定云台控制数据
     gimbal_cmd_send.pitch += PitchLimit(0.00001f * (float)rc_data[TEMP].rc.rocker_l1);
-    gimbal_cmd_send.yaw = RadFormat(gimbal_cmd_send.yaw - 0.00001f * (float)rc_data[TEMP].rc.rocker_l_);
+    gimbal_cmd_send.yaw =
+        RadFormat(gimbal_cmd_send.yaw - 0.00001f * (float)rc_data[TEMP].rc.rocker_l_);
     // 底盘参数,目前没有加入小陀螺(调试似乎暂时没有必要),系数需要调整
     chassis_cmd_send.vx = 300.0f * (float)rc_data[TEMP].rc.rocker_r_; // _水平方向
     chassis_cmd_send.vy = 300.0f * (float)rc_data[TEMP].rc.rocker_r1; // 1数值方向
@@ -163,12 +168,15 @@ static void RemoteControlSet(void) {
  *
  */
 static void MouseKeySet(void) {
-    chassis_cmd_send.vy = rc_data[TEMP].key[KEY_PRESS].w * 15000 - rc_data[TEMP].key[KEY_PRESS].s * 15000; // 系数待测
-    chassis_cmd_send.vx = rc_data[TEMP].key[KEY_PRESS].d * 15000 - rc_data[TEMP].key[KEY_PRESS].a * 15000;
+    chassis_cmd_send.vy =
+        rc_data[TEMP].key[KEY_PRESS].w * 15000 - rc_data[TEMP].key[KEY_PRESS].s * 15000; // 系数待测
+    chassis_cmd_send.vx =
+        rc_data[TEMP].key[KEY_PRESS].d * 15000 - rc_data[TEMP].key[KEY_PRESS].a * 15000;
 
     rc_data[TEMP].mouse.x *= -1;
     rc_data[TEMP].mouse.y *= -1;
-    gimbal_cmd_send.yaw = RadFormat(gimbal_cmd_send.yaw + (float)rc_data[TEMP].mouse.x / 10000); // 系数待测
+    gimbal_cmd_send.yaw =
+        RadFormat(gimbal_cmd_send.yaw + (float)rc_data[TEMP].mouse.x / 10000); // 系数待测
     gimbal_cmd_send.pitch += PitchLimit((float)rc_data[TEMP].mouse.y / 10000);
 
     switch (rc_data[TEMP].key_count[KEY_PRESS][Key_Z] % 3) // Z键设置弹速
@@ -232,7 +240,7 @@ static void MouseKeySet(void) {
     switch (rc_data[TEMP].key[KEY_PRESS].shift) // 待添加 按shift允许超功率 消耗缓冲能量
     {
     case 1:
-        chassis_cmd_send.chassis_mode = MAX_SPEED;
+        chassis_cmd_send.chassis_mode = CHASSIS_MAXSPEED;
         break;
 
     default:
@@ -322,7 +330,8 @@ void RobotCMDTask(void) {
 
     // 根据gimbal的反馈值计算云台和底盘正方向的夹角,不需要传参,通过static私有变量完成
     CalcOffsetAngle();
-    if (switch_is_up(rc_data[TEMP].rc.switch_left) || rc_data->rc_state == 2) // 左侧开关状态为[上],待添加
+    if (switch_is_up(rc_data[TEMP].rc.switch_left) ||
+        rc_data->rc_state == 2) // 左侧开关状态为[上],待添加
     {
         MouseKeySet();
     }
@@ -335,12 +344,13 @@ void RobotCMDTask(void) {
     VisionTask(RadToDeg(ins_data->Roll), -RadToDeg(ins_data->Pitch), RadToDeg(ins_data->Yaw));
 
     // 推送消息,双板通信,视觉通信等
-    shoot_cmd_send.rest_heat       = chassis_fetch_data.rest_heat;
-    shoot_cmd_send.heat_limit      = chassis_fetch_data.heat_limit;
-    chassis_cmd_send.loader_mode   = shoot_cmd_send.load_mode;
-    chassis_cmd_send.friction_mode = shoot_cmd_send.friction_mode;
-    chassis_cmd_send.gimbal_mode   = gimbal_cmd_send.gimbal_mode;
-    chassis_cmd_send.vision_state  = vision_fetch_data.vision_state;
+    // shoot_cmd_send.rest_heat       = chassis_fetch_data.rest_heat;
+    // shoot_cmd_send.heat_limit      = chassis_fetch_data.heat_limit;
+    // chassis_cmd_send.loader_mode   = shoot_cmd_send.load_mode;
+    // chassis_cmd_send.friction_mode = shoot_cmd_send.friction_mode;
+    // chassis_cmd_send.gimbal_mode   = gimbal_cmd_send.gimbal_mode;
+    // chassis_cmd_send.vision_state  = vision_fetch_data.vision_state;
+    chassis_cmd_send.offset_angle = 0;
     // 其他应用所需的控制数据在remotecontrolsetmode和mousekeysetmode中完成设置
 
     PubPushMessage(chassis_cmd_pub, (void *)&chassis_cmd_send);

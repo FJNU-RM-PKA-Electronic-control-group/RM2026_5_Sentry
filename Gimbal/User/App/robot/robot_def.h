@@ -78,12 +78,11 @@ typedef enum
  */
 typedef enum
 {
-    CHASSIS_ZERO_FORCE = 0,    // 电流零输入
+    CHASSIS_ZERO_FORCE = 0,    // 无力模式
+    CHASSIS_NO_FOLLOW,         // 分离模式
+    CHASSIS_FOLLOW_GIMBAL_YAW, // 跟随模式
     CHASSIS_ROTATE,            // 小陀螺模式
-    CHASSIS_ROTATE_F,
-    CHASSIS_NO_FOLLOW,         // 不跟随，允许全向平移
-    CHASSIS_FOLLOW_GIMBAL_YAW, // 跟随模式，底盘叠加角度环控制
-    MAX_SPEED
+    CHASSIS_MAXSPEED,
 } chassis_mode_e;
 
 // 云台模式设置
@@ -166,14 +165,9 @@ typedef struct {
     float vx;           // 前进方向速度
     float vy;           // 横移方向速度
     float wz;           // 旋转速度
-    float offset_angle; // 底盘和归中位置的夹角
+    float offset_angle; // 底盘和正方向位置的夹角
     chassis_mode_e chassis_mode;
     int chassis_speed_buff;
-    // UI部分
-    gimbal_mode_e gimbal_mode;     // 云台模式
-    loader_mode_e loader_mode;     // 发射模式设置
-    friction_mode_e friction_mode; // 摩擦轮关闭
-    Vision_State_e vision_state;   // 弹舱盖打开
 } Chassis_Ctrl_Cmd_s;
 
 // cmd发布的云台控制数据,由gimbal订阅
@@ -212,7 +206,10 @@ typedef struct {
     // float real_vy;
     // float real_wz;
 
-    INS_t *imu_data;
+    float pitch;
+    float yaw;
+    float roll;
+    float yaw_total;
     Enemy_Color_e enemy_color; // 0 for blue, 1 for red
 
 } Chassis_Upload_Data_s;
