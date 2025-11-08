@@ -1,5 +1,19 @@
 {
     "files.associations": {
-        "chassis.h": "c"
+        "chassis.h": "c",
+        "dm_motor.h": "c",
+        "dji_motor.h": "c",
+        "feed_forward.h": "c",
+        "controller.h": "c",
+        "motor_def.h": "c",
+        "daemon.h": "c",
+        "bsp_dwt.h": "c",
+        "bsp_log.h": "c",
+        "user_lib.h": "c",
+        "stdlib.h": "c",
+        "struct_typedef.h": "c",
+        "robot_def.h": "c",
+        "lk9025.h": "c",
+        "bsp_can.h": "c"
     }
 }

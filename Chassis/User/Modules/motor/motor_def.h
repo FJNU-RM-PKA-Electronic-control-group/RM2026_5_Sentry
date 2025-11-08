@@ -149,13 +149,13 @@ typedef struct {
     float *speed_feedforward_ptr;    // 速度前�?�指�?
     float *current_feedforward_ptr;  // 电流前�?�指�?
     float *other_output_ptr;         // 其他输出源指�?
-    float zero_point_offset;
+    float zero_point_offset;         // 零点偏移设定值
 
-    PIDInstance current_PID; // 电流PID实例
-    PIDInstance speed_PID;   // 速度PID实例
-    PIDInstance angle_PID;   // 角度PID实例
+    PIDInstance current_PID;         // 电流PID实例
+    PIDInstance speed_PID;           // 速度PID实例
+    PIDInstance angle_PID;           // 角度PID实例
 
-    float pid_ref;           // PID参考值，通常用于各控制环
+    float pid_ref;                   // PID参考值，通常用于各控制环
 } Motor_Controller_s;
 
 /* 电机类型枚举 */
@@ -182,11 +182,11 @@ typedef enum
  * 目前只有部分场合需要判断是否需要数据融合控制，其他情况下默认即可，具体使用时请根据实际需求指定
  */
 typedef struct {
-    float *other_angle_feedback_ptr; // 角度反�?�指�?,注意使用total_angle
-    float *other_speed_feedback_ptr; // 速度反�?�指�?,单位为angle per sec
+    float *other_angle_feedback_ptr; // 角度反馈数据指针,注意电机使用total_angle
+    float *other_speed_feedback_ptr; // 速度反馈数据指针,单位为angle per sec
 
-    float *speed_feedforward_ptr;    // 速度前�?�指�?
-    float *current_feedforward_ptr;  // 电流前�?�指�?
+    float *speed_feedforward_ptr;    // 速度前馈数据指针
+    float *current_feedforward_ptr;  // 电流前馈数据指针
 
     float angle_zero_point_offset;   // 角度环电机零点偏移量
 
@@ -196,7 +196,7 @@ typedef struct {
 } Motor_Controller_Init_s;
 
 /**
- * @brief 用于初�?�化CAN电机的结构体，包�?所有通道
+ * @brief 用于初始化化CAN电机的结构体，包�?所有通道
  *
  * @note  需要指定电机类型、pid参数和相关配�?数据、反馈指针、输出方向等
  *        还包括can通信参数，�?�can通道和帧id�?

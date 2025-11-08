@@ -4,12 +4,11 @@
 #include "daemon.h"
 #include "robot_def.h"
 #include "stdlib.h"
+#include "user_lib.h"
 
 static uint8_t idx;
 static LKMotorInstance *lkmotor_instance[LK_MOTOR_MX_CNT] = {NULL};
-static CANInstance
-    *sender_instance; // 多电机发送时使用的caninstance(当前保存的是注册的第一个电机的caninstance)
-// 后续考虑兼容单电机和多电机指令.
+//  后续考虑兼容单电机和多电机指令.
 
 /**
  * @brief 电机反馈报文解析
@@ -62,6 +61,9 @@ LKMotorInstance *LKMotorInit(Motor_Init_Config_s *config) {
     PIDInit(&motor->angle_PID, &config->controller_param_init_config.angle_PID);
     motor->other_angle_feedback_ptr = config->controller_param_init_config.other_angle_feedback_ptr;
     motor->other_speed_feedback_ptr = config->controller_param_init_config.other_speed_feedback_ptr;
+    motor->speed_feedforward_ptr    = config->controller_param_init_config.speed_feedforward_ptr;
+    motor->current_feedforward_ptr  = config->controller_param_init_config.current_feedforward_ptr;
+    motor->zero_point_offset        = config->controller_param_init_config.angle_zero_point_offset;
 
     config->can_init_config.id                  = motor;
     config->can_init_config.can_module_callback = LKMotorDecode;
@@ -70,16 +72,7 @@ LKMotorInstance *LKMotorInit(Motor_Init_Config_s *config) {
 
     motor->motor_can_ins = CANRegister(&config->can_init_config);
 
-    // if (idx == 0) // 用第一个电机的can instance发送数据
-    // {
-    //     sender_instance = motor->motor_can_ins;
-    //     //
-    //     修改tx_id为0x280,用于多电机发送,不用管其他LKMotorInstance的tx_id,它们仅作初始化用,跃鹿原本写法哄堂大笑了，已经修正
-    //     sender_instance->txconf.StdId = 0x280;
-    //     sender_instance->tx_id        = 0x280;
-    // }
-
-    LKMotorEnable(motor);
+    LKMotorStop(motor);
     DWT_GetDeltaT(&motor->measure.feed_dwt_cnt);
     lkmotor_instance[idx++] = motor;
 
@@ -95,7 +88,7 @@ LKMotorInstance *LKMotorInit(Motor_Init_Config_s *config) {
 
 /* 第一个电机的can instance用于发送数据,向其tx_buff填充数据 */
 void LKMotorControl() {
-    float pid_measure, pid_ref;
+    float pid_measure, pid_ref, pid_err;
     int16_t set;
     LKMotorInstance *motor;
     LKMotor_Measure_t *measure;
@@ -110,11 +103,27 @@ void LKMotorControl() {
             pid_ref *= -1;
 
         if ((setting->close_loop_type & ANGLE_LOOP) && setting->outer_loop_type == ANGLE_LOOP) {
-            if (setting->angle_feedback_source == OTHER_FEED)
-                pid_measure = *motor->other_angle_feedback_ptr;
-            else
-                pid_measure = measure->real_current;
-            pid_ref = PIDCalculate(&motor->angle_PID, pid_measure, pid_ref);
+            switch (setting->pid_mode) {
+            case MOTOR_PID_MUTILOOP:
+                if (setting->angle_feedback_source == OTHER_FEED)
+                    pid_measure = *motor->other_angle_feedback_ptr;
+                else
+                    pid_measure = measure->total_angle;
+                pid_ref = PIDCalculate(&motor->angle_PID, pid_measure, pid_ref);
+                break;
+            case MOTOR_PID_SINGLELOOP:
+                if (setting->angle_feedback_source == OTHER_FEED)
+                    pid_measure = *motor->other_angle_feedback_ptr;
+                else
+                    pid_measure =
+                        AngleFormatfp(measure->angle_single_round - motor->zero_point_offset);
+
+                pid_err = -NearbyErrFormat((pid_ref - pid_measure), 180.0f);
+                pid_ref = PIDCalculate(&motor->angle_PID, pid_err, 0.0f);
+                break;
+            default:
+                break;
+            }
             if (setting->feedforward_flag & SPEED_FEEDFORWARD)
                 pid_ref += *motor->speed_feedforward_ptr;
         }
@@ -155,5 +164,18 @@ void LKMotorStop(LKMotorInstance *motor) { motor->stop_flag = MOTOR_STOP; }
 void LKMotorEnable(LKMotorInstance *motor) { motor->stop_flag = MOTOR_ENALBED; }
 
 void LKMotorSetRef(LKMotorInstance *motor, float ref) { motor->pid_ref = ref; }
+
+float LKMotorGetAngle(LKMotorInstance *motor) {
+    if (motor->motor_settings.pid_mode == MOTOR_PID_MUTILOOP)
+        return motor->measure.total_angle;
+    else if (motor->motor_settings.pid_mode == MOTOR_PID_SINGLELOOP)
+        return AngleFormatfp(motor->measure.angle_single_round - motor->zero_point_offset);
+}
+
+float LKMotorGetRad(LKMotorInstance *motor) {
+    float angle = LKMotorGetAngle(motor);
+    float rad   = DegToRad(angle);
+    return RadFormat(rad);
+}
 
 uint8_t LKMotorIsOnline(LKMotorInstance *motor) { return DaemonIsOnline(motor->daemon); }

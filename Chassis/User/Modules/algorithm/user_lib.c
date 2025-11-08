@@ -32,7 +32,7 @@ void *zero_malloc(size_t size) {
     return ptr;
 }
 
-// �?速开�?
+// �?速开�?
 float Sqrt(float x) {
     float y;
     float delta;
@@ -56,7 +56,7 @@ float Sqrt(float x) {
     return y;
 }
 
-// 绝�?�值限�?
+// 绝�?�值限�?
 float abs_limit(float num, float Limit) {
     if (num > Limit) {
         num = Limit;
@@ -67,7 +67,7 @@ float abs_limit(float num, float Limit) {
     return num;
 }
 
-// 判断符号�?
+// 判断符号�?
 float sign(float value) {
     if (value >= 0.0f) {
         return 1.0f;
@@ -77,7 +77,7 @@ float sign(float value) {
     }
 }
 
-// �?点�?�区
+// �?点�?�区
 float float_deadband(float Value, float minValue, float maxValue) {
     if (Value < maxValue && Value > minValue) {
         Value = 0.0f;
@@ -105,7 +105,7 @@ int16_t int16_constrain(int16_t Value, int16_t minValue, int16_t maxValue) {
         return Value;
 }
 
-// �?�?限幅函数
+// �?�?限幅函数
 float loop_float_constrain(float Input, float minValue, float maxValue) {
     debuginput = Input;
     if (maxValue < minValue) {
@@ -142,7 +142,7 @@ int float_rounding(float raw) {
     return integer;
 }
 
-// 三维向量归一�?
+// 三维向量归一�?
 float *Norm3d(float *v) {
     float len = Sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
     v[0] /= len;
@@ -173,7 +173,7 @@ float fp32_constrain(float Value, float minValue, float maxValue) {
         return Value;
 }
 
-// �?�?限幅函数
+// �?�?限幅函数
 float loop_fp32_constrain(float Input, float minValue, float maxValue) {
     if (maxValue < minValue) {
         return Input;

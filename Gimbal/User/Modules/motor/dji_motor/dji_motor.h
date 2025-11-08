@@ -23,13 +23,12 @@
 #define DJI_MOTOR_CNT 12
 
 /* 滤波系数设置为1的时候即关闭滤波 */
-#define SPEED_SMOOTH_COEF 0.85f      // 最好大于0.85
-#define CURRENT_SMOOTH_COEF 0.9f     // 必须大于0.9
-#define ECD_ANGLE_COEF_DJI 0.043945f // (360/8192),将编码器值转化为角度制
+#define SPEED_SMOOTH_COEF   0.85f     // 最好大于0.85
+#define CURRENT_SMOOTH_COEF 0.9f      // 必须大于0.9
+#define ECD_ANGLE_COEF_DJI  0.043945f // (360/8192),将编码器值转化为角度制
 
 /* DJI电机CAN反馈信息*/
-typedef struct
-{
+typedef struct {
     uint16_t last_ecd;        // 上一次读取的编码器值
     uint16_t ecd;             // 0-8191,刻度总共有8192格
     float angle_single_round; // 单圈角度
@@ -37,21 +36,20 @@ typedef struct
     int16_t real_current;     // 实际电流
     uint8_t temperature;      // 温度 Celsius
 
-    float total_angle;   // 总角度,注意方向
-    int32_t total_round; // 总圈数,注意方向
+    float total_angle;        // 总角度,注意方向
+    int32_t total_round;      // 总圈数,注意方向
 } DJI_Motor_Measure_s;
 
 /**
  * @brief DJI intelligent motor typedef
  *
  */
-typedef struct
-{
+typedef struct {
     DJI_Motor_Measure_s measure;            // 电机测量值
     Motor_Control_Setting_s motor_settings; // 电机设置
     Motor_Controller_s motor_controller;    // 电机控制器
 
-    CANInstance *motor_can_instance; // 电机CAN实例
+    CANInstance *motor_can_instance;        // 电机CAN实例
     // 分组发送设置
     uint8_t sender_group;
     uint8_t message_num;
@@ -64,7 +62,8 @@ typedef struct
 } DJIMotorInstance;
 
 /**
- * @brief 调用此函数注册一个DJI智能电机,需要传递较多的初始化参数,请在application初始化的时候调用此函数
+ * @brief
+ * 调用此函数注册一个DJI智能电机,需要传递较多的初始化参数,请在application初始化的时候调用此函数
  *        推荐传参时像标准库一样构造initStructure然后传入此函数.
  *        recommend: type xxxinitStructure = {.member1=xx,
  *                                            .member2=xx,
@@ -72,7 +71,8 @@ typedef struct
  *        请注意不要在一条总线上挂载过多的电机(超过6个),若一定要这么做,请降低每个电机的反馈频率(设为500Hz),
  *        并减小DJIMotorControl()任务的运行频率.
  *
- * @attention M3508和M2006的反馈报文都是0x200+id,而GM6020的反馈是0x204+id,请注意前两者和后者的id不要冲突.
+ * @attention
+ * M3508和M2006的反馈报文都是0x200+id,而GM6020的反馈是0x204+id,请注意前两者和后者的id不要冲突.
  *            如果产生冲突,在初始化电机的时候会进入IDcrash_Handler(),可以通过debug来判断是否出现冲突.
  *
  * @param config 电机初始化结构体,包含了电机控制设置,电机PID参数设置,电机类型以及电机挂载的CAN设置
@@ -124,7 +124,19 @@ void DJIMotorEnable(DJIMotorInstance *motor);
  * @param outer_loop 外层闭环类型
  */
 void DJIMotorOuterLoop(DJIMotorInstance *motor, Closeloop_Type_e outer_loop);
-
+/**
+ * @brief 获取DJI电机当前角度值
+ *
+ * @param motor
+ * @return float 当前角度，多圈模式为多圈角度，单圈模式为0~360°
+ */
 float DJIMotorGetAngle(DJIMotorInstance *motor);
+/**
+ * @brief 获取DJI电机当前弧度
+ *
+ * @param motor
+ * @return float 当前弧度，多圈模式为多圈角度，单圈模式为-PI~PI
+ */
+float DJIMotorGetRad(DJIMotorInstance *motor)
 
 #endif // !DJI_MOTOR_H
