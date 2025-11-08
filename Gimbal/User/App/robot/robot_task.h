@@ -6,7 +6,6 @@
 #include "main.h"
 #include "task.h"
 
-
 #include "INS_task.h"
 #include "daemon.h"
 #include "gimbal.h"
@@ -14,12 +13,10 @@
 #include "robot.h"
 #include "vision.h"
 
-
 #include "buzzer.h"
 
 #include "bsp_dwt.h"
 #include "bsp_log.h"
-
 
 #include "calibrate.h"
 //------------
@@ -36,7 +33,9 @@ void StartROBOTTASK(void const *argument);
 
 void OSTaskInit(void) {
     osThreadDef(instask, StartINSTASK, osPriorityRealtime, 0, 1024);
-    insTaskHandle = osThreadCreate(osThread(instask), NULL); // 由于是阻塞读取传感器,为姿态解算设置较高优先级,确保以1khz的频率执行
+    insTaskHandle =
+        osThreadCreate(osThread(instask),
+                       NULL); // 由于是阻塞读取传感器,为姿态解算设置较高优先级,确保以1khz的频率执行
 
     osThreadDef(motortask, StartMOTORTASK, osPriorityNormal, 0, 256);
     motorTaskHandle = osThreadCreate(osThread(motortask), NULL);
@@ -60,7 +59,8 @@ __attribute__((noreturn)) void StartINSTASK(void const *argument) {
         ins_dt = DWT_GetTimeline_ms() - ins_start;
         if (ins_dt > 1)
             LOGERROR("[freeRTOS] INS Task is being DELAY! dt = [%f]", &ins_dt);
-        //        VisionSend(); // 解算完成后发送视觉数据,但是当前的实现不太优雅,后续若添加硬件触发需要重新考虑结构的组织
+        //        VisionSend(); //
+        //        解算完成后发送视觉数据,但是当前的实现不太优雅,后续若添加硬件触发需要重新考虑结构的组织
         osDelay(1);
     }
 }

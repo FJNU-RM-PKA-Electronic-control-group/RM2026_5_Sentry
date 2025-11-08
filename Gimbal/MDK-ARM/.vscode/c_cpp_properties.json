@@ -10,6 +10,7 @@
                 "C:/Keil_v5/ARM/ARMCC/include/arm_linux",
                 "C:/Keil_v5/ARM/ARMCC/include/arm_linux_compat",
                 "C:/Keil_v5/ARM/ARMCC/include/rw",
+                "RTE/_Hero",
                 "d:/HalProject/RM2026_5_Sentry/Gimbal/Inc",
                 "d:/HalProject/RM2026_5_Sentry/Gimbal/Drivers/STM32F4xx_HAL_Driver/Inc",
                 "d:/HalProject/RM2026_5_Sentry/Gimbal/Drivers/STM32F4xx_HAL_Driver/Inc/Legacy",
@@ -62,7 +63,8 @@
                 "d:/HalProject/RM2026_5_Sentry/Gimbal/User/Modules/buzzer",
                 "d:/HalProject/RM2026_5_Sentry/Gimbal/User/Modules/can_comm",
                 "d:/HalProject/RM2026_5_Sentry/Gimbal/User/App/cmd_send",
-                "d:/HalProject/RM2026_5_Sentry/Gimbal/User/Modules/referee"
+                "d:/HalProject/RM2026_5_Sentry/Gimbal/User/Modules/referee",
+                "d:/HalProject/RM2026_5_Sentry/Gimbal/User/Modules/motor/LKmotor"
             ],
             "defines": [
                 "USE_HAL_DRIVER",
@@ -73,6 +75,8 @@
                 "__CC_ARM",
                 "ARM_MATH_MATRIX_CHECK",
                 "ARM_MATH_ROUNDING",
+                "RTE_COMPONENTS_H",
+                "CMSIS_device_header=\"stm32f4xx.h\"",
                 "__arm__",
                 "__align(x)=",
                 "__ALIGNOF__(x)=",
