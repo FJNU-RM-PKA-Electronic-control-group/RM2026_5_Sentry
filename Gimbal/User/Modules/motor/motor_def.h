@@ -59,6 +59,7 @@ typedef enum
 {
     MOTOR_FEED = 0,
     OTHER_FEED,
+    MOTOR_AND_IMU_FEED, // 大小yaw特供，仅LK9025电机可用
 } Feedback_Source_e;
 
 /* 电机正反转标志 */
@@ -104,7 +105,6 @@ typedef struct {
     Feedfoward_Type_e feedforward_flag;            // 前馈标志
     Rad_Formt_Flag_e angle_rad_format_flag;        // 角度转弧度标志
     Motor_PID_Mode_e pid_mode; // PID运行模式标志位，用来确定pid运算用单圈闭环还是多圈闭环
-
 } Motor_Control_Setting_s;
 
 /* 电机控制器,包括其他来源的反馈数据指针,3环控制器和电机的参考输入*/
@@ -149,7 +149,9 @@ typedef struct {
     float *speed_feedforward_ptr;    // 速度前馈数据指针
     float *current_feedforward_ptr;  // 电流前馈数据指针
 
-    float angle_zero_point_offset;   // 角度环电机零点偏移量
+    void *
+        yaw2_motor; // 大小yaw特供指针，传入电机实例地址，用于实时计算当前大yaw陀螺仪值，赋值注意类型匹配，仅LK电机有效
+    float angle_zero_point_offset; // 角度环电机零点偏移量
 
     PID_Init_Config_s current_PID;
     PID_Init_Config_s speed_PID;

@@ -137,6 +137,6 @@ float DJIMotorGetAngle(DJIMotorInstance *motor);
  * @param motor
  * @return float 当前弧度，多圈模式为多圈角度，单圈模式为-PI~PI
  */
-float DJIMotorGetRad(DJIMotorInstance *motor)
+float DJIMotorGetRad(DJIMotorInstance *motor);
 
 #endif // !DJI_MOTOR_H

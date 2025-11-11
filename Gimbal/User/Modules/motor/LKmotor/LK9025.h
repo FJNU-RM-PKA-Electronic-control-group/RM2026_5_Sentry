@@ -4,6 +4,8 @@
 #include "bsp_can.h"
 #include "controller.h"
 #include "daemon.h"
+#include "dji_motor.h"
+#include "fliter.h"
 #include "motor_def.h"
 #include "stdint.h"
 
@@ -44,11 +46,14 @@ typedef struct {
     float *current_feedforward_ptr;  // 电流前馈指针
 
     float zero_point_offset;         // 零点偏移设定值
+    DJIMotorInstance *yaw2_ins_ptr;  // 大小yaw特供指针，指向一个dji电机实例
 
     PIDInstance current_PID;
     PIDInstance speed_PID;
     PIDInstance angle_PID;
     float pid_ref;
+
+    LPFliterInstance angle_output_lpfliter;
 
     Motor_Working_Type_e stop_flag; // 启停标志
 
@@ -94,6 +99,14 @@ void LKMotorStop(LKMotorInstance *motor);
  * @param motor
  */
 void LKMotorEnable(LKMotorInstance *motor);
+/**
+ * @brief 改变反馈指针
+ *
+ * @param motor 电机实例
+ * @param loop 改变的PID环
+ * @param type 反馈类型（MOTOR_FEED/OTHER_FEED）
+ */
+void LKMotorChangeFeed(LKMotorInstance *motor, Closeloop_Type_e loop, Feedback_Source_e type);
 /**
  * @brief 获取LK电机当前角度值
  *

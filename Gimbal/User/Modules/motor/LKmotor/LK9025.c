@@ -1,13 +1,17 @@
+#include "INS_task.h"
 #include "LK9025.h"
 #include "bsp_dwt.h"
 #include "bsp_log.h"
 #include "daemon.h"
+#include "dji_motor.h"
+#include "fliter.h"
 #include "robot_def.h"
 #include "stdlib.h"
 #include "user_lib.h"
 
 static uint8_t idx;
 static LKMotorInstance *lkmotor_instance[LK_MOTOR_MX_CNT] = {NULL};
+static attitude_t *__LK_IMU_data;
 //  后续考虑兼容单电机和多电机指令.
 
 /**
@@ -64,6 +68,7 @@ LKMotorInstance *LKMotorInit(Motor_Init_Config_s *config) {
     motor->speed_feedforward_ptr    = config->controller_param_init_config.speed_feedforward_ptr;
     motor->current_feedforward_ptr  = config->controller_param_init_config.current_feedforward_ptr;
     motor->zero_point_offset        = config->controller_param_init_config.angle_zero_point_offset;
+    motor->yaw2_ins_ptr             = config->controller_param_init_config.yaw2_motor;
 
     config->can_init_config.id                  = motor;
     config->can_init_config.can_module_callback = LKMotorDecode;
@@ -72,7 +77,16 @@ LKMotorInstance *LKMotorInit(Motor_Init_Config_s *config) {
 
     motor->motor_can_ins = CANRegister(&config->can_init_config);
 
+    Low_Pass_Fliter_Init_Config_s lp_fliter = {
+        .RC = 0.5f,
+    };
+
+    LowPassFliterInit(&motor->angle_output_lpfliter, &lp_fliter);
+
     LKMotorStop(motor);
+    if (!idx) {
+        __LK_IMU_data = GetInsData();
+    }
     DWT_GetDeltaT(&motor->measure.feed_dwt_cnt);
     lkmotor_instance[idx++] = motor;
 
@@ -85,7 +99,7 @@ LKMotorInstance *LKMotorInit(Motor_Init_Config_s *config) {
 
     return motor;
 }
-
+float debug_measure[3];
 /* 第一个电机的can instance用于发送数据,向其tx_buff填充数据 */
 void LKMotorControl() {
     float pid_measure, pid_ref, pid_err;
@@ -107,19 +121,34 @@ void LKMotorControl() {
             case MOTOR_PID_MUTILOOP:
                 if (setting->angle_feedback_source == OTHER_FEED)
                     pid_measure = *motor->other_angle_feedback_ptr;
+                else if (setting->angle_feedback_source ==
+                         MOTOR_AND_IMU_FEED) // 大yaw特供，纯堆屎山
+                    pid_measure = (__LK_IMU_data->YawTotalAngle * RAD_2_DEGREE -
+                                   DJIMotorGetAngle((DJIMotorInstance *)motor->yaw2_ins_ptr));
+
                 else
                     pid_measure = measure->total_angle;
+
                 pid_ref = PIDCalculate(&motor->angle_PID, pid_measure, pid_ref);
                 break;
             case MOTOR_PID_SINGLELOOP:
                 if (setting->angle_feedback_source == OTHER_FEED)
                     pid_measure = *motor->other_angle_feedback_ptr;
+                else if (setting->angle_feedback_source ==
+                         MOTOR_AND_IMU_FEED) { // 大yaw特供，纯堆屎山
+                    pid_measure = AngleFormatfp(-FliterCalcutale(
+                        (FliterInstance *)&motor->angle_output_lpfliter,
+                        NearbyErrFormat(DJIMotorGetAngle(motor->yaw2_ins_ptr), 180)));
+                }
                 else
                     pid_measure =
                         AngleFormatfp(measure->angle_single_round - motor->zero_point_offset);
-
-                pid_err = -NearbyErrFormat((pid_ref - pid_measure), 180.0f);
-                pid_ref = PIDCalculate(&motor->angle_PID, pid_err, 0.0f);
+                debug_measure[0] = pid_measure;
+                debug_measure[1] =
+                    NearbyErrFormat(DJIMotorGetAngle((DJIMotorInstance *)motor->yaw2_ins_ptr), 180);
+                debug_measure[2] = __LK_IMU_data->Yaw * RAD_2_DEGREE;
+                pid_err          = -NearbyErrFormat((pid_ref - pid_measure), 180.0f);
+                pid_ref          = PIDCalculate(&motor->angle_PID, pid_err, 0.0f);
                 break;
             default:
                 break;
@@ -134,7 +163,7 @@ void LKMotorControl() {
                 pid_measure = *motor->other_speed_feedback_ptr;
             else
                 pid_measure = measure->speed_rads;
-            pid_ref = PIDCalculate(&motor->angle_PID, pid_measure, pid_ref);
+            pid_ref = PIDCalculate(&motor->speed_PID, pid_measure, pid_ref);
             if (setting->feedforward_flag & CURRENT_FEEDFORWARD)
                 pid_ref += *motor->current_feedforward_ptr;
         }
@@ -164,6 +193,16 @@ void LKMotorStop(LKMotorInstance *motor) { motor->stop_flag = MOTOR_STOP; }
 void LKMotorEnable(LKMotorInstance *motor) { motor->stop_flag = MOTOR_ENALBED; }
 
 void LKMotorSetRef(LKMotorInstance *motor, float ref) { motor->pid_ref = ref; }
+
+void LKMotorChangeFeed(LKMotorInstance *motor, Closeloop_Type_e loop, Feedback_Source_e type) {
+    if (loop == ANGLE_LOOP)
+        motor->motor_settings.angle_feedback_source = type;
+    else if (loop == SPEED_LOOP)
+        motor->motor_settings.speed_feedback_source = type;
+    else
+        LOGERROR(
+            "[lk_motor] loop type error, check memory access and func param"); // 检查是否传入了正确的LOOP类型,或发生了指针越界
+}
 
 float LKMotorGetAngle(LKMotorInstance *motor) {
     if (motor->motor_settings.pid_mode == MOTOR_PID_MUTILOOP)

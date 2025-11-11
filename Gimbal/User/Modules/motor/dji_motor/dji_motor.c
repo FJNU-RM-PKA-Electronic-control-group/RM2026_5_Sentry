@@ -212,6 +212,8 @@ DJIMotorInstance *DJIMotorInit(Motor_Init_Config_s *config) {
         config->controller_param_init_config.speed_feedforward_ptr;
     instance->motor_controller.zero_point_offset =
         config->controller_param_init_config.angle_zero_point_offset;
+    instance->motor_settings.angle_rad_format_flag =
+        config->controller_setting_init_config.angle_rad_format_flag;
     // 后续增加电机前馈控制器(速度和电流)
 
     // 电机分组,因为至多4个电机可以共用一帧CAN控制报文
@@ -300,15 +302,22 @@ void DJIMotorControl() {
             motor_setting->outer_loop_type == ANGLE_LOOP) {
             switch (motor_setting->pid_mode) {
             case MOTOR_PID_MUTILOOP:
-                if (motor_setting->angle_feedback_source == OTHER_FEED)
+                if (motor_setting->angle_feedback_source == OTHER_FEED) {
                     pid_measure = *motor_controller->other_angle_feedback_ptr;
+                    if (motor->motor_settings.angle_rad_format_flag == FORMAT_ENABLE)
+                        pid_measure = AngleFormatfp(pid_measure * RAD_2_DEGREE);
+                }
                 else
                     pid_measure = measure->total_angle;
+
                 pid_ref = PIDCalculate(&motor_controller->angle_PID, pid_measure, pid_ref);
                 break;
             case MOTOR_PID_SINGLELOOP:
-                if (motor_setting->angle_feedback_source == OTHER_FEED)
+                if (motor_setting->angle_feedback_source == OTHER_FEED) {
                     pid_measure = *motor_controller->other_angle_feedback_ptr;
+                    if (motor->motor_settings.angle_rad_format_flag == FORMAT_ENABLE)
+                        pid_measure = AngleFormatfp(pid_measure * RAD_2_DEGREE);
+                }
                 else
                     pid_measure = AngleFormatfp(measure->angle_single_round -
                                                 motor_controller->zero_point_offset);
@@ -329,6 +338,7 @@ void DJIMotorControl() {
 
             if (motor_setting->speed_feedback_source == OTHER_FEED)
                 pid_measure = *motor_controller->other_speed_feedback_ptr;
+
             else // MOTOR_FEED
                 pid_measure = measure->speed_aps;
             // 更新pid_ref进入下一个环

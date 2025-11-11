@@ -2,20 +2,20 @@
   ****************************(C) COPYRIGHT 2022 YUELU****************************
   * @file      chassis.c\h
   * @brief
-  åº•ç›˜åº”ç”¨,è´Ÿè´£æ¥æ”¶robot_cmdçš„æ§åˆ¶å‘½ä»¤å¹¶æ ¹æ®å‘½ä»¤è¿›è?Œè¿åŠ¨å?¦è§£ç®?,å¾—åˆ°è¾“å‡ºæ³¨æ„
+  æ´æ› æ´æ´æ—‚æ•¤,ç’ç†»çŸ—éºãƒ¦æ•¹robot_cmdé¨å‹¬å¸¶é’è·ºæ‡¡æµ ã‚…è‹Ÿéè§„åµé›æˆ’æŠ¤æ©æ¶œ?å²ƒç¹é”ã„¥?ï¹Ğ’ç» ?,å¯°æ¥€åŸŒæˆæ’³åš­å¨‰ã„¦å‰°
   *
-  åº•ç›˜é‡‡å–å³æ‰‹ç³?,å¯¹äºå¹³é¢è§†å›¾,åº•ç›˜çºµå‘è¿åŠ¨çš„æ?£å‰æ–¹ä¸ºxæ­£æ–¹å?;æ¨?å‘è¿åŠ¨çš„å³ä¾§ä¸?
-  *            yæ­£æ–¹å‘ã€?
-  *            å…·ä½“æ§åˆ¶æµç¨‹è§chassis.md
+  æ´æ› æ´é–²å›§å½‡é™è™«å¢œç»¯?,ç€µé€›ç°¬éªæŠ½æ½°ç‘™å——æµ˜,æ´æ› æ´ç»¾é›æ‚œæ©æ„¬å§©é¨å‹¬?ï½…å¢ é‚é€›è´Ÿxå§ï½†æŸŸéš?;å¦¯?éšæˆ£ç¹é”ã„§æ®‘é™å……æ™¶æ¶“?
+  *            yå§ï½†æŸŸéšæˆ™â‚¬?
+  *            éèœ‚ç¶‹éºÑƒåŸ—å¨´ä½ºâ–¼ç‘™ä¹§hassis.md
   *
-  * @todo      1.è¡¥å……chassis_taskçš„pidè¿ç®—éƒ¨åˆ†
+  * @todo      1.ç›ãƒ¥å–chassis_taské¨åˆ¾idæ©æ„®ç•»é–®ã„¥å
   *
   * @note
   * @history
   *  Version    Date            Author          Modification
-  *  V1.0.0                     YUELU              1. å®Œæˆ
-  *  V2.0.0                      qhp               1.é€‚é…å¯¹åº”æœºå™¨äº?
-  *  V2.1.0                     nan_97             1.é€‚é…å·¥ç¨‹æœºå™¨äº?
+  *  V1.0.0                     YUELU              1. ç€¹å±¾åš
+  *  V2.0.0                      qhp               1.é–«å‚å¤ç€µç‘°ç°²éˆå“„æ«’æµœ?
+  *  V2.1.0                     nan_97             1.é–«å‚å¤å®¸ãƒ§â–¼éˆå“„æ«’æµœ?
   *
   @verbatim
   ================================================================================
@@ -39,10 +39,10 @@
 #include "time.h"
 #include "user_lib.h"
 
-/* ¸ù¾İrobot_def.hÖĞµÄmacro×Ô¶¯¼ÆËãµÄ²ÎÊı */
-#define HALF_WHEEL_BASE  (WHEEL_BASE / 2.0f)     // °ëÖá¾à
-#define HALF_TRACK_WIDTH (TRACK_WIDTH / 2.0f)    // °ëÂÖ¾à
-#define PERIMETER_WHEEL  (RADIUS_WHEEL * 2 * PI) // ÂÖ×ÓÖÜ³¤
+/* æ ¹æ®robot_def.hä¸­çš„macroè‡ªåŠ¨è®¡ç®—çš„å‚æ•° */
+#define HALF_WHEEL_BASE  (WHEEL_BASE / 2.0f)     // åŠè½´è·
+#define HALF_TRACK_WIDTH (TRACK_WIDTH / 2.0f)    // åŠè½®è·
+#define PERIMETER_WHEEL  (RADIUS_WHEEL * 2 * PI) // è½®å­å‘¨é•¿
 #define Square(x)        (x) * (x)
 
 #define VECTOR 0
@@ -57,37 +57,39 @@
 #define VECTORMOTOR_OFFSET_LB 43.7692184
 #define VECTORMOTOR_OFFSET_RB 74.310997
 
-/* µ×ÅÌÓ¦ÓÃ°üº¬µÄÄ£¿éºÍĞÅÏ¢´æ´¢,µ×ÅÌÊÇµ¥ÀıÄ£Ê½,Òò´Ë²»ĞèÒªÎªµ×ÅÌ½¨Á¢µ¥¶ÀµÄ½á¹¹Ìå */
-static Publisher_t *chassis_pub;                    // ÓÃÓÚ·¢²¼µ×ÅÌµÄÊı¾İ
-static Subscriber_t *chassis_sub;                   // ÓÃÓÚ¶©ÔÄµ×ÅÌµÄ¿ØÖÆÃüÁî // !ONE_BOARD
-Chassis_Ctrl_Cmd_s chassis_cmd_recv;                // µ×ÅÌ½ÓÊÕµ½µÄ¿ØÖÆÃüÁî
-static Chassis_Upload_Data_s chassis_feedback_data; // µ×ÅÌ»Ø´«µÄ·´À¡Êı¾İ
+/* åº•ç›˜åº”ç”¨åŒ…å«çš„æ¨¡å—å’Œä¿¡æ¯å­˜å‚¨,åº•ç›˜æ˜¯å•ä¾‹æ¨¡å¼,å› æ­¤ä¸éœ€è¦ä¸ºåº•ç›˜å»ºç«‹å•ç‹¬çš„ç»“æ„ä½“ */
+static Publisher_t *chassis_pub;                    // ç”¨äºå‘å¸ƒåº•ç›˜çš„æ•°æ®
+static Subscriber_t *chassis_sub;                   // ç”¨äºè®¢é˜…åº•ç›˜çš„æ§åˆ¶å‘½ä»¤ // !ONE_BOARD
+Chassis_Ctrl_Cmd_s chassis_cmd_recv;                // åº•ç›˜æ¥æ”¶åˆ°çš„æ§åˆ¶å‘½ä»¤
+static Chassis_Upload_Data_s chassis_feedback_data; // åº•ç›˜å›ä¼ çš„åé¦ˆæ•°æ®
 
-// static referee_info_t* referee_data; // ÓÃÓÚ»ñÈ¡²ÃÅĞÏµÍ³µÄÊı¾İ
+// static referee_info_t* referee_data; // ç”¨äºè·å–è£åˆ¤ç³»ç»Ÿçš„æ•°æ®
 // static Referee_Interactive_info_t ui_data; //
-// UIÊı¾İ£¬½«µ×ÅÌÖĞµÄÊı¾İ´«Èë´Ë½á¹¹ÌåµÄ¶ÔÓ¦±äÁ¿ÖĞ£¬UI»á×Ô¶¯¼ì²âÊÇ·ñ±ä»¯£¬¶ÔÓ¦ÏÔÊ¾UI
+// UIæ•°æ®ï¼Œå°†åº•ç›˜ä¸­çš„æ•°æ®ä¼ å…¥æ­¤ç»“æ„ä½“çš„å¯¹åº”å˜é‡ä¸­ï¼ŒUIä¼šè‡ªåŠ¨æ£€æµ‹æ˜¯å¦å˜åŒ–ï¼Œå¯¹åº”æ˜¾ç¤ºUI
 
-// static SuperCapInstance *cap;                                       // ³¬¼¶µçÈİ
+// static SuperCapInstance *cap;                                       // è¶…çº§ç”µå®¹
 DJIMotorInstance *speed_motor[4], *vector_motor[4]; // left right forward back
 PIDInstance follow_pid;
 DJIMotorInstance DEBUG_CHASSIS;
 
-// ÓÃÓÚÕı½âËãµÄ±äÁ¿
+// ç”¨äºæ­£è§£ç®—çš„å˜é‡
 PIDInstance Force_PID_vx, Force_PID_vy, Force_PID_wz;
 LPFliterInstance vx_fliter, vy_fliter, wz_fliter;
 float chassis_vx_FK, chassis_vy_FK, chassis_wz_FK;
 static float chassis_vx_feedback[4], chassis_vy_feedback[4];
 float vx_output, vy_output, wz_output;
-/* ÓÃÓÚ×ÔĞı±äËÙ²ßÂÔµÄÊ±¼ä±äÁ¿ */
+float force_wz, force_vx, force_vy;
+float force_ff[4];
+/* ç”¨äºè‡ªæ—‹å˜é€Ÿç­–ç•¥çš„æ—¶é—´å˜é‡ */
 // static float t;
 
-/* Ë½ÓĞº¯Êı¼ÆËãµÄÖĞ½é±äÁ¿,ÉèÎª¾²Ì¬±ÜÃâ²ÎÊı´«µİµÄ¿ªÏú */
-float chassis_vx, chassis_vy; // ½«ÔÆÌ¨ÏµµÄËÙ¶ÈÍ¶Ó°µ½µ×ÅÌ
-float vt[4], anglet[4];       // µ×ÅÌËÙ¶È½âËãºóµÄÁÙÊ±Êä³ö,´ı½øĞĞÏŞ·ù
+/* ç§æœ‰å‡½æ•°è®¡ç®—çš„ä¸­ä»‹å˜é‡,è®¾ä¸ºé™æ€é¿å…å‚æ•°ä¼ é€’çš„å¼€é”€ */
+float chassis_vx, chassis_vy; // å°†äº‘å°ç³»çš„é€Ÿåº¦æŠ•å½±åˆ°åº•ç›˜
+float vt[4], anglet[4];       // åº•ç›˜é€Ÿåº¦è§£ç®—åçš„ä¸´æ—¶è¾“å‡º,å¾…è¿›è¡Œé™å¹…
 float vector_feedback[4];
 float debug_anglet[4];
 void ChassisInit(void) {
-    // ËÄ¸öÂÖ×ÓµÄ²ÎÊıÒ»Ñù,¸Ätx_idºÍ·´×ª±êÖ¾Î»¼´¿É
+    // å››ä¸ªè½®å­çš„å‚æ•°ä¸€æ ·,æ”¹tx_idå’Œåè½¬æ ‡å¿—ä½å³å¯
     Motor_Init_Config_s chassis_speed_motor_config = {
         .can_init_config.can_handle = &hcan1,
         .controller_param_init_config =
@@ -122,6 +124,7 @@ void ChassisInit(void) {
                 .outer_loop_type       = SPEED_LOOP,
                 .close_loop_type       = (Closeloop_Type_e)(SPEED_LOOP | CURRENT_LOOP),
                 .pid_mode              = MOTOR_PID_MUTILOOP,
+                .feedforward_flag      = CURRENT_FEEDFORWARD,
             },
         .motor_type = M3508,
     };
@@ -163,32 +166,36 @@ void ChassisInit(void) {
         .motor_type = GM6020,
     };
     //  @todo:
-    //  µ±Ç°»¹Ã»ÓĞÉèÖÃµç»úµÄÕı·´×ª,ÈÔÈ»ĞèÒªÊÖ¶¯Ìí¼ÓreferenceµÄÕı¸ººÅ,ĞèÒªµç»úmoduleµÄÖ§³Ö,´ıĞŞ¸Ä.
+    //  å½“å‰è¿˜æ²¡æœ‰è®¾ç½®ç”µæœºçš„æ­£åè½¬,ä»ç„¶éœ€è¦æ‰‹åŠ¨æ·»åŠ referenceçš„æ­£è´Ÿå·,éœ€è¦ç”µæœºmoduleçš„æ”¯æŒ,å¾…ä¿®æ”¹.
     chassis_speed_motor_config.can_init_config.tx_id = 1;
     // chassis_speed_motor_config.can_init_config.rx_id = 1;
+    chassis_speed_motor_config.controller_param_init_config.current_feedforward_ptr = &force_ff[LF];
     chassis_speed_motor_config.controller_setting_init_config.motor_reverse_flag =
         MOTOR_DIRECTION_NORMAL;
     speed_motor[LF] = DJIMotorInit(&chassis_speed_motor_config);
 
     chassis_speed_motor_config.can_init_config.tx_id = 2;
     // chassis_speed_motor_config.can_init_config.rx_id = 2;
+    chassis_speed_motor_config.controller_param_init_config.current_feedforward_ptr = &force_ff[RF];
     chassis_speed_motor_config.controller_setting_init_config.motor_reverse_flag =
         MOTOR_DIRECTION_NORMAL;
     speed_motor[RF] = DJIMotorInit(&chassis_speed_motor_config);
 
     chassis_speed_motor_config.can_init_config.tx_id = 4;
     // chassis_speed_motor_config.can_init_config.rx_id = 4;
+    chassis_speed_motor_config.controller_param_init_config.current_feedforward_ptr = &force_ff[LB];
     chassis_speed_motor_config.controller_setting_init_config.motor_reverse_flag =
         MOTOR_DIRECTION_NORMAL;
     speed_motor[LB] = DJIMotorInit(&chassis_speed_motor_config);
 
     chassis_speed_motor_config.can_init_config.tx_id = 3;
     // chassis_speed_motor_config.can_init_config.rx_id = 3;
+    chassis_speed_motor_config.controller_param_init_config.current_feedforward_ptr = &force_ff[RB];
     chassis_speed_motor_config.controller_setting_init_config.motor_reverse_flag =
         MOTOR_DIRECTION_NORMAL;
     speed_motor[RB] = DJIMotorInit(&chassis_speed_motor_config);
 
-    // ¶æÏòµç»ú
+    // èˆµå‘ç”µæœº
     chassis_vector_motor_config.can_init_config.tx_id = 1;
     // chassis_vector_motor_config.can_init_config.rx_id = 1;
     chassis_vector_motor_config.controller_setting_init_config.motor_reverse_flag =
@@ -229,48 +236,49 @@ void ChassisInit(void) {
         VECTORMOTOR_OFFSET_RB;
     vector_motor[RB] = DJIMotorInit(&chassis_vector_motor_config);
 
-    //    referee_data = UITaskInit(&huart6,&ui_data); // ²ÃÅĞÏµÍ³³õÊ¼»¯,»áÍ¬Ê±³õÊ¼»¯UI
+    //    referee_data = UITaskInit(&huart6,&ui_data); // è£åˆ¤ç³»ç»Ÿåˆå§‹åŒ–,ä¼šåŒæ—¶åˆå§‹åŒ–UI
 
     //    SuperCap_Init_Config_s cap_conf = {
     //        .can_config = {
     //            .can_handle = &hcan2,
-    //            .tx_id = 0x302, // ³¬¼¶µçÈİÄ¬ÈÏ½ÓÊÕid
-    //            .rx_id = 0x301, // ³¬¼¶µçÈİÄ¬ÈÏ·¢ËÍid,×¢ÒâtxºÍrxÔÚÆäËûÈË¿´À´ÊÇ·´µÄ
+    //            .tx_id = 0x302, // è¶…çº§ç”µå®¹é»˜è®¤æ¥æ”¶id
+    //            .rx_id = 0x301, // è¶…çº§ç”µå®¹é»˜è®¤å‘é€id,æ³¨æ„txå’Œrxåœ¨å…¶ä»–äººçœ‹æ¥æ˜¯åçš„
     //        }};
-    //    cap = SuperCapInit(&cap_conf); // ³¬¼¶µçÈİ³õÊ¼»¯
+    //    cap = SuperCapInit(&cap_conf); // è¶…çº§ç”µå®¹åˆå§‹åŒ–
 
     PID_Init_Config_s pid_config = {
-        .Kp            = 4, // 0.4
-        .Ki            = 0, // 0
-        .Kd            = 0,
+        .Kp            = 0.9, // 0.4
+        .Ki            = 0,   // 0
+        .Kd            = 1.0f,
         .IntegralLimit = 3000,
         .Improve       = (PID_Improvement_e)(PID_Trapezoid_Intergral | PID_Integral_Limit |
                                        PID_Derivative_On_Measurement),
-        .MaxOut        = 15000,
+        .DeadBand      = 0.5,
+        .MaxOut        = 100,
     };
     PIDInit(&follow_pid, &pid_config);
 
     PID_Init_Config_s force_pid_config = {
-        .Kp            = 4, // 0.4
+        .Kp            = 1, // 0.4
         .Ki            = 0, // 0
         .Kd            = 0.05,
         .IntegralLimit = 3000,
         .DeadBand      = 0,
         .Improve       = (PID_Improvement_e)(PID_Trapezoid_Intergral | PID_Integral_Limit |
                                        PID_Derivative_On_Measurement),
-        .MaxOut        = 10000,
+        .MaxOut        = 150,
     };
     PIDInit(&Force_PID_vx, &force_pid_config);
     PIDInit(&Force_PID_vy, &force_pid_config);
     PIDInit(&Force_PID_wz, &force_pid_config);
 
     Low_Pass_Fliter_Init_Config_s lp_fliter_config;
-    lp_fliter_config.RC = 0.02;
+    lp_fliter_config.RC = 0.05;
     LowPassFliterInit(&vx_fliter, &lp_fliter_config);
     LowPassFliterInit(&vy_fliter, &lp_fliter_config);
     LowPassFliterInit(&wz_fliter, &lp_fliter_config);
 
-    // ·¢²¼¶©ÔÄ³õÊ¼»¯,Èç¹ûÎªË«°å,ÔòĞèÒªcan commÀ´´«µİÏûÏ¢
+    // å‘å¸ƒè®¢é˜…åˆå§‹åŒ–,å¦‚æœä¸ºåŒæ¿,åˆ™éœ€è¦can commæ¥ä¼ é€’æ¶ˆæ¯
     chassis_sub = SubRegister("chassis_cmd", sizeof(Chassis_Ctrl_Cmd_s));
     chassis_pub = PubRegister("chassis_feed", sizeof(Chassis_Upload_Data_s));
 }
@@ -288,14 +296,14 @@ void ChassisInit(void) {
     ((HALF_TRACK_WIDTH - CENTER_GIMBAL_OFFSET_X + HALF_WHEEL_BASE + CENTER_GIMBAL_OFFSET_Y) *      \
      DEGREE_2_RAD)
 /**
- * @brief ¶æÂÖÔË¶¯Ñ§Õı½â
+ * @brief èˆµè½®è¿åŠ¨å­¦æ­£è§£
  *
- * @todo ¿´¿´²âÊÔºóÒª²»Òª¼Ó¸öµÍÍ¨ÂË²¨
+ * @todo çœ‹çœ‹æµ‹è¯•åè¦ä¸è¦åŠ ä¸ªä½é€šæ»¤æ³¢
  */
 static void SteeringWheelFK(void) {
-    // »ñÈ¡¼ÆËãËùĞè·´À¡Öµ
+    // è·å–è®¡ç®—æ‰€éœ€åé¦ˆå€¼
     for (size_t i = 0; i < 4; i++) {
-        float speed = speed_motor[i]->measure.speed_aps * DEGREE_2_RAD * RADIUS_WHEEL; // aps×ªmmps
+        float speed = speed_motor[i]->measure.speed_aps * DEGREE_2_RAD * RADIUS_WHEEL; // apsè½¬mmps
         float angle = RadFormat(DJIMotorGetAngle(vector_motor[i]) * DEGREE_2_RAD);
         float wheel_sin_theta  = arm_sin_f32(angle);
         float wheel_cos_theta  = arm_cos_f32(angle);
@@ -303,15 +311,15 @@ static void SteeringWheelFK(void) {
         chassis_vx_feedback[i] = speed * wheel_cos_theta;
         chassis_vy_feedback[i] = speed * wheel_sin_theta;
     }
-    // ÎªµÍÍ¨ÂË²¨×öµãĞ¡×¼±¸£¬Èô²âÊÔºó·¢ÏÖ²»ĞèÒª¿ÉÉ¾³ı
+    // ä¸ºä½é€šæ»¤æ³¢åšç‚¹å°å‡†å¤‡ï¼Œè‹¥æµ‹è¯•åå‘ç°ä¸éœ€è¦å¯åˆ é™¤
     chassis_vx_feedback[RF] *= -1;
     chassis_vx_feedback[RB] *= -1;
     chassis_vy_feedback[RF] *= -1;
     chassis_vy_feedback[RB] *= -1;
 
     // clang-format off
-    // ½âËã²¿·Ö£¬Ó¦¸ÃÊÓÇé¿ö½øĞĞ¼ÓÈ¨Æ½¾ù
-    //×¢Òâ£¬ÒòÎªÎÒÏ£Íûµ×ÅÌ³õÊ¼»¯Ê±3508Æ¨¹É³¯ÄÚ²¿£¬ËùÒÔRF£¬RBÁ½¸öÂÖÏòµç»úËÙ¶È·´À¡ÊÇ¸ºµÄ
+    // è§£ç®—éƒ¨åˆ†ï¼Œåº”è¯¥è§†æƒ…å†µè¿›è¡ŒåŠ æƒå¹³å‡
+    //æ³¨æ„ï¼Œå› ä¸ºæˆ‘å¸Œæœ›åº•ç›˜åˆå§‹åŒ–æ—¶3508å±è‚¡æœå†…éƒ¨ï¼Œæ‰€ä»¥RFï¼ŒRBä¸¤ä¸ªè½®å‘ç”µæœºé€Ÿåº¦åé¦ˆæ˜¯è´Ÿçš„
     vx_output = (chassis_vx_feedback[LF] + chassis_vx_feedback[RF] + 
                 chassis_vx_feedback[LB] + chassis_vx_feedback[RB]) / 40;
 
@@ -324,17 +332,18 @@ static void SteeringWheelFK(void) {
                 chassis_vy_feedback[RF] - chassis_vy_feedback[LB]) / 8;
     // clang-format on
 
-    chassis_vx_FK = vx_output; // FliterCalcutale((FliterInstance *)&vx_fliter, vx_output);
-    chassis_vy_FK = vy_output; // FliterCalcutale((FliterInstance *)&vy_fliter, vy_output);
-    chassis_wz_FK = wz_output; // FliterCalcutale((FliterInstance *)&wz_fliter, wz_output);
+    chassis_vx_FK = FliterCalcutale((FliterInstance *)&vx_fliter, vx_output);
+    chassis_vy_FK = FliterCalcutale((FliterInstance *)&vy_fliter, vy_output);
+    chassis_wz_FK = FliterCalcutale((FliterInstance *)&wz_fliter, wz_output);
 }
 /**
- * @brief ¶æÂÖ¶¯Á¦Ñ§Äæ½â
+ * @brief èˆµè½®åŠ¨åŠ›å­¦é€†è§£
  *
  */
 static void SteeringWheelIK(void) {
-    // ¶æÏòµç»ú½Ç¶È½âËã
+    // èˆµå‘ç”µæœºè§’åº¦è§£ç®—
     float wz_projected = chassis_cmd_recv.wz * SIN45;
+    // force_wz *= -SIN45;
 
     anglet[LF] = atan2f(chassis_vx + (wz_projected * HALF_WHEEL_BASE),
                         chassis_vy + (wz_projected * HALF_TRACK_WIDTH));
@@ -345,7 +354,7 @@ static void SteeringWheelIK(void) {
     anglet[RB] = atan2f(chassis_vx - (wz_projected * HALF_WHEEL_BASE),
                         chassis_vy - (wz_projected * HALF_TRACK_WIDTH));
 
-    // ÂÖÏòµç»úËÙ¶È½âËã£¬¾ÍÊÇÇó¸öÄ£³¤
+    // è½®å‘ç”µæœºé€Ÿåº¦è§£ç®—ï¼Œå°±æ˜¯æ±‚ä¸ªæ¨¡é•¿
     arm_sqrt_f32(Square(chassis_vx + (wz_projected * HALF_TRACK_WIDTH)) +
                      Square(chassis_vy + (wz_projected * HALF_WHEEL_BASE)),
                  &vt[LF]);
@@ -360,34 +369,58 @@ static void SteeringWheelIK(void) {
                  &vt[RB]);
     vt[RF] = -vt[RF];
     vt[RB] = -vt[RB];
+    // if (!((chassis_vx == 0) && (chassis_vy == 0) && chassis_cmd_recv.wz == 0)) {
+    //     force_vx *= 0.25;
+    //     force_vy *= 0.25;
+    //     force_wz *= 0.25;
+    //     arm_sqrt_f32(Square(force_vx + (force_wz * HALF_TRACK_WIDTH)) +
+    //                      Square(force_vy + (force_wz * HALF_WHEEL_BASE)),
+    //                  &force_ff[LF]);
+    //     arm_sqrt_f32(Square(force_vx + (force_wz * HALF_TRACK_WIDTH)) +
+    //                      Square(force_vy - (force_wz * HALF_WHEEL_BASE)),
+    //                  &force_ff[RF]);
+    //     arm_sqrt_f32(Square(force_vx - (force_wz * HALF_TRACK_WIDTH)) +
+    //                      Square(force_vy + (force_wz * HALF_WHEEL_BASE)),
+    //                  &force_ff[LB]);
+    //     arm_sqrt_f32(Square(force_vx - (force_wz * HALF_TRACK_WIDTH)) +
+    //                      Square(force_vy - (force_wz * HALF_WHEEL_BASE)),
+    //                  &force_ff[RB]);
+    //     force_ff[RF] = -force_ff[RF];
+    //     force_ff[RB] = -force_ff[RB];
+    // }
+    // else {
+    for (size_t i = 0; i < 4; i++) {
+        force_ff[i] = 0;
+    }
+    // }
 
-    // ½«Êä³öÖµ»¯Îªµç»úĞèÒªµÄµ¥Î»£¬Í¬Ê±×öÒ»¸ö¶æÏòµç»ú¾Í½ü×ªÏòÓÅ»¯
+    // å°†è¾“å‡ºå€¼åŒ–ä¸ºç”µæœºéœ€è¦çš„å•ä½ï¼ŒåŒæ—¶åšä¸€ä¸ªèˆµå‘ç”µæœºå°±è¿‘è½¬å‘ä¼˜åŒ–
     for (uint8_t i = 0; i < WHEEL_COUNT; i++) {
         float angle_single_round = DJIMotorGetAngle(vector_motor[i]);
-        // vt[i] /= RADIUS_WHEEL; // ½«ÏßËÙ¶È»¯Îª½ÇËÙ¶È
+        // vt[i] /= RADIUS_WHEEL; // å°†çº¿é€Ÿåº¦åŒ–ä¸ºè§’é€Ÿåº¦
         anglet[i] /= DEGREE_2_RAD;
         anglet[i] = AngleFormatfp(anglet[i]);
-        //  ¼ÆËã¶æÏòµç»úµÄ½Ç¶È²î
+        //  è®¡ç®—èˆµå‘ç”µæœºçš„è§’åº¦å·®
         float delta_angle = anglet[i] - angle_single_round;
-        // ÂÖÏòµç»ú»»Ïò£¬ÒÔ¼°·À´ò»¬ÓÅ»¯
-        // ĞÂĞ´µÄ´ı²âÊÔ
+        // è½®å‘ç”µæœºæ¢å‘ï¼Œä»¥åŠé˜²æ‰“æ»‘ä¼˜åŒ–
+        // æ–°å†™çš„å¾…æµ‹è¯•
         vt[i] *= arm_cos_f32(NearbyErrFormat((delta_angle), 180.0F) * DEGREE_2_RAD);
 
-        // ¶æÏòµç»ú¾Í½ü×ªÏò
+        // èˆµå‘ç”µæœºå°±è¿‘è½¬å‘
         anglet[i] = AngleFormatfp(angle_single_round + NearbyErrFormat(delta_angle, 90.0f));
     }
 }
 
 /**
- * @brief ÏÖÔÚÖ»ÓĞ¸³Öµ¹¦ÄÜ£¬ºóĞøÌí¼Ó¹¦ÂÊÏŞÖÆ£¬µ«ÊÇ¹À¼Æ²»»áÔÚÕâ
+ * @brief ç°åœ¨åªæœ‰èµ‹å€¼åŠŸèƒ½ï¼Œåç»­æ·»åŠ åŠŸç‡é™åˆ¶ï¼Œä½†æ˜¯ä¼°è®¡ä¸ä¼šåœ¨è¿™
  *
  */
 static void LimitChassisOutput(void) {
-    // ¹¦ÂÊÏŞÖÆ´ıÌí¼Ó
+    // åŠŸç‡é™åˆ¶å¾…æ·»åŠ 
     // referee_data->PowerHeatData.chassis_power;
     // referee_data->PowerHeatData.chassis_power_buffer;
 
-    // Íê³É¹¦ÂÊÏŞÖÆºó½øĞĞµç»ú²Î¿¼ÊäÈëÉè¶¨
+    // å®ŒæˆåŠŸç‡é™åˆ¶åè¿›è¡Œç”µæœºå‚è€ƒè¾“å…¥è®¾å®š
     DJIMotorSetRef(speed_motor[LF], vt[LF]);
     DJIMotorSetRef(speed_motor[RF], vt[RF]);
     DJIMotorSetRef(speed_motor[LB], vt[LB]);
@@ -401,28 +434,27 @@ static void LimitChassisOutput(void) {
 }
 
 /**
- * @brief ¸ù¾İÃ¿¸öÂÖ×ÓµÄËÙ¶È·´À¡,¼ÆËãµ×ÅÌµÄÊµ¼ÊÔË¶¯ËÙ¶È,ÄæÔË¶¯½âËã
- *        ¶ÔÓÚË«°åµÄÇé¿ö,¿¼ÂÇÔö¼ÓÀ´×Ôµ×ÅÌ°åIMUµÄÊı¾İ
+ * @brief æ ¹æ®æ¯ä¸ªè½®å­çš„é€Ÿåº¦åé¦ˆ,è®¡ç®—åº•ç›˜çš„å®é™…è¿åŠ¨é€Ÿåº¦,é€†è¿åŠ¨è§£ç®—
+ *        å¯¹äºåŒæ¿çš„æƒ…å†µ,è€ƒè™‘å¢åŠ æ¥è‡ªåº•ç›˜æ¿IMUçš„æ•°æ®
  *
  */
 static void EstimateSpeed(void) {
-    // ¸ù¾İµç»úËÙ¶ÈºÍÍÓÂİÒÇµÄ½ÇËÙ¶È½øĞĞ½âËã,»¹¿ÉÒÔÀûÓÃ¼ÓËÙ¶È¼ÆÅĞ¶ÏÊÇ·ñ´ò»¬(Èç¹ûÓĞ)
+    // æ ¹æ®ç”µæœºé€Ÿåº¦å’Œé™€èºä»ªçš„è§’é€Ÿåº¦è¿›è¡Œè§£ç®—,è¿˜å¯ä»¥åˆ©ç”¨åŠ é€Ÿåº¦è®¡åˆ¤æ–­æ˜¯å¦æ‰“æ»‘(å¦‚æœæœ‰)
     // chassis_feedback_data.vx vy wz =
     //  ...
 }
 
-static float VectorPIDCalculate(PIDInstance *pid_config, float measure, float ref) {}
-/* »úÆ÷ÈËµ×ÅÌ¿ØÖÆºËĞÄÈÎÎñ */
+/* æœºå™¨äººåº•ç›˜æ§åˆ¶æ ¸å¿ƒä»»åŠ¡ */
 void ChassisTask(void) {
-    // ºóĞøÔö¼ÓÃ»ÊÕµ½ÏûÏ¢µÄ´¦Àí(Ë«°åµÄÇé¿ö)
-    // »ñÈ¡ĞÂµÄ¿ØÖÆĞÅÏ¢
+    // åç»­å¢åŠ æ²¡æ”¶åˆ°æ¶ˆæ¯çš„å¤„ç†(åŒæ¿çš„æƒ…å†µ)
+    // è·å–æ–°çš„æ§åˆ¶ä¿¡æ¯
     SubGetMessage(chassis_sub, &chassis_cmd_recv);
     DEBUG_CHASSIS = *speed_motor[LF];
 
     // VectorFeedbackCheck();
 
     if (chassis_cmd_recv.chassis_mode ==
-        CHASSIS_ZERO_FORCE) { // Èç¹û³öÏÖÖØÒªÄ£¿éÀëÏß»òÒ£¿ØÆ÷ÉèÖÃÎª¼±Í£,ÈÃµç»úÍ£Ö¹
+        CHASSIS_ZERO_FORCE) { // å¦‚æœå‡ºç°é‡è¦æ¨¡å—ç¦»çº¿æˆ–é¥æ§å™¨è®¾ç½®ä¸ºæ€¥åœ,è®©ç”µæœºåœæ­¢
         DJIMotorStop(speed_motor[LF]);
         DJIMotorStop(speed_motor[RF]);
         DJIMotorStop(speed_motor[LB]);
@@ -433,7 +465,7 @@ void ChassisTask(void) {
         DJIMotorStop(vector_motor[LB]);
         DJIMotorStop(vector_motor[RB]);
     }
-    else { // Õı³£¹¤×÷
+    else { // æ­£å¸¸å·¥ä½œ
         DJIMotorEnable(speed_motor[LF]);
         DJIMotorEnable(speed_motor[RF]);
         DJIMotorEnable(speed_motor[LB]);
@@ -444,54 +476,51 @@ void ChassisTask(void) {
         DJIMotorEnable(vector_motor[LB]);
         DJIMotorEnable(vector_motor[RB]);
     }
-
-    // ¸ù¾İ¿ØÖÆÄ£Ê½Éè¶¨Ğı×ªËÙ¶È
+    SteeringWheelFK(); // è¿åŠ¨å­¦æ­£è§£ç®—ï¼Œè·å–åº•ç›˜å½“å‰é€Ÿåº¦çŠ¶æ€
+    // æ ¹æ®æ§åˆ¶æ¨¡å¼è®¾å®šæ—‹è½¬é€Ÿåº¦
     switch (chassis_cmd_recv.chassis_mode) {
-    case CHASSIS_NO_FOLLOW: // µ×ÅÌ²»Ğı×ª,µ«Î¬³ÖÈ«Ïò»ú¶¯,Ò»°ãÓÃÓÚµ÷ÕûÔÆÌ¨×ËÌ¬
+    case CHASSIS_NO_FOLLOW: // åº•ç›˜ä¸æ—‹è½¬,ä½†ç»´æŒå…¨å‘æœºåŠ¨,ä¸€èˆ¬ç”¨äºè°ƒæ•´äº‘å°å§¿æ€
         chassis_cmd_recv.wz = 0;
         break;
-    case CHASSIS_FOLLOW_GIMBAL_YAW: // ¸úËæÔÆÌ¨,²»µ¥¶ÀÉèÖÃpid,ÒÔÎó²î½Ç¶ÈÆ½·½ÎªËÙ¶ÈÊä³ö
-                                    //          chassis_cmd_recv.wz = -2.5f *
-                                    //          chassis_cmd_recv.offset_angle *
-                                    //          abs(chassis_cmd_recv.offset_angle);
-
-        // if (!chassis_cmd_recv.wz) {
-        //     chassis_cmd_recv.wz = PIDCalculate(&follow_pid, 0, -chassis_cmd_recv.offset_angle);
-        // }
+    case CHASSIS_FOLLOW_GIMBAL_YAW:
+        // è·Ÿéšäº‘å°,ä¸å•ç‹¬è®¾ç½®pid,ä»¥è¯¯å·®è§’åº¦å¹³æ–¹ä¸ºé€Ÿåº¦è¾“å‡º
+        chassis_cmd_recv.wz = PIDCalculate(&follow_pid, 0, -chassis_cmd_recv.offset_angle);
         break;
-    case CHASSIS_SPIN: // ×ÔĞı,Í¬Ê±±£³ÖÈ«Ïò»ú¶¯;µ±Ç°wzÎ¬³Ö¶¨Öµ,ºóĞøÔö¼Ó²»¹æÔòµÄ±äËÙ²ßÂÔ
+    case CHASSIS_SPIN: // è‡ªæ—‹,åŒæ—¶ä¿æŒå…¨å‘æœºåŠ¨;å½“å‰wzç»´æŒå®šå€¼,åç»­å¢åŠ ä¸è§„åˆ™çš„å˜é€Ÿç­–ç•¥
         chassis_cmd_recv.wz = 20;
         break;
     default:
         break;
     }
 
-    // ¸ù¾İÔÆÌ¨ºÍµ×ÅÌµÄ½Ç¶Èoffset½«¿ØÖÆÁ¿Ó³Éäµ½µ×ÅÌ×ø±êÏµÉÏ
-    // µ×ÅÌÄæÊ±ÕëĞı×ªÎª½Ç¶ÈÕı·½Ïò;ÔÆÌ¨ÃüÁîµÄ·½ÏòÒÔÔÆÌ¨Ö¸ÏòµÄ·½ÏòÎªx,²ÉÓÃÓÒÊÖÏµ(xÖ¸ÏòÕı±±Ê±yÔÚÕı¶«)
+    // æ ¹æ®äº‘å°å’Œåº•ç›˜çš„è§’åº¦offsetå°†æ§åˆ¶é‡æ˜ å°„åˆ°åº•ç›˜åæ ‡ç³»ä¸Š
+    // åº•ç›˜é€†æ—¶é’ˆæ—‹è½¬ä¸ºè§’åº¦æ­£æ–¹å‘;äº‘å°å‘½ä»¤çš„æ–¹å‘ä»¥äº‘å°æŒ‡å‘çš„æ–¹å‘ä¸ºx,é‡‡ç”¨å³æ‰‹ç³»(xæŒ‡å‘æ­£åŒ—æ—¶yåœ¨æ­£ä¸œ)
     static float sin_theta, cos_theta;
     cos_theta  = arm_cos_f32(chassis_cmd_recv.offset_angle * DEGREE_2_RAD);
     sin_theta  = arm_sin_f32(chassis_cmd_recv.offset_angle * DEGREE_2_RAD);
     chassis_vx = chassis_cmd_recv.vx * cos_theta - chassis_cmd_recv.vy * sin_theta;
     chassis_vy = chassis_cmd_recv.vx * sin_theta + chassis_cmd_recv.vy * cos_theta;
+    force_wz   = PIDCalculate(&Force_PID_wz, chassis_wz_FK, chassis_cmd_recv.wz);
+    force_vx   = PIDCalculate(&Force_PID_vx, chassis_vx_FK, chassis_cmd_recv.vx);
+    force_vy   = PIDCalculate(&Force_PID_vy, chassis_vy_FK, chassis_cmd_recv.vy);
 
-    // ¸ù¾İ¿ØÖÆÄ£Ê½½øĞĞÔË¶¯Ñ§½âËã,¼ÆËãµ×ÅÌÊä³ö
-    SteeringWheelFK(); // ÔË¶¯Ñ§Õı½âËã£¬»ñÈ¡µ×ÅÌµ±Ç°ËÙ¶È×´Ì¬
-    SteeringWheelIK(); // ¶¯Á¦Ñ§Äæ½âËã£¬¼ÆËãÄ¿±êËùĞè¿ØÖÆµçÁ÷
+    // æ ¹æ®æ§åˆ¶æ¨¡å¼è¿›è¡Œè¿åŠ¨å­¦è§£ç®—,è®¡ç®—åº•ç›˜è¾“å‡º
+    SteeringWheelIK(); // åŠ¨åŠ›å­¦é€†è§£ç®—ï¼Œè®¡ç®—ç›®æ ‡æ‰€éœ€æ§åˆ¶ç”µæµ
 
-    // ¸ù¾İ²ÃÅĞÏµÍ³µÄ·´À¡Êı¾İºÍµçÈİÊı¾İ¶ÔÊä³öÏŞ·ù²¢Éè¶¨±Õ»·²Î¿¼Öµ
+    // æ ¹æ®è£åˆ¤ç³»ç»Ÿçš„åé¦ˆæ•°æ®å’Œç”µå®¹æ•°æ®å¯¹è¾“å‡ºé™å¹…å¹¶è®¾å®šé—­ç¯å‚è€ƒå€¼
     LimitChassisOutput();
 
-    // ¸ù¾İµç»úµÄ·´À¡ËÙ¶ÈºÍIMU(Èç¹ûÓĞ)¼ÆËãÕæÊµËÙ¶È
+    // æ ¹æ®ç”µæœºçš„åé¦ˆé€Ÿåº¦å’ŒIMU(å¦‚æœæœ‰)è®¡ç®—çœŸå®é€Ÿåº¦
     // EstimateSpeed();
 
-    // // »ñÈ¡²ÃÅĞÏµÍ³Êı¾İ   ½¨Òé½«²ÃÅĞÏµÍ³Óëµ×ÅÌ·ÖÀë£¬ËùÒÔ´Ë´¦Êı¾İÓ¦Ê¹ÓÃÏûÏ¢ÖĞĞÄ·¢ËÍ
-    // // ÎÒ·½ÑÕÉ«idĞ¡ÓÚ7ÊÇºìÉ«,´óÓÚ7ÊÇÀ¶É«,×¢ÒâÕâÀï·¢ËÍµÄÊÇ¶Ô·½µÄÑÕÉ«, 0:blue , 1:red
+    // // è·å–è£åˆ¤ç³»ç»Ÿæ•°æ®   å»ºè®®å°†è£åˆ¤ç³»ç»Ÿä¸åº•ç›˜åˆ†ç¦»ï¼Œæ‰€ä»¥æ­¤å¤„æ•°æ®åº”ä½¿ç”¨æ¶ˆæ¯ä¸­å¿ƒå‘é€
+    // // æˆ‘æ–¹é¢œè‰²idå°äº7æ˜¯çº¢è‰²,å¤§äº7æ˜¯è“è‰²,æ³¨æ„è¿™é‡Œå‘é€çš„æ˜¯å¯¹æ–¹çš„é¢œè‰², 0:blue , 1:red
     // chassis_feedback_data.enemy_color = referee_data->GameRobotState.robot_id > 7 ? 1 : 0;
-    // // µ±Ç°Ö»×öÁË17mmÈÈÁ¿µÄÊı¾İ»ñÈ¡,ºóĞø¸ù¾İrobot_defÖĞµÄºêÇĞ»»Ë«Ç¹¹ÜºÍÓ¢ĞÛ42mmµÄÇé¿ö
+    // // å½“å‰åªåšäº†17mmçƒ­é‡çš„æ•°æ®è·å–,åç»­æ ¹æ®robot_defä¸­çš„å®åˆ‡æ¢åŒæªç®¡å’Œè‹±é›„42mmçš„æƒ…å†µ
     // chassis_feedback_data.bullet_speed =
     // referee_data->GameRobotState.shooter_id1_17mm_speed_limit;
     // chassis_feedback_data.rest_heat = referee_data->PowerHeatData.shooter_heat0;
 
-    // ÍÆËÍ·´À¡ÏûÏ¢
+    // æ¨é€åé¦ˆæ¶ˆæ¯
     // PubPushMessage(chassis_pub, (void *)&chassis_feedback_data);
 }

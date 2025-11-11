@@ -10,9 +10,9 @@ void MotorControlTask(void) {
     static uint8_t cnt = 0; // 设定不同电机的任务频率
     FeedForwardControl();
     DJIMotorControl();
+    LKMotorControl();
     if (cnt % 2 == 0) { // 500hz
         DMMotorControl();
-        LKMotorControl();
     }
     //	if(cnt%10==0) //100hz
 

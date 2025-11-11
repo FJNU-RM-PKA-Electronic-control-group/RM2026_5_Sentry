@@ -7,6 +7,7 @@
 // module
 #include "INS_task.h"
 #include "dji_motor.h"
+#include "fliter.h"
 #include "message_center.h"
 #include "remote_control.h"
 #include "user_lib.h"
@@ -49,12 +50,13 @@ static Subscriber_t *vision_feed_sub;   // 视觉反馈信息订阅者
 Vision_Upload_Data_s vision_fetch_data; // 从视觉获取的反馈信息
 
 static Robot_Status_e robot_state;      // 机器人整体工作状态
+LPFliterInstance yaw_offset_fliter;     // 底盘防翻滤波
 
 static void CalcOffsetAngle() {
     // 别名angle提高可读性,不然太长了不好看,虽然基本不会动这个函数
     static float angle;
-    angle = gimbal_fetch_data.yaw_motor_single_round_angle; // 从云台获取的当前yaw电机单圈角度
-#if YAW_ECD_GREATER_THAN_4096                               // 如果大于180度
+    angle = gimbal_fetch_data.yaw1_motor_single_round_angle; // 从云台获取的当前yaw电机单圈角度
+#if YAW_ECD_GREATER_THAN_4096                                // 如果大于180度
     if (angle > YAW_ALIGN_ANGLE && angle <= 180.0f + YAW_ALIGN_ANGLE)
         chassis_cmd_send.offset_angle = angle - YAW_ALIGN_ANGLE;
     else if (angle > 180.0f + YAW_ALIGN_ANGLE)
@@ -100,6 +102,7 @@ void VisionControlSet(void) {
 }
 
 static void RemoteControlSet(void) {
+    static gimbal_mode_e last_gimbal_mode = GIMBAL_ZERO_FORCE;
     if (switch_is_up(rc_data[TEMP].rc.switch_right)) // 右侧开关状态[上],底盘跟随云台
     {
         chassis_cmd_send.chassis_mode = CHASSIS_FOLLOW_GIMBAL_YAW;
@@ -128,12 +131,23 @@ static void RemoteControlSet(void) {
     // 云台参数,确定云台控制数据
     gimbal_cmd_send.pitch += PitchLimit(0.00001f * (float)rc_data[TEMP].rc.rocker_l1);
     gimbal_cmd_send.yaw =
-        RadFormat(gimbal_cmd_send.yaw - 0.00001f * (float)rc_data[TEMP].rc.rocker_l_);
+        AngleFormatfp(gimbal_cmd_send.yaw - 0.0005f * (float)rc_data[TEMP].rc.rocker_l_);
     // 底盘参数,目前没有加入小陀螺(调试似乎暂时没有必要),系数需要调整
-    chassis_cmd_send.vx = 300.0f * (float)rc_data[TEMP].rc.rocker_r_; // _水平方向
-    chassis_cmd_send.vy = 300.0f * (float)rc_data[TEMP].rc.rocker_r1; // 1数值方向
+    chassis_cmd_send.vx = 10.0f * (float)rc_data[TEMP].rc.rocker_r_; // _水平方向
+    chassis_cmd_send.vy = 10.0f * (float)rc_data[TEMP].rc.rocker_r1; // 1数值方向
+    // if (last_gimbal_mode != gimbal_cmd_send.gimbal_mode) {
+    //     switch (gimbal_cmd_send.gimbal_mode) {
+    //     case GIMBAL_FREE_MODE:
+    //         gimbal_cmd_send.yaw = gimbal_fetch_data.yaw_motor_single_round_angle;
+    //         break;
+    //     case GIMBAL_GYRO_MODE:
 
-    if (switch_is_down(rc_data[TEMP].rc.switch_left))                 // 左侧开关状态为[下],视觉模式
+    //     default:
+    //         break;
+    //     }
+    // }
+
+    if (switch_is_down(rc_data[TEMP].rc.switch_left)) // 左侧开关状态为[下],视觉模式
     {
         VisionControlSet();
     }
@@ -240,7 +254,7 @@ static void MouseKeySet(void) {
     switch (rc_data[TEMP].key[KEY_PRESS].shift) // 待添加 按shift允许超功率 消耗缓冲能量
     {
     case 1:
-        chassis_cmd_send.chassis_mode = CHASSIS_MAXSPEED;
+        //        chassis_cmd_send.chassis_mode = CHASSIS_MAXSPEED;
         break;
 
     default:
@@ -315,6 +329,12 @@ void RobotCmdInit(void) {
     chassis_feed_sub = SubRegister("chassis_feed", sizeof(Chassis_Upload_Data_s));
     vision_feed_sub  = SubRegister("vision_feed", sizeof(Vision_Upload_Data_s));
 
+    Low_Pass_Fliter_Init_Config_s offset_lp_fliter = {
+        .RC = 0.0f,
+    };
+
+    LowPassFliterInit(&yaw_offset_fliter, &offset_lp_fliter);
+
     //	gimbal_cmd_send.pitch = 0;		作用不明，保留
     robot_state = ROBOT_READY;
 }
@@ -350,7 +370,9 @@ void RobotCMDTask(void) {
     // chassis_cmd_send.friction_mode = shoot_cmd_send.friction_mode;
     // chassis_cmd_send.gimbal_mode   = gimbal_cmd_send.gimbal_mode;
     // chassis_cmd_send.vision_state  = vision_fetch_data.vision_state;
-    chassis_cmd_send.offset_angle = 0;
+    chassis_cmd_send.offset_angle = theta_format(FliterCalcutale(
+        (FliterInstance *)&yaw_offset_fliter, gimbal_fetch_data.yaw2_motor_single_round_angle));
+
     // 其他应用所需的控制数据在remotecontrolsetmode和mousekeysetmode中完成设置
 
     PubPushMessage(chassis_cmd_pub, (void *)&chassis_cmd_send);

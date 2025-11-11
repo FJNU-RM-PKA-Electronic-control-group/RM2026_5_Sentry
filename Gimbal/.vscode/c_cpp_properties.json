@@ -47,6 +47,7 @@
                 "User/Modules/motor/dji_motor",
                 "User/App/robot",
                 "User/App/robot_cmd",
+                "User/App/chassis",
                 "User/App/gimbal",
                 "User/App/shoot",
                 "User/Modules/motor/dm_motor",
@@ -63,7 +64,8 @@
                 "User/Modules/can_comm",
                 "User/App/cmd_send",
                 "User/Modules/referee",
-                "User/Modules/motor/LKmotor"
+                "User/Modules/motor/LKmotor",
+                "User/Modules/fliter"
             ],
             "defines": [
                 "USE_HAL_DRIVER",

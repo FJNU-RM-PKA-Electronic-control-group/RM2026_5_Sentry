@@ -15,8 +15,10 @@
 
 /* 机器人重要参数定义,注意根据不同机器人进行修改,浮点数需要以.0或f结尾,无符号以u结尾 */
 // 云台参数
-#define YAW_CHASSIS_ALIGN_ECD                                                                      \
-    359.992706 // 云台和底盘对齐指向相同方向时的电机编码器值,若对云台有机械改动需要修改
+#define YAW1_ZEROPOINT_ECD                                                                         \
+    227.334595 // 云台和底盘对齐指向相同方向时的电机编码器值,若对云台有机械改动需要修改
+#define YAW2_ZEROPOINT_ECD                                                                         \
+    37.9245338 // 小yaw和大yaw对齐指向相同方向时的电机编码器值,若对云台有机械改动需要修改
 #define YAW_ECD_GREATER_THAN_4096 0 // ALIGN_ECD值是否大于4096,是为1,否为0;用于计算云台偏转角度
 #define PITCH_HORIZON_ECD         5042.0f // 云台处于水平位置时编码器值,若对云台有机械改动需要修改
 #define PITCH_MAX_ANGLE                                                                            \
@@ -82,7 +84,7 @@ typedef enum
     CHASSIS_NO_FOLLOW,         // 分离模式
     CHASSIS_FOLLOW_GIMBAL_YAW, // 跟随模式
     CHASSIS_ROTATE,            // 小陀螺模式
-    CHASSIS_MAXSPEED,
+    // CHASSIS_MAXSPEED,
 } chassis_mode_e;
 
 // 云台模式设置
@@ -216,7 +218,8 @@ typedef struct {
 
 typedef struct {
     attitude_t gimbal_imu_data;
-    float yaw_motor_single_round_angle;
+    float yaw1_motor_single_round_angle;
+    float yaw2_motor_single_round_angle;
     float pitch_ecd_angle;
 } Gimbal_Upload_Data_s;
 

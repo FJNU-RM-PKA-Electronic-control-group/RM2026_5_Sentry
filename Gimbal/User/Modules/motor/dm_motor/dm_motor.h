@@ -83,7 +83,7 @@ void DMMotorChangeFeed(DMMotorInstance *motor, Closeloop_Type_e loop, Feedback_S
 
 void DMMotorStop(DMMotorInstance *motor);
 void DMMotorCaliEncoder(DMMotorInstance *motor);
-void DMMotorControlInit(void);
+// void DMMotorControlInit(void);
 
 void DMMotorControl(void);
 #endif // !DMMOTOR

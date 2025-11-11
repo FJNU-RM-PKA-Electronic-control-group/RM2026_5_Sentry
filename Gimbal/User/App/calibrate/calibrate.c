@@ -119,7 +119,7 @@ static void GimbalCalibrateControl(void) {
         cali_data_save.max_pitch   = max_pitch_temp;
         cali_data_save.min_pitch   = min_pitch_temp;
         cali_data_save.zero_pitch  = (max_pitch_temp + min_pitch_temp) / 2;
-        cali_data_save.zero_yaw    = gimbal_cali_data.yaw_motor_single_round_angle;
+        cali_data_save.zero_yaw    = gimbal_cali_data.yaw2_motor_single_round_angle;
         cali_data_save.cali_status = 1;
         flash_erase_address(CALIBRATE_DATA_ADDR, 1);
         flash_write_single_address(CALIBRATE_DATA_ADDR, (uint32_t *)&cali_data_save, sizeof(cali_data_t) / 4); // –¥»Îflash

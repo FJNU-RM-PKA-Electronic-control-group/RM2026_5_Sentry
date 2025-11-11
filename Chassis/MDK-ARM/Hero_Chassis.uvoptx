@@ -120,6 +120,7 @@
         <SetRegEntry>
           <Number>0</Number>
           <Key>DLGUARM</Key>
+          <Name>	</Name>
         </SetRegEntry>
         <SetRegEntry>
           <Number>0</Number>
@@ -675,6 +676,11 @@
           <count>43</count>
           <WinNumber>2</WinNumber>
           <ItemText>chassis_fetch_data</ItemText>
+        </Ww>
+        <Ww>
+          <count>44</count>
+          <WinNumber>2</WinNumber>
+          <ItemText>follow_pid</ItemText>
         </Ww>
       </WatchWindow2>
       <MemoryWindow1>
