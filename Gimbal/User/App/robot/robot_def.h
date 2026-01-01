@@ -18,9 +18,12 @@
 #define YAW1_ZEROPOINT_ECD                                                                         \
     227.334595 // 云台和底盘对齐指向相同方向时的电机编码器值,若对云台有机械改动需要修改
 #define YAW2_ZEROPOINT_ECD                                                                         \
-    37.9245338 // 小yaw和大yaw对齐指向相同方向时的电机编码器值,若对云台有机械改动需要修改
-#define YAW_ECD_GREATER_THAN_4096 0 // ALIGN_ECD值是否大于4096,是为1,否为0;用于计算云台偏转角度
-#define PITCH_HORIZON_ECD         5042.0f // 云台处于水平位置时编码器值,若对云台有机械改动需要修改
+    128.077698 // 小yaw和大yaw对齐指向相同方向时的电机编码器值,若对云台有机械改动需要修改
+#define YAW_ECD_GREATER_THAN_4096 0   // ALIGN_ECD值是否大于4096,是为1,否为0;用于计算云台偏转角度
+
+#define PITCH_HORIZON_ECD 0.731576204 // 云台处于水平位置时编码器值,若对云台有机械改动需要修改
+#define PITCH_MAX_ECD     0.85
+#define PITCH_MIN_ECD     0.62
 #define PITCH_MAX_ANGLE                                                                            \
     -15674.30f // 云台竖直方向最大角度 (注意反馈如果是陀螺仪，则填写陀螺仪的角度)
 #define PITCH_MIN_ANGLE                                                                            \

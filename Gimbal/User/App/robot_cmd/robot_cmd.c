@@ -21,7 +21,8 @@
 // 私有宏,自动将编码器转换成角度值
 // #define YAW_ALIGN_ANGLE (YAW_CHASSIS_ALIGN_ECD * ECD_ANGLE_COEF_DJI) // 对齐时的角度,0-360
 // #define PTICH_HORIZON_ANGLE (PITCH_HORIZON_ECD * ECD_ANGLE_COEF_DJI) //
-// pitch水平时电机的角度,0-360 #define USE_VISION_FIRE_CONTROL
+// pitch水平时电机的角度,0-360
+#define USE_VISION_FIRE_CONTROL
 
 #define YAW_ALIGN_ANGLE     0
 #define PTICH_HORIZON_ANGLE 0
@@ -75,12 +76,12 @@ static void CalcOffsetAngle() {
 
 static float PitchLimit(float add) {
     if (gimbal_cmd_send.gimbal_mode != GIMBAL_ZERO_FORCE) {
-        if (gimbal_fetch_data.pitch_ecd_angle <= calibrate_data->max_pitch &&
-            gimbal_fetch_data.pitch_ecd_angle >= calibrate_data->min_pitch) {
+        if (gimbal_fetch_data.pitch_ecd_angle <= PITCH_MAX_ECD &&
+            gimbal_fetch_data.pitch_ecd_angle >= PITCH_MIN_ECD) {
             return add;
         }
-        else if (add * (gimbal_fetch_data.pitch_ecd_angle - calibrate_data->max_pitch) < 0 ||
-                 add * (gimbal_fetch_data.pitch_ecd_angle - calibrate_data->min_pitch) < 0) {
+        else if (add * (gimbal_fetch_data.pitch_ecd_angle - PITCH_MAX_ECD) < 0 ||
+                 add * (gimbal_fetch_data.pitch_ecd_angle - PITCH_MIN_ECD) < 0) {
             return add;
         }
     }
@@ -88,17 +89,18 @@ static float PitchLimit(float add) {
 }
 
 void VisionControlSet(void) {
+    if (vision_fetch_data.fire_advice == SHOOT_STOP)
+        shoot_cmd_send.shoot_mode = SHOOT_STOP;
     if (vision_fetch_data.vision_state == NO_TARGET) {
         return;
     }
     else {
         gimbal_cmd_send.pitch = vision_fetch_data.aim_pitch;
         gimbal_cmd_send.yaw   = vision_fetch_data.aim_yaw;
-#ifdef USE_VISION_FIRE_CONTROL
-        if (vision_fetch_data.fire_advice == SHOOT_STOP)
-            shoot_cmd_send.shoot_mode = SHOOT_STOP;
-#endif
     }
+    // #ifdef USE_VISION_FIRE_CONTROL
+
+    // #endif
 }
 
 static void RemoteControlSet(void) {
@@ -131,26 +133,27 @@ static void RemoteControlSet(void) {
     // 云台参数,确定云台控制数据
     gimbal_cmd_send.pitch += PitchLimit(0.00001f * (float)rc_data[TEMP].rc.rocker_l1);
     gimbal_cmd_send.yaw =
-        AngleFormatfp(gimbal_cmd_send.yaw - 0.0005f * (float)rc_data[TEMP].rc.rocker_l_);
+        theta_format(gimbal_cmd_send.yaw - 0.001f * (float)rc_data[TEMP].rc.rocker_l_);
     // 底盘参数,目前没有加入小陀螺(调试似乎暂时没有必要),系数需要调整
     chassis_cmd_send.vx = 10.0f * (float)rc_data[TEMP].rc.rocker_r_; // _水平方向
     chassis_cmd_send.vy = 10.0f * (float)rc_data[TEMP].rc.rocker_r1; // 1数值方向
-    // if (last_gimbal_mode != gimbal_cmd_send.gimbal_mode) {
-    //     switch (gimbal_cmd_send.gimbal_mode) {
-    //     case GIMBAL_FREE_MODE:
-    //         gimbal_cmd_send.yaw = gimbal_fetch_data.yaw_motor_single_round_angle;
-    //         break;
-    //     case GIMBAL_GYRO_MODE:
+    if (last_gimbal_mode != gimbal_cmd_send.gimbal_mode) {
+        switch (gimbal_cmd_send.gimbal_mode) {
+        case GIMBAL_FREE_MODE:
+            gimbal_cmd_send.yaw   = ins_data->Yaw * RAD_2_DEGREE;
+            gimbal_cmd_send.pitch = ins_data->Pitch;
 
-    //     default:
-    //         break;
-    //     }
-    // }
+            break;
+        case GIMBAL_GYRO_MODE:
+            gimbal_cmd_send.yaw   = ins_data->Yaw * RAD_2_DEGREE;
+            gimbal_cmd_send.pitch = ins_data->Pitch;
 
-    if (switch_is_down(rc_data[TEMP].rc.switch_left)) // 左侧开关状态为[下],视觉模式
-    {
-        VisionControlSet();
+        default:
+            break;
+        }
     }
+    last_gimbal_mode = gimbal_cmd_send.gimbal_mode;
+
     // 发射参数
     // 摩擦轮控制,拨轮向上打为负,向下为正
     if (rc_data[TEMP].rc.dial < -100 || rc_data[TEMP].rc.dial > 100) // 向上(下)超过100,打开摩擦轮
@@ -172,6 +175,10 @@ static void RemoteControlSet(void) {
     }
     else {
         shoot_cmd_send.load_mode = LOAD_STOP;
+    }
+    if (switch_is_down(rc_data[TEMP].rc.switch_left)) // 左侧开关状态为[下],视觉模式
+    {
+        VisionControlSet();
     }
     // 射频控制,固定每秒1发,后续可以根据左侧拨轮的值大小切换射频,
     shoot_cmd_send.shoot_rate = 2;
@@ -361,7 +368,7 @@ void RobotCMDTask(void) {
     EmergencyHandler(); // 处理模块离线和遥控器急停等紧急情况
 
                         // 设置视觉发送数据,还需增加加速度和角速度数据
-    VisionTask(RadToDeg(ins_data->Roll), -RadToDeg(ins_data->Pitch), RadToDeg(ins_data->Yaw));
+    // VisionTask(RadToDeg(ins_data->Roll), -RadToDeg(ins_data->Pitch), RadToDeg(ins_data->Yaw));
 
     // 推送消息,双板通信,视觉通信等
     // shoot_cmd_send.rest_heat       = chassis_fetch_data.rest_heat;

@@ -32,9 +32,10 @@
 #include "pid.h"
 
 // #include "ist8310.h"
-#include "user_lib.h"
-
 #include "bsp_usart1.h"
+#include "dm_imu.h"
+#include "user_lib.h"
+#include "vision.h"
 
 #define IMU_temp_PWM(pwm) imu_pwm_set(pwm) // pwm给定
 
@@ -66,7 +67,8 @@ void INS_Init(void) {
 
     IMU_QuaternionEKF_Init(10, 0.001, 10000000, 1, 0);
     // imu heat init
-    PID_init(&imu_temp_pid, PID_POSITION, imu_temp_PID, TEMPERATURE_PID_MAX_OUT, TEMPERATURE_PID_MAX_IOUT);
+    PID_init(&imu_temp_pid, PID_POSITION, imu_temp_PID, TEMPERATURE_PID_MAX_OUT,
+             TEMPERATURE_PID_MAX_IOUT);
 
     INS.AccelLPF = 0.0085;
     q4_Init(INS.q, INS.Accel[IMU_X], INS.Accel[IMU_Y], INS.Accel[IMU_Z]);
@@ -99,13 +101,15 @@ void INS_task(void) {
         INS.atanyz = atan2f(INS.Accel[IMU_Y], INS.Accel[IMU_Z]) * 180 / PI;
 
         // 核心函数,EKF更新四元数
-        //		IMU_QuaternionEKF_Update(INS.Gyro[IMU_X], INS.Gyro[IMU_Y], INS.Gyro[IMU_Z], INS.Accel[IMU_X], INS.Accel[IMU_Y], INS.Accel[IMU_Z], dt);
+        //		IMU_QuaternionEKF_Update(INS.Gyro[IMU_X], INS.Gyro[IMU_Y], INS.Gyro[IMU_Z],
+        // INS.Accel[IMU_X], INS.Accel[IMU_Y], INS.Accel[IMU_Z], dt);
 
         //		memcpy(INS.q, QEKF_INS.q, sizeof(QEKF_INS.q));
         //		ist8310_read_mag(mag);
-        MahonyAHRSupdateIMU(INS.q, INS.Gyro[IMU_X], INS.Gyro[IMU_Y], INS.Gyro[IMU_Z], INS.Accel[IMU_X], INS.Accel[IMU_Y], INS.Accel[IMU_Z]);
-        //		MahonyAHRSupdate(INS.q,INS.Gyro[IMU_X], INS.Gyro[IMU_Y], INS.Gyro[IMU_Z], INS.Accel[IMU_X], INS.Accel[IMU_Y], INS.Accel[IMU_Z], mag.x,
-        //mag.y, mag.z);
+        MahonyAHRSupdateIMU(INS.q, INS.Gyro[IMU_X], INS.Gyro[IMU_Y], INS.Gyro[IMU_Z],
+                            INS.Accel[IMU_X], INS.Accel[IMU_Y], INS.Accel[IMU_Z]);
+        //		MahonyAHRSupdate(INS.q,INS.Gyro[IMU_X], INS.Gyro[IMU_Y], INS.Gyro[IMU_Z],
+        // INS.Accel[IMU_X], INS.Accel[IMU_Y], INS.Accel[IMU_Z], mag.x, mag.y, mag.z);
 
         // 机体系基向量转换到导航坐标系，本例选取惯性系为导航系
         BodyFrameToEarthFrame(xb, INS.xn, INS.q);
@@ -118,10 +122,11 @@ void INS_task(void) {
 
         for (uint8_t i = 0; i < 3; i++) // 同样过一个低通滤波
         {
-            INS.MotionAccel_b[i] = (INS.Accel[i] - gravity_b[i]) * dt / (INS.AccelLPF + dt) +
-                                   INS.MotionAccel_b[i] * INS.AccelLPF / (INS.AccelLPF + dt); // AccelLPF=0.0085
+            INS.MotionAccel_b[i] =
+                (INS.Accel[i] - gravity_b[i]) * dt / (INS.AccelLPF + dt) +
+                INS.MotionAccel_b[i] * INS.AccelLPF / (INS.AccelLPF + dt);  // AccelLPF=0.0085
         }
-        BodyFrameToEarthFrame(INS.MotionAccel_b, INS.MotionAccel_n, INS.q);                   // 转换回导航系n
+        BodyFrameToEarthFrame(INS.MotionAccel_b, INS.MotionAccel_n, INS.q); // 转换回导航系n
 
         // 获取最终数据
         //		INS.Yaw = QEKF_INS.Yaw*0.01745329252f;
@@ -129,10 +134,13 @@ void INS_task(void) {
         //		INS.Roll = QEKF_INS.Roll*0.01745329252f;
         //		INS.YawTotalAngle = QEKF_INS.YawTotalAngle;
         INS.Pitch = (asin(2 * (INS.q[0] * INS.q[2] - INS.q[1] * INS.q[3])));
-        INS.Yaw   = RadFormat((atan2(2 * (INS.q[0] * INS.q[3] + INS.q[1] * INS.q[2]), (1 - 2 * (INS.q[2] * INS.q[2] + INS.q[3] * INS.q[3])))));
-        INS.Roll  = (atan2(2 * (INS.q[0] * INS.q[1] + INS.q[2] * INS.q[3]), (1 - 2 * (INS.q[1] * INS.q[1] + INS.q[2] * INS.q[2]))));
-    }
+        INS.Yaw   = RadFormat((atan2(2 * (INS.q[0] * INS.q[3] + INS.q[1] * INS.q[2]),
+                                     (1 - 2 * (INS.q[2] * INS.q[2] + INS.q[3] * INS.q[3])))));
+        INS.Roll  = (atan2(2 * (INS.q[0] * INS.q[1] + INS.q[2] * INS.q[3]),
+                           (1 - 2 * (INS.q[1] * INS.q[1] + INS.q[2] * INS.q[2]))));
 
+        VisionTask(RadToDeg(INS.Roll), RadToDeg(INS.Pitch), RadToDeg(INS.Yaw));
+    }
     if ((count % 2) == 0) {
         // 500hz
         IMU_Temperature_Ctrl();
@@ -144,13 +152,16 @@ void INS_task(void) {
 
 void BodyFrameToEarthFrame(const float *vecBF, float *vecEF, float *q) {
     vecEF[0] =
-        2.0f * ((0.5f - q[2] * q[2] - q[3] * q[3]) * vecBF[0] + (q[1] * q[2] - q[0] * q[3]) * vecBF[1] + (q[1] * q[3] + q[0] * q[2]) * vecBF[2]);
+        2.0f * ((0.5f - q[2] * q[2] - q[3] * q[3]) * vecBF[0] +
+                (q[1] * q[2] - q[0] * q[3]) * vecBF[1] + (q[1] * q[3] + q[0] * q[2]) * vecBF[2]);
 
-    vecEF[1] =
-        2.0f * ((q[1] * q[2] + q[0] * q[3]) * vecBF[0] + (0.5f - q[1] * q[1] - q[3] * q[3]) * vecBF[1] + (q[2] * q[3] - q[0] * q[1]) * vecBF[2]);
+    vecEF[1] = 2.0f * ((q[1] * q[2] + q[0] * q[3]) * vecBF[0] +
+                       (0.5f - q[1] * q[1] - q[3] * q[3]) * vecBF[1] +
+                       (q[2] * q[3] - q[0] * q[1]) * vecBF[2]);
 
     vecEF[2] =
-        2.0f * ((q[1] * q[3] - q[0] * q[2]) * vecBF[0] + (q[2] * q[3] + q[0] * q[1]) * vecBF[1] + (0.5f - q[1] * q[1] - q[2] * q[2]) * vecBF[2]);
+        2.0f * ((q[1] * q[3] - q[0] * q[2]) * vecBF[0] + (q[2] * q[3] + q[0] * q[1]) * vecBF[1] +
+                (0.5f - q[1] * q[1] - q[2] * q[2]) * vecBF[2]);
 }
 
 /**
@@ -161,13 +172,16 @@ void BodyFrameToEarthFrame(const float *vecBF, float *vecEF, float *q) {
  */
 void EarthFrameToBodyFrame(const float *vecEF, float *vecBF, float *q) {
     vecBF[0] =
-        2.0f * ((0.5f - q[2] * q[2] - q[3] * q[3]) * vecEF[0] + (q[1] * q[2] + q[0] * q[3]) * vecEF[1] + (q[1] * q[3] - q[0] * q[2]) * vecEF[2]);
+        2.0f * ((0.5f - q[2] * q[2] - q[3] * q[3]) * vecEF[0] +
+                (q[1] * q[2] + q[0] * q[3]) * vecEF[1] + (q[1] * q[3] - q[0] * q[2]) * vecEF[2]);
 
-    vecBF[1] =
-        2.0f * ((q[1] * q[2] - q[0] * q[3]) * vecEF[0] + (0.5f - q[1] * q[1] - q[3] * q[3]) * vecEF[1] + (q[2] * q[3] + q[0] * q[1]) * vecEF[2]);
+    vecBF[1] = 2.0f * ((q[1] * q[2] - q[0] * q[3]) * vecEF[0] +
+                       (0.5f - q[1] * q[1] - q[3] * q[3]) * vecEF[1] +
+                       (q[2] * q[3] + q[0] * q[1]) * vecEF[2]);
 
     vecBF[2] =
-        2.0f * ((q[1] * q[3] + q[0] * q[2]) * vecEF[0] + (q[2] * q[3] - q[0] * q[1]) * vecEF[1] + (0.5f - q[1] * q[1] - q[2] * q[2]) * vecEF[2]);
+        2.0f * ((q[1] * q[3] + q[0] * q[2]) * vecEF[0] + (q[2] * q[3] - q[0] * q[1]) * vecEF[1] +
+                (0.5f - q[1] * q[1] - q[2] * q[2]) * vecEF[2]);
 }
 
 static void IMU_Param_Correction(IMU_Param_t *param, float gyro[3], float accel[3]) {
@@ -175,7 +189,8 @@ static void IMU_Param_Correction(IMU_Param_t *param, float gyro[3], float accel[
     static float c_11, c_12, c_13, c_21, c_22, c_23, c_31, c_32, c_33;
     float cosPitch, cosYaw, cosRoll, sinPitch, sinYaw, sinRoll;
 
-    if (fabsf(param->Yaw - lastYawOffset) > 0.001f || fabsf(param->Pitch - lastPitchOffset) > 0.001f ||
+    if (fabsf(param->Yaw - lastYawOffset) > 0.001f ||
+        fabsf(param->Pitch - lastPitchOffset) > 0.001f ||
         fabsf(param->Roll - lastRollOffset) > 0.001f || param->flag) {
         cosYaw   = arm_cos_f32(param->Yaw / 57.295779513f);
         cosPitch = arm_cos_f32(param->Pitch / 57.295779513f);

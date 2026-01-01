@@ -24,8 +24,8 @@ void RobotInit(void) {
     BuzzerInit();
     RobotCmdInit();
     GimbalInit();
-    // ShootInit();
-    // VisionInit();
+    ShootInit();
+    VisionInit();
     CmdRevInit();
 
     OSTaskInit();
@@ -34,6 +34,6 @@ void RobotInit(void) {
 void RobotTask(void) {
     RobotCMDTask();
     GimbalTask();
-    // ShootTask();
+    ShootTask();
     CmdRevTask();
 }

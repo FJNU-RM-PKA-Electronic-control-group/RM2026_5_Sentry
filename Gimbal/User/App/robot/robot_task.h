@@ -87,8 +87,8 @@ __attribute__((noreturn)) void StartDAEMONTASK(void const *argument) {
     for (;;) {
         // 100Hz
         daemon_start = DWT_GetTimeline_ms();
-        DaemonTask();
-        BuzzerTask();
+        // DaemonTask();
+        //  BuzzerTask();
         daemon_dt = DWT_GetTimeline_ms() - daemon_start;
         if (daemon_dt > 10)
             LOGERROR("[freeRTOS] Daemon Task is being DELAY! dt = [%f]", &daemon_dt);

@@ -6,7 +6,6 @@
 #include "user_lib.h"
 #include "vision.h"
 
-
 #define COM6_PACKAGE_HEADER    0xFF
 #define COM6_PACKAGE_TAIL_BYTE 0x0D
 #define PC_DATA_LEN            16
@@ -57,7 +56,7 @@ void VisionInit(void) {
 void VisionTask(float roll, float pitch, float yaw) {
     vision_sendmessage(AIM_RED, roll, pitch, yaw);
     vision_feedback_data.aim_pitch = DegToRad(Data_PC.pitch);
-    vision_feedback_data.aim_yaw   = DegToRad(Data_PC.yaw);
+    vision_feedback_data.aim_yaw   = Data_PC.yaw;
     if (Data_PC.fire_advice == 1)
         vision_feedback_data.fire_advice = SHOOT_ON;
     else

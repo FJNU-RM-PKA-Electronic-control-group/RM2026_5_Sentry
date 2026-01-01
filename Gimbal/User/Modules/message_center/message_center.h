@@ -15,11 +15,10 @@
 #include "stdint.h"
 
 #define MAX_TOPIC_NAME_LEN 32 // 最大的话题名长度,每个话题都有字符串来命名
-#define MAX_TOPIC_COUNT 15    // 最多支持的话题数量
-#define QUEUE_SIZE 1
+#define MAX_TOPIC_COUNT    15 // 最多支持的话题数量
+#define QUEUE_SIZE         1
 
-typedef struct mqt
-{
+typedef struct mqt {
     /* 用数组模拟FIFO队列 */
     void *queue[QUEUE_SIZE];
     uint8_t data_len;
@@ -35,8 +34,7 @@ typedef struct mqt
  * @brief 发布者类型.每个发布者拥有发布者实例,并且可以通过链表访问所有订阅了自己发布的话题的订阅者
  *
  */
-typedef struct ent
-{
+typedef struct ent {
     /* 话题名称 */
     char topic_name[MAX_TOPIC_NAME_LEN + 1]; // 1个字节用于存放字符串结束符 '\0'
     uint8_t data_len;                        // 该话题的数据长度

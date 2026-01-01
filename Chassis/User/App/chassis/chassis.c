@@ -52,10 +52,10 @@
 #define LB                    3
 #define RB                    2
 #define WHEEL_COUNT           4
-#define VECTORMOTOR_OFFSET_LF 195.731033
-#define VECTORMOTOR_OFFSET_RF 44.9996796
-#define VECTORMOTOR_OFFSET_LB 43.7692184
-#define VECTORMOTOR_OFFSET_RB 74.310997
+#define VECTORMOTOR_OFFSET_LF 227.107758
+#define VECTORMOTOR_OFFSET_RF 17.1824951
+#define VECTORMOTOR_OFFSET_LB 72.6410828
+#define VECTORMOTOR_OFFSET_RB 44.0768356
 
 /* 底盘应用包含的模块和信息存储,底盘是单例模式,因此不需要为底盘建立单独的结构体 */
 static Publisher_t *chassis_pub;                    // 用于发布底盘的数据
@@ -249,12 +249,12 @@ void ChassisInit(void) {
     PID_Init_Config_s pid_config = {
         .Kp            = 0.9, // 0.4
         .Ki            = 0,   // 0
-        .Kd            = 1.0f,
+        .Kd            = 0.0f,
         .IntegralLimit = 3000,
         .Improve       = (PID_Improvement_e)(PID_Trapezoid_Intergral | PID_Integral_Limit |
                                        PID_Derivative_On_Measurement),
-        .DeadBand      = 0.5,
-        .MaxOut        = 100,
+        .DeadBand      = 7.0,
+        .MaxOut        = 20,
     };
     PIDInit(&follow_pid, &pid_config);
 
@@ -496,8 +496,8 @@ void ChassisTask(void) {
     // 根据云台和底盘的角度offset将控制量映射到底盘坐标系上
     // 底盘逆时针旋转为角度正方向;云台命令的方向以云台指向的方向为x,采用右手系(x指向正北时y在正东)
     static float sin_theta, cos_theta;
-    cos_theta  = arm_cos_f32(chassis_cmd_recv.offset_angle * DEGREE_2_RAD);
-    sin_theta  = arm_sin_f32(chassis_cmd_recv.offset_angle * DEGREE_2_RAD);
+    cos_theta  = arm_cos_f32(theta_format(chassis_cmd_recv.offset_angle + 45.0f) * DEGREE_2_RAD);
+    sin_theta  = arm_sin_f32(theta_format(chassis_cmd_recv.offset_angle + 45.0f) * DEGREE_2_RAD);
     chassis_vx = chassis_cmd_recv.vx * cos_theta - chassis_cmd_recv.vy * sin_theta;
     chassis_vy = chassis_cmd_recv.vx * sin_theta + chassis_cmd_recv.vy * cos_theta;
     force_wz   = PIDCalculate(&Force_PID_wz, chassis_wz_FK, chassis_cmd_recv.wz);

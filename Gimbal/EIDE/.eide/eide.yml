@@ -1,0 +1,359 @@
+version: "4.1"
+name: Hero
+type: ARM
+deviceName: null
+packDir: null
+srcDirs: []
+virtualFolder:
+  name: <virtual_root>
+  files: []
+  folders:
+    - name: Application
+      files: []
+      folders:
+        - name: MDK-ARM
+          files:
+            - path: ../MDK-ARM/startup_stm32f407xx.s
+          folders: []
+        - name: User
+          files:
+            - path: ../Src/main.c
+            - path: ../Src/gpio.c
+            - path: ../Src/freertos.c
+            - path: ../Src/can.c
+            - path: ../Src/dma.c
+            - path: ../Src/i2c.c
+            - path: ../Src/spi.c
+            - path: ../Src/tim.c
+            - path: ../Src/usart.c
+            - path: ../Src/usb_device.c
+            - path: ../Src/usbd_conf.c
+            - path: ../Src/usbd_desc.c
+            - path: ../Src/usbd_cdc_if.c
+            - path: ../Src/stm32f4xx_it.c
+            - path: ../Src/stm32f4xx_hal_msp.c
+            - path: ../Src/stm32f4xx_hal_timebase_tim.c
+          folders: []
+    - name: Drivers
+      files: []
+      folders:
+        - name: CMSIS
+          files:
+            - path: ../Src/system_stm32f4xx.c
+          folders: []
+        - name: STM32F4xx_HAL_Driver
+          files:
+            - path: ../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.c
+            - path: ../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.c
+            - path: ../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pcd.c
+            - path: ../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pcd_ex.c
+            - path: ../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_usb.c
+            - path: ../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.c
+            - path: ../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc_ex.c
+            - path: ../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash.c
+            - path: ../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash_ex.c
+            - path: ../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash_ramfunc.c
+            - path: ../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.c
+            - path: ../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma_ex.c
+            - path: ../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c
+            - path: ../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr.c
+            - path: ../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr_ex.c
+            - path: ../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.c
+            - path: ../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.c
+            - path: ../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c
+            - path: ../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_can.c
+            - path: ../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_i2c.c
+            - path: ../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_i2c_ex.c
+            - path: ../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_spi.c
+            - path: ../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c
+          folders: []
+    - name: Middlewares
+      files: []
+      folders:
+        - name: FreeRTOS
+          files:
+            - path: ../Middlewares/Third_Party/FreeRTOS/Source/croutine.c
+            - path: ../Middlewares/Third_Party/FreeRTOS/Source/event_groups.c
+            - path: ../Middlewares/Third_Party/FreeRTOS/Source/list.c
+            - path: ../Middlewares/Third_Party/FreeRTOS/Source/queue.c
+            - path: ../Middlewares/Third_Party/FreeRTOS/Source/stream_buffer.c
+            - path: ../Middlewares/Third_Party/FreeRTOS/Source/tasks.c
+            - path: ../Middlewares/Third_Party/FreeRTOS/Source/timers.c
+            - path: ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS/cmsis_os.c
+            - path: ../Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c
+            - path: ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F/port.c
+          folders: []
+        - name: SEGGER_RTT
+          files:
+            - path: ../Middlewares/Third_Party/SEGGER/RTT/SEGGER_RTT.c
+            - path: ../Middlewares/Third_Party/SEGGER/RTT/SEGGER_RTT_printf.c
+          folders: []
+        - name: USB_Device_Library
+          files:
+            - path: ../Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_core.c
+            - path: ../Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ctlreq.c
+            - path: ../Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ioreq.c
+            - path: ../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Src/usbd_cdc.c
+          folders: []
+    - name: Bsp
+      files:
+        - path: ../User/Bsp/delay/bsp_delay.c
+        - path: ../User/Bsp/dwt/bsp_dwt.c
+        - path: ../User/Bsp/led/bsp_led.c
+        - path: ../User/Bsp/pwm/bsp_imu_pwm.c
+        - path: ../User/Bsp/spi/bsp_spi.c
+        - path: ../User/Bsp/usart/bsp_usart1.c
+        - path: ../User/Bsp/can/bsp_can.c
+        - path: ../User/Bsp/log/bsp_log.c
+        - path: ../User/Bsp/usart/bsp_usart.c
+        - path: ../User/Bsp/flash/bsp_flash.c
+        - path: ../User/Bsp/iic/bsp_iic.c
+        - path: ../User/Bsp/gpio/bsp_gpio.c
+        - path: ../User/Bsp/pwm/bsp_pwm.c
+      folders: []
+    - name: Modules
+      files:
+        - path: ../User/Modules/arm_math/arm_cortexM4lf_math.lib
+        - path: ../User/Modules/bmi088/BMI088driver.c
+        - path: ../User/Modules/bmi088/BMI088Middleware.c
+        - path: ../User/Modules/algorithm/kalman_filter.c
+        - path: ../User/Modules/algorithm/QuaternionEKF.c
+        - path: ../User/Modules/algorithm/controller.c
+        - path: ../User/Modules/algorithm/user_lib.c
+        - path: ../User/Modules/algorithm/pid.c
+        - path: ../User/Modules/daemon/daemon.c
+        - path: ../User/Modules/remote/remote_control.c
+        - path: ../User/Modules/message_center/message_center.c
+        - path: ../User/Modules/motor/dji_motor/dji_motor.c
+        - path: ../User/Modules/motor/dm_motor/dm_motor.c
+        - path: ../User/Modules/motor/rmd_motor/rmd_motor.c
+        - path: ../User/Modules/feed_forward/feed_forward.c
+        - path: ../User/Modules/calibration/calibration.c
+        - path: ../User/Modules/algorithm/MahonyAHRS.c
+        - path: ../User/Modules/ist8310/ist8310driver.c
+        - path: ../User/Modules/ist8310/ist8310driver_middleware.c
+        - path: ../User/Modules/buzzer/buzzer.c
+        - path: ../User/Modules/can_comm/can_comm.c
+        - path: ../User/Modules/algorithm/crc8.c
+        - path: ../User/Modules/referee/crc_ref.c
+        - path: ../User/Modules/referee/gimbal_referee.c
+        - path: ../User/Modules/referee/referee_UI.c
+        - path: ../User/Modules/referee/rm_referee.c
+        - path: ../User/Modules/referee/referee_task.c
+        - path: ../User/Modules/motor/LKmotor/LK9025.c
+        - path: ../User/Modules/fliter/fliter.c
+        - path: ../User/Modules/dm_imu/dm_imu.c
+      folders: []
+    - name: App
+      files:
+        - path: ../User/App/robot/robot_def.h
+        - path: ../User/App/robot/robot_task.h
+        - path: ../User/App/robot/robot.c
+        - path: ../User/App/robot_cmd/robot_cmd.c
+        - path: ../User/App/gimbal/gimbal.c
+        - path: ../User/App/shoot/shoot.c
+        - path: ../User/App/cmd_send/cmd_send.c
+        - path: ../User/App/motor_task/motor_task.c
+        - path: ../User/App/ins_task/INS_task.c
+        - path: ../User/App/usart_task/usart_task.c
+        - path: ../User/App/test_task/test_task.c
+        - path: ../User/App/led_flow_task/led_flow_task.c
+        - path: ../User/App/vision/vision.c
+        - path: ../User/App/calibrate/calibrate.c
+      folders: []
+    - name: ::CMSIS
+      files: []
+      folders: []
+dependenceList: []
+outDir: build
+miscInfo:
+  uid: 62ec7533be5112a7dd61e983ffc10754
+targets:
+  Hero:
+    cppPreprocessAttrs:
+      defineList:
+        - USE_HAL_DRIVER
+        - STM32F407xx
+        - USE_HAL_DRIVER
+        - STM32F407xx
+        - ARM_MATH_CM4
+        - __FPU_USED=1U
+        - __FPU_PRESENT=1U
+        - __CC_ARM
+        - ARM_MATH_MATRIX_CHECK
+        - ARM_MATH_ROUNDING
+      incList:
+        - ../Inc
+        - ../Drivers/STM32F4xx_HAL_Driver/Inc
+        - ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy
+        - ../Middlewares/Third_Party/FreeRTOS/Source/include
+        - ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS
+        - ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F
+        - ../Drivers/CMSIS/Device/ST/STM32F4xx/Include
+        - ../Drivers/CMSIS/Include
+        - ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc
+        - ../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc
+        - ../Middlewares/Third_Party/SEGGER/Config
+        - ../Middlewares/Third_Party/SEGGER/RTT
+        - ../User/App/ins_task
+        - ../User/App/led_flow_task
+        - ../User/App/test_task
+        - ../User/App/typedef
+        - ../User/App/usart_task
+        - ../User/Bsp/delay
+        - ../User/Bsp/dwt
+        - ../User/Bsp/led
+        - ../User/Bsp/pwm
+        - ../User/Bsp/spi
+        - ../User/Bsp/usart
+        - ../User/Bsp/can
+        - ../User/Bsp/log
+        - ../User/Modules/algorithm
+        - ../User/Modules/arm_math
+        - ../User/Modules/bmi088
+        - ../User/Modules/ist8310
+        - ../User/Modules/motor
+        - ../User/Modules/daemon
+        - ../User/Modules/remote
+        - ../User/Modules/message_center
+        - ../User/Modules/motor/dji_motor
+        - ../User/App/robot
+        - ../User/App/robot_cmd
+        - ../User/App/chassis
+        - ../User/App/gimbal
+        - ../User/App/shoot
+        - ../User/Modules/motor/dm_motor
+        - ../User/Modules/motor/rmd_motor
+        - ../User/App/motor_task
+        - ../User/Modules/feed_forward
+        - ../User/Bsp/flash
+        - ../User/Modules/calibration
+        - ../User/Bsp/iic
+        - ../User/Bsp/gpio
+        - ../User/App/vision
+        - ../User/App/calibrate
+        - ../User/Modules/buzzer
+        - ../User/Modules/can_comm
+        - ../User/App/cmd_send
+        - ../User/Modules/referee
+        - ../User/Modules/motor/LKmotor
+        - ../User/Modules/fliter
+        - ../User/Modules/dm_imu
+        - .cmsis/include
+        - ../MDK-ARM/RTE/_Hero
+      libList: []
+    excludeList: []
+    toolchain: AC5
+    toolchainConfigMap:
+      AC5:
+        archExtensions: ""
+        cpuType: Cortex-M4
+        floatingPointHardware: single
+        options:
+          version: 4
+          afterBuildTasks: []
+          asm-compiler: {}
+          beforeBuildTasks: []
+          c/cpp-compiler:
+            CXX_FLAGS: --diag_suppress=1 --diag_suppress=1295
+            C_FLAGS: --diag_suppress=1 --diag_suppress=1295
+            c99-mode: true
+            one-elf-section-per-function: true
+            optimization: level-0
+            warnings: all-warnings
+          global:
+            output-debug-info: enable
+            use-microLIB: true
+          linker:
+            $outputTaskExcludes:
+              - .bin
+            output-format: elf
+            ro-base: "0x08000000"
+            rw-base: "0x20000000"
+            xo-base: ""
+        scatterFilePath: ""
+        storageLayout:
+          RAM:
+            - id: 1
+              isChecked: false
+              mem:
+                size: "0x0"
+                startAddr: "0x0"
+              noInit: false
+              tag: RAM
+            - id: 2
+              isChecked: false
+              mem:
+                size: "0x0"
+                startAddr: "0x0"
+              noInit: false
+              tag: RAM
+            - id: 3
+              isChecked: false
+              mem:
+                size: "0x0"
+                startAddr: "0x0"
+              noInit: false
+              tag: RAM
+            - id: 1
+              isChecked: true
+              mem:
+                size: "0x20000"
+                startAddr: "0x20000000"
+              noInit: false
+              tag: IRAM
+            - id: 2
+              isChecked: false
+              mem:
+                size: "0x10000"
+                startAddr: "0x10000000"
+              noInit: false
+              tag: IRAM
+          ROM:
+            - id: 1
+              isChecked: false
+              isStartup: false
+              mem:
+                size: "0x0"
+                startAddr: "0x0"
+              tag: ROM
+            - id: 2
+              isChecked: false
+              isStartup: false
+              mem:
+                size: "0x0"
+                startAddr: "0x0"
+              tag: ROM
+            - id: 3
+              isChecked: false
+              isStartup: false
+              mem:
+                size: "0x0"
+                startAddr: "0x0"
+              tag: ROM
+            - id: 1
+              isChecked: true
+              isStartup: true
+              mem:
+                size: "0x100000"
+                startAddr: "0x8000000"
+              tag: IROM
+            - id: 2
+              isChecked: false
+              isStartup: false
+              mem:
+                size: "0x0"
+                startAddr: "0x0"
+              tag: IROM
+        useCustomScatterFile: false
+    uploadConfigMap:
+      JLink:
+        baseAddr: ""
+        bin: ""
+        cpuInfo:
+          cpuName: STM32F407IG
+          vendor: ST
+        otherCmds: ""
+        proType: 1
+        speed: 8000
+    uploader: JLink

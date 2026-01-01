@@ -21,6 +21,7 @@
         "rmd_motor.h": "c",
         "crc_ref.h": "c",
         "stm32f407xx.h": "c",
-        "stdint.h": "c"
+        "stdint.h": "c",
+        "ins_task.h": "c"
     }
 }
