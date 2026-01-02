@@ -40,27 +40,6 @@ Gimbal_Upload_Data_s gimbal_feedback_data; // 回传给cmd的云台状态信息
 Gimbal_Ctrl_Cmd_s gimbal_cmd_recv;         // 来自cmd的控制信息
 
 // static BMI088Instance *bmi088; // 云台IMU
-static void YawSetTarget(float recv_yaw) {
-    static bool_t target_setted = 0;
-    float current_yaw           = IMU_data_rad->Yaw * RAD_2_DEGREE;
-    float yaw2_ecd_err          = NearbyErrFormat(0 - DJIMotorGetAngle(yaw2_motor), 180.0f);
-    float yaw_err               = -NearbyErrFormat(recv_yaw - current_yaw, 180);
-    if (target_setted == 0) {
-        if (yaw_err > (50 - yaw2_ecd_err)) {
-            target_yaw[YAW1] = LKMotorGetAngle(yaw1_motor) + (yaw_err - (50 - yaw2_ecd_err));
-            target_setted    = 1;
-        }
-        else if (yaw_err < (-50 + yaw2_ecd_err)) {
-            target_yaw[YAW1] = LKMotorGetAngle(yaw1_motor) + (yaw_err - (-50 + yaw2_ecd_err));
-            target_setted    = 1;
-        }
-    }
-    else {
-        if (yaw_err < (-50 + yaw2_ecd_err) || yaw_err > (-50 + yaw2_ecd_err)) {
-            target_setted = 0;
-        }
-    }
-}
 
 void GimbalInit(void) {
 
@@ -156,7 +135,7 @@ void GimbalInit(void) {
                     {
                         .Kp = 15.0f, // 50
                         .Ki = 0.0f,  // 200
-                        .Kd = 5.0f,
+                        .Kd = 0.0f,
                         .Improve =
                             (PID_Improvement_e)(PID_Trapezoid_Intergral | PID_Integral_Limit |
                                                 PID_Derivative_On_Measurement |
@@ -252,6 +231,63 @@ void GimbalInit(void) {
     gimbal_sub = SubRegister("gimbal_cmd", sizeof(Gimbal_Ctrl_Cmd_s));
 }
 
+static void YawSetTarget(float recv_yaw, gimbal_mode_e mode) {
+    // static bool_t target_setted = 0;
+    static Yaw1_mode_e yaw1_mode = YAW1_NOMOVE;
+    // float current_yaw           = IMU_data_rad->Yaw * RAD_2_DEGREE;
+    static gimbal_mode_e last_mode = GIMBAL_ZERO_FORCE;
+    float yaw2_ecd_err             = theta_format(DJIMotorGetAngle(yaw2_motor));
+    // float yaw_err               = -NearbyErrFormat(recv_yaw - current_yaw, 180);
+    if (last_mode != mode) {
+        target_yaw[YAW1] = DM_IMU_data->yaw;
+        target_yaw[YAW2] = IMU_data_rad->Yaw * RAD_2_DEGREE;
+    }
+    switch (yaw1_mode) {
+    case YAW1_NOMOVE:
+        if (yaw2_ecd_err > 50) {
+            // target_yaw[YAW1] = DM_IMU_data->yaw += 5.0;
+            yaw1_mode = YAW1_TURNLEFT;
+        }
+        else if (yaw2_ecd_err < -50) {
+            // target_yaw[YAW1] = DM_IMU_data->yaw -= 5.0;
+            yaw1_mode = YAW1_TURNRIGHT;
+        }
+        break;
+    case YAW1_TURNLEFT:
+        target_yaw[YAW1] = DM_IMU_data->yaw += 5.0;
+        if (yaw2_ecd_err < 48)
+            yaw1_mode = YAW1_NOMOVE;
+        break;
+    case YAW1_TURNRIGHT:
+        target_yaw[YAW1] = DM_IMU_data->yaw -= 5.0;
+        if (yaw2_ecd_err > -48)
+            yaw1_mode = YAW1_NOMOVE;
+        break;
+    default:
+        break;
+    }
+
+    target_yaw[YAW1] = theta_format(target_yaw[YAW1]);
+    target_yaw[YAW2] = recv_yaw;
+    last_mode        = mode;
+
+    // if (target_setted == 0) {
+    //     if (yaw_err > (50 - yaw2_ecd_err)) {
+    //         target_yaw[YAW1] =
+    //         target_setted    = 1;
+    //     }
+    //     else if (yaw_err < (-50 + yaw2_ecd_err)) {
+    //         target_yaw[YAW1] =
+    //         target_setted    = 1;
+    //     }
+    // }
+    // else {
+    //     if (yaw_err < (-50 + yaw2_ecd_err) || yaw_err > (-50 + yaw2_ecd_err)) {
+    //         target_setted = 0;
+    //     }
+    // }
+}
+
 /* 机器人云台控制核心任务,后续考虑只保留IMU控制,不再需要电机的反馈 */
 void GimbalTask(void) {
     // 获取云台控制数据
@@ -269,17 +305,21 @@ void GimbalTask(void) {
     switch (gimbal_cmd_recv.gimbal_mode) {
     // 停止
     case GIMBAL_ZERO_FORCE:
+        YawSetTarget(gimbal_cmd_recv.yaw, GIMBAL_ZERO_FORCE);
+
         LKMotorStop(yaw1_motor);
         DJIMotorStop(yaw2_motor);
         DMMotorStop(pitch_motor);
         break;
     // 使用陀螺仪的反馈,底盘根据yaw电机的offset跟随云台或视觉模式采用
     case GIMBAL_GYRO_MODE: // 后续只保留此模式
+        YawSetTarget(gimbal_cmd_recv.yaw, GIMBAL_GYRO_MODE);
+
         LKMotorEnable(yaw1_motor);
         DJIMotorEnable(yaw2_motor);
         DMMotorEnable(pitch_motor);
         LKMotorChangeFeed(yaw1_motor, ANGLE_LOOP, OTHER_FEED);
-        LKMotorChangeFeed(yaw1_motor, SPEED_LOOP, MOTOR_FEED);
+        LKMotorChangeFeed(yaw1_motor, SPEED_LOOP, OTHER_FEED);
         DJIMotorChangeFeed(yaw2_motor, SPEED_LOOP, OTHER_FEED);
         DJIMotorChangeFeed(yaw2_motor, ANGLE_LOOP, OTHER_FEED);
         DMMotorChangeFeed(pitch_motor, ANGLE_LOOP, OTHER_FEED);
@@ -287,8 +327,8 @@ void GimbalTask(void) {
 
         // DMMotorSetRef(yaw_motor, 0); // yaw和pitch会在robot_cmd中处理好多圈和单圈
         // LKMotorSetRef(yaw1_motor, 0);
-        DJIMotorSetRef(yaw2_motor, gimbal_cmd_recv.yaw);
-        LKMotorSetRef(yaw1_motor, gimbal_cmd_recv.yaw);
+        DJIMotorSetRef(yaw2_motor, target_yaw[YAW2]);
+        LKMotorSetRef(yaw1_motor, target_yaw[YAW1]);
         DMMotorSetRef(pitch_motor, gimbal_cmd_recv.pitch);
         // DMMotorSetRef(yaw_motor, gimbal_cmd_recv.yaw); //
         // yaw和pitch会在robot_cmd中处理好多圈和单圈 RMDMotorSetRef(pitch_motor,
@@ -296,8 +336,8 @@ void GimbalTask(void) {
 
         break;
     // 云台自由模式,使用编码器反馈,底盘和云台分离,仅云台旋转,一般用于调整云台姿态(英雄吊射等)/能量机关
-    case GIMBAL_FREE_MODE: // 后续删除,或加入云台追地盘的跟随模式(响应速度更快)
-        // YawSetTarget(gimbal_cmd_recv.yaw);
+    case GIMBAL_FREE_MODE:
+        YawSetTarget(gimbal_cmd_recv.yaw, GIMBAL_FREE_MODE);
 
         LKMotorEnable(yaw1_motor);
         DJIMotorEnable(yaw2_motor);
@@ -305,11 +345,11 @@ void GimbalTask(void) {
         DJIMotorChangeFeed(yaw2_motor, SPEED_LOOP, OTHER_FEED);
         DJIMotorChangeFeed(yaw2_motor, ANGLE_LOOP, OTHER_FEED);
         LKMotorChangeFeed(yaw1_motor, ANGLE_LOOP, OTHER_FEED);
-        LKMotorChangeFeed(yaw1_motor, SPEED_LOOP, MOTOR_FEED);
+        LKMotorChangeFeed(yaw1_motor, SPEED_LOOP, OTHER_FEED);
         DMMotorChangeFeed(pitch_motor, ANGLE_LOOP, OTHER_FEED);
         DMMotorChangeFeed(pitch_motor, SPEED_LOOP, OTHER_FEED);
-        DJIMotorSetRef(yaw2_motor, gimbal_cmd_recv.yaw);
-        LKMotorSetRef(yaw1_motor, gimbal_cmd_recv.yaw);
+        DJIMotorSetRef(yaw2_motor, target_yaw[YAW2]);
+        LKMotorSetRef(yaw1_motor, target_yaw[YAW1]);
         DMMotorSetRef(pitch_motor, gimbal_cmd_recv.pitch);
         // yaw和pitch会在robot_cmd中处理好多圈和单圈 RMDMotorSetRef(pitch_motor,
         // gimbal_cmd_recv.pitch);
@@ -317,7 +357,7 @@ void GimbalTask(void) {
     default:
         break;
     }
-    DJIMotorStop(yaw2_motor);
+    // DJIMotorStop(yaw2_motor);
     // LKMotorStop(yaw1_motor);
     DEBUG_dm_pitch    = DM_IMU_data->pitch;
     DEBUG_dm_yaw      = DM_IMU_data->yaw;

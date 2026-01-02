@@ -255,7 +255,7 @@ void DM_IMU_Init(DMIMU_Init_Config_s *config) {
     imu_set_mode(DM_IMU, DM_IMU->send_mode);
     imu_set_baud(DM_IMU, DM_IMU->baudrate);
     imu_change_com_port(DM_IMU, DM_IMU->com_port);
-    imu_set_active_mode_delay(5); // 主动模式下5ms发送一次
+    imu_set_active_mode_delay(10); // 主动模式下5ms发送一次
     // 上电先校准
     imu_accel_calibration();
     HAL_Delay(6000);

@@ -378,7 +378,7 @@ void RobotCMDTask(void) {
     // chassis_cmd_send.gimbal_mode   = gimbal_cmd_send.gimbal_mode;
     // chassis_cmd_send.vision_state  = vision_fetch_data.vision_state;
     chassis_cmd_send.offset_angle = theta_format(FliterCalcutale(
-        (FliterInstance *)&yaw_offset_fliter, gimbal_fetch_data.yaw2_motor_single_round_angle));
+        (FliterInstance *)&yaw_offset_fliter, gimbal_fetch_data.yaw1_motor_single_round_angle));
 
     // 其他应用所需的控制数据在remotecontrolsetmode和mousekeysetmode中完成设置
 
