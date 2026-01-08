@@ -38,20 +38,22 @@ Chassis_Upload_Data_s
     chassis_fetch_data;             // 从底盘应用接收的反馈信息信息,底盘功率枪口热量与底盘运动状态等
 
 static Publisher_t *gimbal_cmd_pub; // 云台控制消息发布者
-static Subscriber_t *gimbal_feed_sub;   // 云台反馈信息订阅者
-Gimbal_Ctrl_Cmd_s gimbal_cmd_send;      // 传递给云台的控制信息
-Gimbal_Upload_Data_s gimbal_fetch_data; // 从云台获取的反馈信息
+static Subscriber_t *gimbal_feed_sub;       // 云台反馈信息订阅者
+Gimbal_Ctrl_Cmd_s gimbal_cmd_send;          // 传递给云台的控制信息
+Gimbal_Upload_Data_s gimbal_fetch_data;     // 从云台获取的反馈信息
 
-static Publisher_t *shoot_cmd_pub;      // 发射控制消息发布者
-static Subscriber_t *shoot_feed_sub;    // 发射反馈信息订阅者
-Shoot_Ctrl_Cmd_s shoot_cmd_send;        // 传递给发射的控制信息
-Shoot_Upload_Data_s shoot_fetch_data;   // 从发射获取的反馈信息
+static Publisher_t *shoot_cmd_pub;          // 发射控制消息发布者
+static Subscriber_t *shoot_feed_sub;        // 发射反馈信息订阅者
+Shoot_Ctrl_Cmd_s shoot_cmd_send;            // 传递给发射的控制信息
+Shoot_Upload_Data_s shoot_fetch_data;       // 从发射获取的反馈信息
 
-static Subscriber_t *vision_feed_sub;   // 视觉反馈信息订阅者
-Vision_Upload_Data_s vision_fetch_data; // 从视觉获取的反馈信息
+static Subscriber_t *vision_feed_sub;       // 视觉反馈信息订阅者
+static Subscriber_t *guidence_feed_sub;
+Vision_Upload_Data_s vision_fetch_data;     // 从视觉获取的反馈信息
+Guidence_Upload_Data_s guidence_fetch_data; // 导航
 
-static Robot_Status_e robot_state;      // 机器人整体工作状态
-LPFliterInstance yaw_offset_fliter;     // 底盘防翻滤波
+static Robot_Status_e robot_state;          // 机器人整体工作状态
+LPFliterInstance yaw_offset_fliter;         // 底盘防翻滤波
 
 static void CalcOffsetAngle() {
     // 别名angle提高可读性,不然太长了不好看,虽然基本不会动这个函数
@@ -76,12 +78,12 @@ static void CalcOffsetAngle() {
 
 static float PitchLimit(float add) {
     if (gimbal_cmd_send.gimbal_mode != GIMBAL_ZERO_FORCE) {
-        if (gimbal_fetch_data.pitch_ecd_angle <= PITCH_MAX_ECD &&
-            gimbal_fetch_data.pitch_ecd_angle >= PITCH_MIN_ECD) {
+        if (gimbal_fetch_data.pitch_ecd_angle <= (float)PITCH_MAX_ECD &&
+            gimbal_fetch_data.pitch_ecd_angle >= (float)PITCH_MIN_ECD) {
             return add;
         }
-        else if (add * (gimbal_fetch_data.pitch_ecd_angle - PITCH_MAX_ECD) < 0 ||
-                 add * (gimbal_fetch_data.pitch_ecd_angle - PITCH_MIN_ECD) < 0) {
+        else if (add * (gimbal_fetch_data.pitch_ecd_angle - (float)PITCH_MAX_ECD) < 0 ||
+                 add * (gimbal_fetch_data.pitch_ecd_angle - (float)PITCH_MIN_ECD) < 0) {
             return add;
         }
     }
@@ -89,12 +91,17 @@ static float PitchLimit(float add) {
 }
 
 void VisionControlSet(void) {
-    if (vision_fetch_data.fire_advice == SHOOT_STOP)
-        shoot_cmd_send.shoot_mode = SHOOT_STOP;
+    // if (vision_fetch_data.fire_advice == SHOOT_STOP)
+    //     shoot_cmd_send.shoot_mode = SHOOT_STOP;
+    chassis_cmd_send.vx = guidence_fetch_data.vx;
+    chassis_cmd_send.vy = guidence_fetch_data.vy;
+    chassis_cmd_send.wz = guidence_fetch_data.wz;
     if (vision_fetch_data.vision_state == NO_TARGET) {
+        // gimbal_cmd_send.gimbal_mode = GIMBAL_SCAN_MODE;
         return;
     }
     else {
+        // gimbal_cmd_send.gimbal_mode = GIMBAL_VISION_MODE;
         gimbal_cmd_send.pitch = vision_fetch_data.aim_pitch;
         gimbal_cmd_send.yaw   = vision_fetch_data.aim_yaw;
     }
@@ -135,8 +142,8 @@ static void RemoteControlSet(void) {
     gimbal_cmd_send.yaw =
         theta_format(gimbal_cmd_send.yaw - 0.001f * (float)rc_data[TEMP].rc.rocker_l_);
     // 底盘参数,目前没有加入小陀螺(调试似乎暂时没有必要),系数需要调整
-    chassis_cmd_send.vx = 10.0f * (float)rc_data[TEMP].rc.rocker_r_; // _水平方向
-    chassis_cmd_send.vy = 10.0f * (float)rc_data[TEMP].rc.rocker_r1; // 1数值方向
+    chassis_cmd_send.vx = 20.0f * (float)rc_data[TEMP].rc.rocker_r_; // _水平方向
+    chassis_cmd_send.vy = 20.0f * (float)rc_data[TEMP].rc.rocker_r1; // 1数值方向
     if (last_gimbal_mode != gimbal_cmd_send.gimbal_mode) {
         switch (gimbal_cmd_send.gimbal_mode) {
         case GIMBAL_FREE_MODE:
@@ -328,13 +335,14 @@ void RobotCmdInit(void) {
     ins_data       = GetInsData();
     calibrate_data = CalibrateInit();
 
-    gimbal_cmd_pub   = PubRegister("gimbal_cmd", sizeof(Gimbal_Ctrl_Cmd_s));
-    gimbal_feed_sub  = SubRegister("gimbal_feed", sizeof(Gimbal_Upload_Data_s));
-    shoot_cmd_pub    = PubRegister("shoot_cmd", sizeof(Shoot_Ctrl_Cmd_s));
-    shoot_feed_sub   = SubRegister("shoot_feed", sizeof(Shoot_Upload_Data_s));
-    chassis_cmd_pub  = PubRegister("chassis_cmd", sizeof(Chassis_Ctrl_Cmd_s));
-    chassis_feed_sub = SubRegister("chassis_feed", sizeof(Chassis_Upload_Data_s));
-    vision_feed_sub  = SubRegister("vision_feed", sizeof(Vision_Upload_Data_s));
+    gimbal_cmd_pub    = PubRegister("gimbal_cmd", sizeof(Gimbal_Ctrl_Cmd_s));
+    gimbal_feed_sub   = SubRegister("gimbal_feed", sizeof(Gimbal_Upload_Data_s));
+    shoot_cmd_pub     = PubRegister("shoot_cmd", sizeof(Shoot_Ctrl_Cmd_s));
+    shoot_feed_sub    = SubRegister("shoot_feed", sizeof(Shoot_Upload_Data_s));
+    chassis_cmd_pub   = PubRegister("chassis_cmd", sizeof(Chassis_Ctrl_Cmd_s));
+    chassis_feed_sub  = SubRegister("chassis_feed", sizeof(Chassis_Upload_Data_s));
+    vision_feed_sub   = SubRegister("vision_feed", sizeof(Vision_Upload_Data_s));
+    guidence_feed_sub = SubRegister("guidence_feed", sizeof(Guidence_Upload_Data_s));
 
     Low_Pass_Fliter_Init_Config_s offset_lp_fliter = {
         .RC = 0.0f,
@@ -354,6 +362,7 @@ void RobotCMDTask(void) {
     SubGetMessage(shoot_feed_sub, &shoot_fetch_data);
     SubGetMessage(gimbal_feed_sub, &gimbal_fetch_data);
     SubGetMessage(vision_feed_sub, &vision_fetch_data);
+    SubGetMessage(guidence_feed_sub, &guidence_fetch_data);
 
     // 根据gimbal的反馈值计算云台和底盘正方向的夹角,不需要传参,通过static私有变量完成
     CalcOffsetAngle();
@@ -371,12 +380,6 @@ void RobotCMDTask(void) {
     // VisionTask(RadToDeg(ins_data->Roll), -RadToDeg(ins_data->Pitch), RadToDeg(ins_data->Yaw));
 
     // 推送消息,双板通信,视觉通信等
-    // shoot_cmd_send.rest_heat       = chassis_fetch_data.rest_heat;
-    // shoot_cmd_send.heat_limit      = chassis_fetch_data.heat_limit;
-    // chassis_cmd_send.loader_mode   = shoot_cmd_send.load_mode;
-    // chassis_cmd_send.friction_mode = shoot_cmd_send.friction_mode;
-    // chassis_cmd_send.gimbal_mode   = gimbal_cmd_send.gimbal_mode;
-    // chassis_cmd_send.vision_state  = vision_fetch_data.vision_state;
     chassis_cmd_send.offset_angle = theta_format(FliterCalcutale(
         (FliterInstance *)&yaw_offset_fliter, gimbal_fetch_data.yaw1_motor_single_round_angle));
 

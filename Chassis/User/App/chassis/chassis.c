@@ -96,14 +96,14 @@ void ChassisInit(void) {
             {
                 .speed_PID =
                     {
-                        .Kp            = 4,    // 4.5
+                        .Kp            = 5,    // 4.5
                         .Ki            = 0,    // 0
                         .Kd            = 0.01, // 0
                         .IntegralLimit = 3000,
                         .Improve =
                             (PID_Improvement_e)(PID_Trapezoid_Intergral | PID_Integral_Limit |
                                                 PID_Derivative_On_Measurement),
-                        .MaxOut = 12000,
+                        .MaxOut = 13000,
                     },
                 .current_PID =
                     {
@@ -496,8 +496,8 @@ void ChassisTask(void) {
     // 根据云台和底盘的角度offset将控制量映射到底盘坐标系上
     // 底盘逆时针旋转为角度正方向;云台命令的方向以云台指向的方向为x,采用右手系(x指向正北时y在正东)
     static float sin_theta, cos_theta;
-    cos_theta  = arm_cos_f32(theta_format(chassis_cmd_recv.offset_angle + 45.0f) * DEGREE_2_RAD);
-    sin_theta  = arm_sin_f32(theta_format(chassis_cmd_recv.offset_angle + 45.0f) * DEGREE_2_RAD);
+    cos_theta  = arm_cos_f32(theta_format(chassis_cmd_recv.offset_angle) * DEGREE_2_RAD);
+    sin_theta  = arm_sin_f32(theta_format(chassis_cmd_recv.offset_angle) * DEGREE_2_RAD);
     chassis_vx = chassis_cmd_recv.vx * cos_theta - chassis_cmd_recv.vy * sin_theta;
     chassis_vy = chassis_cmd_recv.vx * sin_theta + chassis_cmd_recv.vy * cos_theta;
     force_wz   = PIDCalculate(&Force_PID_wz, chassis_wz_FK, chassis_cmd_recv.wz);

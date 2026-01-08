@@ -32,7 +32,7 @@ DJIMotorInstance DEBUG_yaw2_motor;
 float DEBUG_dm_pitch, DEBUG_dm_yaw, DEBUG_dm_roll;
 float target_yaw[2];
 float DEBUG_yaw1_angle, DEBUG_yaw1_target;
-float DEBUG_yaw2_angle, DEBUG_pitch_rad;
+float DEBUG_yaw2_angle, DEBUG_pitch_rad, DEBUG_IMU_yaw;
 
 static Publisher_t *gimbal_pub;            // 云台应用消息发布者(云台反馈给cmd)
 static Subscriber_t *gimbal_sub;           // cmd控制消息订阅者
@@ -234,41 +234,71 @@ void GimbalInit(void) {
 static void YawSetTarget(float recv_yaw, gimbal_mode_e mode) {
     // static bool_t target_setted = 0;
     static Yaw1_mode_e yaw1_mode = YAW1_NOMOVE;
+    static Yaw2_mode_e yaw2_mode = YAW2_NOSCAN;
     // float current_yaw           = IMU_data_rad->Yaw * RAD_2_DEGREE;
     static gimbal_mode_e last_mode = GIMBAL_ZERO_FORCE;
     float yaw2_ecd_err             = theta_format(DJIMotorGetAngle(yaw2_motor));
     // float yaw_err               = -NearbyErrFormat(recv_yaw - current_yaw, 180);
+
     if (last_mode != mode) {
         target_yaw[YAW1] = DM_IMU_data->yaw;
         target_yaw[YAW2] = IMU_data_rad->Yaw * RAD_2_DEGREE;
     }
-    switch (yaw1_mode) {
-    case YAW1_NOMOVE:
-        if (yaw2_ecd_err > 50) {
-            // target_yaw[YAW1] = DM_IMU_data->yaw += 5.0;
-            yaw1_mode = YAW1_TURNLEFT;
+    if (mode != GIMBAL_SCAN_MODE) {
+        yaw2_mode = YAW2_NOSCAN;
+        switch (yaw1_mode) {
+        case YAW1_NOMOVE:
+            if (yaw2_ecd_err > 50) {
+                // target_yaw[YAW1] = DM_IMU_data->yaw += 5.0;
+                yaw1_mode = YAW1_TURNLEFT;
+            }
+            else if (yaw2_ecd_err < -50) {
+                // target_yaw[YAW1] = DM_IMU_data->yaw -= 5.0;
+                yaw1_mode = YAW1_TURNRIGHT;
+            }
+            break;
+        case YAW1_TURNLEFT:
+            target_yaw[YAW1] = DM_IMU_data->yaw += 5.0f;
+            if (yaw2_ecd_err < 48)
+                yaw1_mode = YAW1_NOMOVE;
+            break;
+        case YAW1_TURNRIGHT:
+            target_yaw[YAW1] = DM_IMU_data->yaw -= 5.0f;
+            if (yaw2_ecd_err > -48)
+                yaw1_mode = YAW1_NOMOVE;
+            break;
+        default:
+            break;
         }
-        else if (yaw2_ecd_err < -50) {
-            // target_yaw[YAW1] = DM_IMU_data->yaw -= 5.0;
-            yaw1_mode = YAW1_TURNRIGHT;
+        target_yaw[YAW2] = recv_yaw;
+    }
+    else {
+        target_yaw[YAW1] += 0.1; // 大Yaw云台慢速扫描
+        switch (yaw2_mode) {
+        case YAW2_TURNLEFT:
+            target_yaw[YAW2] += 0.25f;
+            if (yaw2_ecd_err > 50) {
+                yaw2_mode        = YAW2_TURNRIGHT;
+                target_yaw[YAW2] = IMU_data_rad->Yaw * RAD_2_DEGREE;
+            }
+            break;
+        case YAW2_TURNRIGHT:
+            target_yaw[YAW2] -= 0.15f;
+            if (yaw2_ecd_err < -50) {
+                yaw2_mode        = YAW2_TURNLEFT;
+                target_yaw[YAW2] = IMU_data_rad->Yaw * RAD_2_DEGREE;
+            }
+            break;
+        case YAW2_NOSCAN:
+            yaw2_mode = YAW2_TURNLEFT;
+            break;
+        default:
+            break;
         }
-        break;
-    case YAW1_TURNLEFT:
-        target_yaw[YAW1] = DM_IMU_data->yaw += 5.0;
-        if (yaw2_ecd_err < 48)
-            yaw1_mode = YAW1_NOMOVE;
-        break;
-    case YAW1_TURNRIGHT:
-        target_yaw[YAW1] = DM_IMU_data->yaw -= 5.0;
-        if (yaw2_ecd_err > -48)
-            yaw1_mode = YAW1_NOMOVE;
-        break;
-    default:
-        break;
     }
 
     target_yaw[YAW1] = theta_format(target_yaw[YAW1]);
-    target_yaw[YAW2] = recv_yaw;
+    target_yaw[YAW2] = theta_format(target_yaw[YAW2]);
     last_mode        = mode;
 
     // if (target_setted == 0) {
@@ -354,6 +384,42 @@ void GimbalTask(void) {
         // yaw和pitch会在robot_cmd中处理好多圈和单圈 RMDMotorSetRef(pitch_motor,
         // gimbal_cmd_recv.pitch);
         break;
+    case GIMBAL_SCAN_MODE:
+        YawSetTarget(gimbal_cmd_recv.yaw, GIMBAL_SCAN_MODE);
+
+        LKMotorEnable(yaw1_motor);
+        DJIMotorEnable(yaw2_motor);
+        DMMotorEnable(pitch_motor);
+        DJIMotorChangeFeed(yaw2_motor, SPEED_LOOP, OTHER_FEED);
+        DJIMotorChangeFeed(yaw2_motor, ANGLE_LOOP, OTHER_FEED);
+        LKMotorChangeFeed(yaw1_motor, ANGLE_LOOP, OTHER_FEED);
+        LKMotorChangeFeed(yaw1_motor, SPEED_LOOP, OTHER_FEED);
+        DMMotorChangeFeed(pitch_motor, ANGLE_LOOP, OTHER_FEED);
+        DMMotorChangeFeed(pitch_motor, SPEED_LOOP, OTHER_FEED);
+
+        DJIMotorSetRef(yaw2_motor, target_yaw[YAW2]);
+        LKMotorSetRef(yaw1_motor, target_yaw[YAW1]);
+        DMMotorSetRef(pitch_motor, gimbal_cmd_recv.pitch);
+        break;
+
+    case GIMBAL_VISION_MODE:
+        YawSetTarget(gimbal_cmd_recv.yaw, GIMBAL_VISION_MODE);
+
+        LKMotorEnable(yaw1_motor);
+        DJIMotorEnable(yaw2_motor);
+        DMMotorEnable(pitch_motor);
+        DJIMotorChangeFeed(yaw2_motor, SPEED_LOOP, OTHER_FEED);
+        DJIMotorChangeFeed(yaw2_motor, ANGLE_LOOP, OTHER_FEED);
+        LKMotorChangeFeed(yaw1_motor, ANGLE_LOOP, OTHER_FEED);
+        LKMotorChangeFeed(yaw1_motor, SPEED_LOOP, OTHER_FEED);
+        DMMotorChangeFeed(pitch_motor, ANGLE_LOOP, OTHER_FEED);
+        DMMotorChangeFeed(pitch_motor, SPEED_LOOP, OTHER_FEED);
+
+        DJIMotorSetRef(yaw2_motor, target_yaw[YAW2]);
+        LKMotorSetRef(yaw1_motor, target_yaw[YAW1]);
+        DMMotorSetRef(pitch_motor, gimbal_cmd_recv.pitch);
+        break;
+
     default:
         break;
     }
@@ -378,6 +444,7 @@ void GimbalTask(void) {
     gimbal_feedback_data.yaw1_motor_single_round_angle = LKMotorGetAngle(yaw1_motor);
     gimbal_feedback_data.pitch_ecd_angle               = pitch_motor->measure.position;
     DEBUG_pitch_rad                                    = -IMU_data_rad->Pitch;
+    DEBUG_IMU_yaw                                      = IMU_data_rad->Yaw * RAD_2_DEGREE;
 
     // gimbal_feedback_data.pitch_ecd_angle              = pitch_motor->measure.total_angle;
 

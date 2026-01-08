@@ -7,13 +7,17 @@
 #include "vision.h"
 
 #define COM6_PACKAGE_HEADER    0xFF
+#define COM6_GUIDENCE_HEADER   0x5A
 #define COM6_PACKAGE_TAIL_BYTE 0x0D
 #define PC_DATA_LEN            16
 
-static Publisher_t *vision_pub;            // 自瞄应用消息发布者(自瞄反馈给cmd)
-Vision_Upload_Data_s vision_feedback_data; // 回传给cmd的云台状态信息
+static Publisher_t *vision_pub;                // 自瞄应用消息发布者(自瞄反馈给cmd)
+static Publisher_t *guidence_pub;              // 自瞄应用消息发布者(自瞄反馈给cmd)
+Vision_Upload_Data_s vision_feedback_data;     // 回传给cmd的云台状态信息
+Guidence_Upload_Data_s guidence_feedback_data; // 回传给cmd的导航状态信息
 
 xPC_Data Data_PC;
+xGuidance_Data Data_Guidance;
 uint8_t message[PC_DATA_LEN];
 uint8_t data_from_pc[PC_DATA_LEN];
 
@@ -45,18 +49,28 @@ void PC_read_data(uint8_t *data) {
                 break;
             }
         }
+        else if (*data == COM6_GUIDENCE_HEADER) {
+            if (*(data + PC_DATA_LEN - 1) == COM6_PACKAGE_TAIL_BYTE) {
+                memcpy(&Data_Guidance, data, sizeof(xGuidance_Data));
+                break;
+            }
+        }
     }
 }
 
 void VisionInit(void) {
     MX_USB_DEVICE_Init();
-    vision_pub = PubRegister("vision_feed", sizeof(Vision_Upload_Data_s));
+    vision_pub   = PubRegister("vision_feed", sizeof(Vision_Upload_Data_s));
+    guidence_pub = PubRegister("guidence_feed", sizeof(Guidence_Upload_Data_s));
 }
 
 void VisionTask(float roll, float pitch, float yaw) {
     vision_sendmessage(AIM_RED, roll, pitch, yaw);
     vision_feedback_data.aim_pitch = DegToRad(Data_PC.pitch);
     vision_feedback_data.aim_yaw   = Data_PC.yaw;
+    guidence_feedback_data.vx      = -5000 * Data_Guidance.vy;
+    guidence_feedback_data.vy      = 5000 * Data_Guidance.vx;
+    guidence_feedback_data.wz      = Data_Guidance.wz;
     if (Data_PC.fire_advice == 1)
         vision_feedback_data.fire_advice = SHOOT_ON;
     else
@@ -65,5 +79,6 @@ void VisionTask(float roll, float pitch, float yaw) {
         vision_feedback_data.vision_state = NO_TARGET;
     else
         vision_feedback_data.vision_state = TARGET_LOCK;
+    PubPushMessage(guidence_pub, (void *)&guidence_feedback_data);
     PubPushMessage(vision_pub, (void *)&vision_feedback_data);
 }

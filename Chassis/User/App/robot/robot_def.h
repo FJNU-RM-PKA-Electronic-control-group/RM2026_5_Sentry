@@ -119,7 +119,7 @@ typedef struct {
  *
  */
 // cmd发布的底盘控制数�?,由chassis订阅
-typedef struct {
+typedef __packed struct {
     // 控制部分
     float vx;           // 前进方向速度
     float vy;           // 横移方向速度

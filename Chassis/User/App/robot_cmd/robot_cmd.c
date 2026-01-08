@@ -302,6 +302,6 @@ void RobotCMDTask(void) {
 
     // 其他应用所需的控制数据在remotecontrolsetmode和mousekeysetmode中完成设置
     PubPushMessage(chassis_feed_pub, (void *)&chassis_fetch_data);
-    PubPushMessage(chassis_cmd_pub, (void *)&chassis_cmd_send);
+    // PubPushMessage(chassis_cmd_pub, (void *)&chassis_cmd_send);
     PubPushMessage(robotarm_cmd_pub, (void *)&robotarm_cmd_send);
 }

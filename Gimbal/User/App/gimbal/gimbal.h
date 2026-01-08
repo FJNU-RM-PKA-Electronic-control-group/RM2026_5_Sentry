@@ -10,6 +10,14 @@ typedef enum
 
 } Yaw1_mode_e;
 
+// 小yaw状态机枚举(用于扫描模式)
+typedef enum
+{
+    YAW2_NOSCAN,
+    YAW2_TURNLEFT,
+    YAW2_TURNRIGHT,
+
+} Yaw2_mode_e;
 /**
  * @brief 初始化云台,会被RobotInit()调用
  *
