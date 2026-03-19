@@ -16,14 +16,14 @@
 /* 机器人重要参数定义,注意根据不同机器人进行修改,浮点数需要以.0或f结尾,无符号以u结尾 */
 // 云台参数
 #define YAW1_ZEROPOINT_ECD                                                                         \
-    227.334595 // 云台和底盘对齐指向相同方向时的电机编码器值,若对云台有机械改动需要修改
+    312.665405 // 云台和底盘对齐指向相同方向时的电机编码器值,若对云台有机械改动需要修改
 #define YAW2_ZEROPOINT_ECD                                                                         \
-    128.077698 // 小yaw和大yaw对齐指向相同方向时的电机编码器值,若对云台有机械改动需要修改
+    313.899139 // 小yaw和大yaw对齐指向相同方向时的电机编码器值,若对云台有机械改动需要修改
 #define YAW_ECD_GREATER_THAN_4096 0   // ALIGN_ECD值是否大于4096,是为1,否为0;用于计算云台偏转角度
 
-#define PITCH_HORIZON_ECD 0.731576204 // 云台处于水平位置时编码器值,若对云台有机械改动需要修改
-#define PITCH_MAX_ECD     0.85
-#define PITCH_MIN_ECD     0.62
+#define PITCH_HORIZON_ECD 0.872225285 // 云台处于水平位置时编码器值,若对云台有机械改动需要修改
+#define PITCH_MAX_ECD     0.95
+#define PITCH_MIN_ECD     0.79
 #define PITCH_MAX_ANGLE                                                                            \
     -15674.30f // 云台竖直方向最大角度 (注意反馈如果是陀螺仪，则填写陀螺仪的角度)
 #define PITCH_MIN_ANGLE                                                                            \
@@ -66,6 +66,7 @@ typedef enum
 {
     ROBOT_STOP = 0,
     ROBOT_READY,
+    ROBOT_AUTO
 } Robot_Status_e;
 
 // 应用状态
@@ -98,7 +99,7 @@ typedef enum
     GIMBAL_GYRO_MODE, // 云台陀螺仪反馈模式,反馈值为陀螺仪pitch,total_yaw_angle,底盘可以为小陀螺和跟随模式
     GIMBAL_SCAN_MODE,
     GIMBAL_VISION_MODE,
-    
+
 } gimbal_mode_e;
 
 // 发射模式设置
@@ -156,6 +157,15 @@ typedef enum
     OFFLINE = 0,
     ONLINE  = 1,
 } online_state_e;
+
+typedef enum
+{
+    STATE_NOPE      = 0,
+    STATE_ATTACKING = 2,
+    STATE_DEFENDING = 3,
+    STATE_MOVING    = 1,
+
+} Sentry_State_e;
 
 // 功率限制,从裁判系统获取,是否有必要保留?
 typedef struct { // 功率控制
@@ -227,6 +237,7 @@ typedef struct {
     float yaw1_motor_single_round_angle;
     float yaw2_motor_single_round_angle;
     float pitch_ecd_angle;
+
 } Gimbal_Upload_Data_s;
 
 typedef struct {
@@ -240,8 +251,8 @@ typedef struct {
     float vx;
     float vy;
     float wz;
+    Sentry_State_e state;
 } Guidence_Upload_Data_s;
-
 
 typedef struct {
     uint8_t no_error;

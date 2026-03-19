@@ -16,27 +16,52 @@ typedef enum
 
 } aim_mod_e;
 
+#pragma pack(1)
+
 typedef __packed struct {
     uint8_t header;
+    // 视觉
     uint8_t fire_advice;
     float pitch;
     float yaw;
     float distance;
+    // 导航;
+    float linear_x;
+    float linear_y;
+    float angular_z;
+    Sentry_State_e state;
+    uint8_t NC[3]; // 占位符
     uint8_t check_bit;
     uint8_t tail_byte;
 
 } xPC_Data;
 
 typedef __packed struct {
-    uint8_t frame_header;
-    uint8_t NC; // 占位符
-    float vx;
-    float vy;
-    float wz;
-    bool friction_wheel_scan;
-    uint8_t frame_tail;
+    uint8_t header;
+    // 视觉
+    uint8_t mode;
+    float roll;
+    float pitch;
+    float yaw;
+    // 导航
+    float offset;
+    uint8_t NC[12]; // 占位符
+    uint8_t check_bit;
+    uint8_t tail_byte;
 
-} xGuidance_Data;
+} TxPC_Data;
+
+#pragma pack()
+// typedef __packed struct {
+//     uint8_t frame_header;
+//     uint8_t NC; // 占位符
+//     float vx;
+//     float vy;
+//     float wz;
+//     bool friction_wheel_scan;
+//     uint8_t frame_tail;
+
+// } xGuidance_Data;
 
 typedef __packed struct {
     uint8_t header;

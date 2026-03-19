@@ -51,14 +51,14 @@ __attribute__((noreturn)) void StartINSTASK(void const *argument) {
     static float ins_start;
     static float ins_dt;
     INS_Init(); // 确保BMI088被正确初始化.
-    LOGINFO("[freeRTOS] INS Task Start");
+    // LOGINFO("[freeRTOS] INS Task Start");
     for (;;) {
         // 1kHz
         ins_start = DWT_GetTimeline_ms();
         INS_task();
         ins_dt = DWT_GetTimeline_ms() - ins_start;
-        if (ins_dt > 1)
-            LOGERROR("[freeRTOS] INS Task is being DELAY! dt = [%f]", &ins_dt);
+        // if (ins_dt > 1)
+        // LOGERROR("[freeRTOS] INS Task is being DELAY! dt = [%f]", &ins_dt);
         //        VisionSend(); //
         //        解算完成后发送视觉数据,但是当前的实现不太优雅,后续若添加硬件触发需要重新考虑结构的组织
         osDelay(1);
@@ -68,13 +68,13 @@ __attribute__((noreturn)) void StartINSTASK(void const *argument) {
 __attribute__((noreturn)) void StartMOTORTASK(void const *argument) {
     static float motor_dt;
     static float motor_start;
-    LOGINFO("[freeRTOS] MOTOR Task Start");
+    // LOGINFO("[freeRTOS] MOTOR Task Start");
     for (;;) {
         motor_start = DWT_GetTimeline_ms();
         MotorControlTask();
         motor_dt = DWT_GetTimeline_ms() - motor_start;
-        if (motor_dt > 1)
-            LOGERROR("[freeRTOS] MOTOR Task is being DELAY! dt = [%f]", &motor_dt);
+        // if (motor_dt > 1)
+        // LOGERROR("[freeRTOS] MOTOR Task is being DELAY! dt = [%f]", &motor_dt);
         osDelay(1);
     }
 }
@@ -83,15 +83,15 @@ __attribute__((noreturn)) void StartDAEMONTASK(void const *argument) {
     static float daemon_dt;
     static float daemon_start;
 
-    LOGINFO("[freeRTOS] Daemon Task Start");
+    // LOGINFO("[freeRTOS] Daemon Task Start");
     for (;;) {
         // 100Hz
         daemon_start = DWT_GetTimeline_ms();
         // DaemonTask();
         //  BuzzerTask();
         daemon_dt = DWT_GetTimeline_ms() - daemon_start;
-        if (daemon_dt > 10)
-            LOGERROR("[freeRTOS] Daemon Task is being DELAY! dt = [%f]", &daemon_dt);
+        // if (daemon_dt > 10)
+        // LOGERROR("[freeRTOS] Daemon Task is being DELAY! dt = [%f]", &daemon_dt);
         osDelay(10);
     }
 }
@@ -99,14 +99,14 @@ __attribute__((noreturn)) void StartDAEMONTASK(void const *argument) {
 __attribute__((noreturn)) void StartROBOTTASK(void const *argument) {
     static float robot_dt;
     static float robot_start;
-    LOGINFO("[freeRTOS] ROBOT core Task Start");
+    // LOGINFO("[freeRTOS] ROBOT core Task Start");
     // 200Hz-500Hz,若有额外的控制任务如平衡步兵可能需要提升至1kHz
     for (;;) {
         robot_start = DWT_GetTimeline_ms();
         RobotTask();
         robot_dt = DWT_GetTimeline_ms() - robot_start;
-        if (robot_dt > 2)
-            LOGERROR("[freeRTOS] ROBOT core Task is being DELAY! dt = [%f]", &robot_dt);
+        // if (robot_dt > 2)
+        // LOGERROR("[freeRTOS] ROBOT core Task is being DELAY! dt = [%f]", &robot_dt);
         osDelay(2);
     }
 }

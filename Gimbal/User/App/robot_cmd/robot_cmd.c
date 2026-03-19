@@ -53,7 +53,11 @@ Vision_Upload_Data_s vision_fetch_data;     // 从视觉获取的反馈信息
 Guidence_Upload_Data_s guidence_fetch_data; // 导航
 
 static Robot_Status_e robot_state;          // 机器人整体工作状态
+static Robot_Status_e last_robot_state;     // 机器人整体工作状态
 LPFliterInstance yaw_offset_fliter;         // 底盘防翻滤波
+LPFliterInstance vx_fliter;                 // 底盘防翻速度滤波
+LPFliterInstance vy_fliter;                 // 底盘防翻速度滤波
+Sentry_State_e sentry_state = STATE_MOVING;
 
 static void CalcOffsetAngle() {
     // 别名angle提高可读性,不然太长了不好看,虽然基本不会动这个函数
@@ -89,33 +93,103 @@ static float PitchLimit(float add) {
     }
     return 0;
 }
+/**
+ * @brief     姿态模式状态机控制函数
+ * @attention 需要选择一个适合的触发时机，尚在开发中
+ *
+ * @bug       ————我  很  智  能————
+ *
+ */
+void StateControlSet() {
+    switch (guidence_fetch_data.state) {
+    case STATE_MOVING:
+        shoot_cmd_send.shoot_mode    = SHOOT_STOP;
+        shoot_cmd_send.friction_mode = FRICTION_ON;
+        shoot_cmd_send.load_mode     = LOAD_STOP;
+
+        break;
+    case STATE_ATTACKING:
+        chassis_cmd_send.chassis_mode = CHASSIS_ROTATE;
+        shoot_cmd_send.friction_mode  = FRICTION_ON;
+        if (vision_fetch_data.fire_advice == SHOOT_ON) {
+            shoot_cmd_send.shoot_mode = SHOOT_ON;
+            shoot_cmd_send.load_mode  = LOAD_REVERSE;
+        }
+        else {
+            shoot_cmd_send.shoot_mode = SHOOT_STOP;
+        }
+        if (vision_fetch_data.vision_state == NO_TARGET) {
+            gimbal_cmd_send.gimbal_mode = GIMBAL_SCAN_MODE;
+        }
+        else {
+            // gimbal_cmd_send.gimbal_mode = GIMBAL_VISION_MODE;
+            gimbal_cmd_send.gimbal_mode = GIMBAL_FREE_MODE;
+            gimbal_cmd_send.pitch       = vision_fetch_data.aim_pitch; // 0.027;
+            gimbal_cmd_send.yaw         = vision_fetch_data.aim_yaw;
+        }
+
+        chassis_cmd_send.vx *= 0.5;
+        chassis_cmd_send.vy *= 0.5;
+        chassis_cmd_send.wz = 20;
+        break;
+    case STATE_DEFENDING:
+        chassis_cmd_send.chassis_mode = CHASSIS_ROTATE;
+        shoot_cmd_send.shoot_mode     = SHOOT_STOP;
+        shoot_cmd_send.friction_mode  = FRICTION_ON;
+        chassis_cmd_send.vx *= 0.3;
+        chassis_cmd_send.vy *= 0.3;
+        chassis_cmd_send.wz = 100;
+    case STATE_NOPE:
+    default:
+        break;
+    }
+}
 
 void VisionControlSet(void) {
     // if (vision_fetch_data.fire_advice == SHOOT_STOP)
     //     shoot_cmd_send.shoot_mode = SHOOT_STOP;
+
+    // robot_state = ROBOT_AUTO;
+    // if (robot_state != last_robot_state && robot_state == ROBOT_AUTO) {
+    //     sentry_state = STATE_MOVING;
+    // }
+    // if (guidence_fetch_data.vx != chassis_cmd_send.vx && chassis_cmd_send.vx == 0 &&
+    //     guidence_fetch_data.vy != chassis_cmd_send.vy && chassis_cmd_send.vy == 0) {
+    //     StateSwitch();
+    // }
+
     chassis_cmd_send.vx = guidence_fetch_data.vx;
     chassis_cmd_send.vy = guidence_fetch_data.vy;
     chassis_cmd_send.wz = guidence_fetch_data.wz;
+
     if (vision_fetch_data.vision_state == NO_TARGET) {
         // gimbal_cmd_send.gimbal_mode = GIMBAL_SCAN_MODE;
         return;
     }
     else {
         // gimbal_cmd_send.gimbal_mode = GIMBAL_VISION_MODE;
-        gimbal_cmd_send.pitch = vision_fetch_data.aim_pitch;
+        gimbal_cmd_send.pitch = vision_fetch_data.aim_pitch; // 0.027;
         gimbal_cmd_send.yaw   = vision_fetch_data.aim_yaw;
     }
-    // #ifdef USE_VISION_FIRE_CONTROL
+    shoot_cmd_send.shoot_mode = SHOOT_ON;
 
+    // #ifdef USE_VISION_FIRE_CONTROL
+    if (vision_fetch_data.fire_advice == SHOOT_STOP)
+        shoot_cmd_send.shoot_mode = SHOOT_STOP;
     // #endif
 }
 
 static void RemoteControlSet(void) {
     static gimbal_mode_e last_gimbal_mode = GIMBAL_ZERO_FORCE;
+    last_robot_state                      = robot_state;
     if (switch_is_up(rc_data[TEMP].rc.switch_right)) // 右侧开关状态[上],底盘跟随云台
     {
         chassis_cmd_send.chassis_mode = CHASSIS_FOLLOW_GIMBAL_YAW;
         gimbal_cmd_send.gimbal_mode   = GIMBAL_GYRO_MODE;
+        if (switch_is_up(rc_data[TEMP].rc.switch_left)) {
+            chassis_cmd_send.chassis_mode = CHASSIS_ROTATE;
+            chassis_cmd_send.wz           = 30;
+        }
     }
     else if (switch_is_mid(
                  rc_data[TEMP].rc.switch_right)) // 右侧开关状态[中],底盘和云台分离,底盘保持不转动
@@ -138,7 +212,9 @@ static void RemoteControlSet(void) {
     }
 
     // 云台参数,确定云台控制数据
-    gimbal_cmd_send.pitch += PitchLimit(0.00001f * (float)rc_data[TEMP].rc.rocker_l1);
+    gimbal_cmd_send.pitch +=
+        0.00001f * (float)rc_data[TEMP]
+                       .rc.rocker_l1; // PitchLimit(0.00001f * (float)rc_data[TEMP].rc.rocker_l1);
     gimbal_cmd_send.yaw =
         theta_format(gimbal_cmd_send.yaw - 0.001f * (float)rc_data[TEMP].rc.rocker_l_);
     // 底盘参数,目前没有加入小陀螺(调试似乎暂时没有必要),系数需要调整
@@ -183,7 +259,8 @@ static void RemoteControlSet(void) {
     else {
         shoot_cmd_send.load_mode = LOAD_STOP;
     }
-    if (switch_is_down(rc_data[TEMP].rc.switch_left)) // 左侧开关状态为[下],视觉模式
+    if (switch_is_down(rc_data[TEMP].rc.switch_left) &&
+        robot_state != ROBOT_STOP) // 左侧开关状态为[下],视觉模式
     {
         VisionControlSet();
     }
@@ -320,13 +397,13 @@ static void EmergencyHandler(void) {
         shoot_cmd_send.shoot_mode     = SHOOT_OFF;
         shoot_cmd_send.friction_mode  = FRICTION_OFF;
         shoot_cmd_send.load_mode      = LOAD_STOP;
-        LOGERROR("[CMD] emergency stop!");
+        // LOGERROR("[CMD] emergency stop!");
     }
     // 遥控器右侧开关为[上],恢复正常运行
     if (switch_is_up(rc_data[TEMP].rc.switch_right)) {
         robot_state               = ROBOT_READY;
         shoot_cmd_send.shoot_mode = SHOOT_ON;
-        LOGINFO("[CMD] reinstate, robot ready");
+        // LOGINFO("[CMD] reinstate, robot ready");
     }
 }
 
@@ -344,11 +421,14 @@ void RobotCmdInit(void) {
     vision_feed_sub   = SubRegister("vision_feed", sizeof(Vision_Upload_Data_s));
     guidence_feed_sub = SubRegister("guidence_feed", sizeof(Guidence_Upload_Data_s));
 
-    Low_Pass_Fliter_Init_Config_s offset_lp_fliter = {
+    Low_Pass_Fliter_Init_Config_s lp_fliter = {
         .RC = 0.0f,
     };
 
-    LowPassFliterInit(&yaw_offset_fliter, &offset_lp_fliter);
+    LowPassFliterInit(&yaw_offset_fliter, &lp_fliter);
+    lp_fliter.RC = 0.05;
+    LowPassFliterInit(&vx_fliter, &lp_fliter);
+    LowPassFliterInit(&vy_fliter, &lp_fliter);
 
     //	gimbal_cmd_send.pitch = 0;		作用不明，保留
     robot_state = ROBOT_READY;
@@ -366,23 +446,26 @@ void RobotCMDTask(void) {
 
     // 根据gimbal的反馈值计算云台和底盘正方向的夹角,不需要传参,通过static私有变量完成
     CalcOffsetAngle();
-    if (switch_is_up(rc_data[TEMP].rc.switch_left) ||
-        rc_data->rc_state == 2) // 左侧开关状态为[上],待添加
-    {
-        MouseKeySet();
-    }
-    else {
-        RemoteControlSet();
-    }
+    // if (switch_is_up(rc_data[TEMP].rc.switch_left) ||
+    //     rc_data->rc_state == 2) // 左侧开关状态为[上],待添加
+    // {
+    //     MouseKeySet();
+    // }
+    // else {
+    RemoteControlSet();
+    // }
     EmergencyHandler(); // 处理模块离线和遥控器急停等紧急情况
-
-                        // 设置视觉发送数据,还需增加加速度和角速度数据
+    // if (robot_state != ROBOT_STOP) {
+    //     StateControlSet();
+    // }
+    // 设置视觉发送数据,还需增加加速度和角速度数据
     // VisionTask(RadToDeg(ins_data->Roll), -RadToDeg(ins_data->Pitch), RadToDeg(ins_data->Yaw));
 
     // 推送消息,双板通信,视觉通信等
     chassis_cmd_send.offset_angle = theta_format(FliterCalcutale(
         (FliterInstance *)&yaw_offset_fliter, gimbal_fetch_data.yaw1_motor_single_round_angle));
-
+    chassis_cmd_send.vx = FliterCalcutale((FliterInstance *)&vx_fliter, chassis_cmd_send.vx);
+    chassis_cmd_send.vy = FliterCalcutale((FliterInstance *)&vy_fliter, chassis_cmd_send.vy);
     // 其他应用所需的控制数据在remotecontrolsetmode和mousekeysetmode中完成设置
 
     PubPushMessage(chassis_cmd_pub, (void *)&chassis_cmd_send);

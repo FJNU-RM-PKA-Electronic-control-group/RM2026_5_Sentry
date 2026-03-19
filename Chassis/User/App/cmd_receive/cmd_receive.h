@@ -5,7 +5,7 @@
 #include "stdint.h"
 
 #pragma pack(1)
-typedef struct {
+typedef __packed struct {
     float vx;           // 前进方向速度
     float vy;           // 横移方向速度
     float wz;           // 旋转速度

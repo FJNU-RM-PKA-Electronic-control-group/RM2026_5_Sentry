@@ -32,7 +32,7 @@ DJIMotorInstance DEBUG_yaw2_motor;
 float DEBUG_dm_pitch, DEBUG_dm_yaw, DEBUG_dm_roll;
 float target_yaw[2];
 float DEBUG_yaw1_angle, DEBUG_yaw1_target;
-float DEBUG_yaw2_angle, DEBUG_pitch_rad, DEBUG_IMU_yaw;
+float DEBUG_yaw2_angle, DEBUG_pitch_rad, DEBUG_IMU_yaw, DEBUG_Pitch_target;
 
 static Publisher_t *gimbal_pub;            // 云台应用消息发布者(云台反馈给cmd)
 static Subscriber_t *gimbal_sub;           // cmd控制消息订阅者
@@ -62,31 +62,30 @@ void GimbalInit(void) {
             },
         .controller_param_init_config =
             {
-                .angle_PID =
-                    {
-                        .Kp = 40.0f,
-                        .Ki = 3.0f,
-                        .Kd = 0.0f,
-                        .Improve =
-                            (PID_Improvement_e)(PID_Trapezoid_Intergral | PID_Integral_Limit |
-                                                PID_Derivative_On_Measurement |
-                                                PID_DerivativeFilter),
-                        .CoefA         = 0.01,
-                        .CoefB         = 0.1,
-                        .MaxOut        = 150.0f,
-                        .IntegralLimit = 33.0f,
-                    },
+                .angle_PID = {.Kp = 23.0f,
+                              .Ki = 25.0f,
+                              .Kd = 0.0f,
+                              .Improve =
+                                  (PID_Improvement_e)(PID_Trapezoid_Intergral | PID_Integral_Limit |
+                                                      PID_Derivative_On_Measurement |
+                                                      PID_DerivativeFilter),
+                              .CoefA             = 0.01,
+                              .CoefB             = 0.1,
+                              .MaxOut            = 150.0f,
+                              .IntegralLimit     = 33.0f,
+                              .Derivative_LPF_RC = 0.1f},
                 .speed_PID =
                     {
-                        .Kp = 60.0f, // 50
-                        .Ki = 15.0f, // 200
-                        .Kd = 0.0f,
+                        .Kp = 150.0f, //
+                        .Ki = 10.0f,  //
+                        .Kd = 150.0f,
                         .Improve =
                             (PID_Improvement_e)(PID_Trapezoid_Intergral | PID_Integral_Limit |
                                                 PID_Derivative_On_Measurement |
                                                 PID_DerivativeFilter),
-                        .IntegralLimit = 3000,
-                        .MaxOut        = 15000,
+                        .IntegralLimit     = 3000,
+                        .MaxOut            = 15000,
+                        .Derivative_LPF_RC = 0.05f,
                     },
                 .other_angle_feedback_ptr = &IMU_data_rad->Yaw,
                 .other_speed_feedback_ptr = &IMU_data_rad->Gyro[2],
@@ -118,24 +117,25 @@ void GimbalInit(void) {
             {
                 .angle_PID =
                     {
-                        .Kp       = 5.0f, // 8
+                        .Kp       = 7.0f, // 8
                         .Ki       = 0.0f,
-                        .Kd       = 0.2f,
+                        .Kd       = 0.35f,
                         .DeadBand = 0.0,
                         .Improve =
                             (PID_Improvement_e)(PID_Trapezoid_Intergral | PID_Integral_Limit |
                                                 PID_Derivative_On_Measurement |
                                                 PID_DerivativeFilter | PID_ChangingIntegrationRate),
-                        .CoefA         = 0.01,
-                        .CoefB         = 0.1,
-                        .IntegralLimit = 50,
-                        .MaxOut        = 300.0F,
+                        .CoefA             = 0.01,
+                        .CoefB             = 0.1,
+                        .IntegralLimit     = 50,
+                        .MaxOut            = 300.0F,
+                        .Derivative_LPF_RC = 0.01f,
                     },
                 .speed_PID =
                     {
-                        .Kp = 15.0f, // 50
+                        .Kp = 35.0f, // 50
                         .Ki = 0.0f,  // 200
-                        .Kd = 0.0f,
+                        .Kd = 0.15f,
                         .Improve =
                             (PID_Improvement_e)(PID_Trapezoid_Intergral | PID_Integral_Limit |
                                                 PID_Derivative_On_Measurement |
@@ -173,14 +173,14 @@ void GimbalInit(void) {
     };
     pitch_ff                         = FeedForwardInit(&pitch_ff_config);
     Motor_Init_Config_s pitch_config = {
-        .can_init_config = {.can_handle = &hcan1, .tx_id = 0x01, .rx_id = 0x00},
+        .can_init_config = {.can_handle = &hcan1, .tx_id = 0x0A, .rx_id = 0x09},
         .controller_param_init_config =
             {
                 .angle_PID =
                     {
-                        .Kp = 10.0f, // 20
-                        .Ki = 1.0,   // 17
-                        .Kd = 0.0f,  // 2
+                        .Kp = 13.5f,  // 20
+                        .Ki = 1.0,    // 17
+                        .Kd = 0.005f, // 2
                         .Improve =
                             (PID_Improvement_e)(PID_Trapezoid_Intergral | PID_Integral_Limit |
                                                 PID_Derivative_On_Measurement |
@@ -192,9 +192,9 @@ void GimbalInit(void) {
                     },
                 .speed_PID =
                     {
-                        .Kp = 1.0f,  // 150
-                        .Ki = 20.0f, // 30
-                        .Kd = 0,     // 3
+                        .Kp = 1.3f,  // 150
+                        .Ki = 10.0f, // 30
+                        .Kd = 0.007, // 3
                         .Improve =
                             (PID_Improvement_e)(PID_Trapezoid_Intergral | PID_Integral_Limit |
                                                 PID_Derivative_On_Measurement | PID_OutputFilter),
@@ -258,13 +258,14 @@ static void YawSetTarget(float recv_yaw, gimbal_mode_e mode) {
             }
             break;
         case YAW1_TURNLEFT:
-            target_yaw[YAW1] = DM_IMU_data->yaw += 5.0f;
+            target_yaw[YAW1] = DM_IMU_data->yaw + float_constrain(yaw2_ecd_err - 48.5f, 0.0f, 5.0f);
             if (yaw2_ecd_err < 48)
                 yaw1_mode = YAW1_NOMOVE;
             break;
         case YAW1_TURNRIGHT:
-            target_yaw[YAW1] = DM_IMU_data->yaw -= 5.0f;
-            if (yaw2_ecd_err > -48)
+            target_yaw[YAW1] =
+                DM_IMU_data->yaw + float_constrain(yaw2_ecd_err + 48.5f, -5.0f, 0.0f);
+            if (yaw2_ecd_err > -43)
                 yaw1_mode = YAW1_NOMOVE;
             break;
         default:
@@ -273,18 +274,18 @@ static void YawSetTarget(float recv_yaw, gimbal_mode_e mode) {
         target_yaw[YAW2] = recv_yaw;
     }
     else {
-        target_yaw[YAW1] += 0.1; // 大Yaw云台慢速扫描
+        target_yaw[YAW1] += 0.2f; // 大Yaw云台慢速扫描
         switch (yaw2_mode) {
         case YAW2_TURNLEFT:
-            target_yaw[YAW2] += 0.25f;
+            target_yaw[YAW2] += 0.55f;
             if (yaw2_ecd_err > 50) {
                 yaw2_mode        = YAW2_TURNRIGHT;
                 target_yaw[YAW2] = IMU_data_rad->Yaw * RAD_2_DEGREE;
             }
             break;
         case YAW2_TURNRIGHT:
-            target_yaw[YAW2] -= 0.15f;
-            if (yaw2_ecd_err < -50) {
+            target_yaw[YAW2] -= 0.05f;
+            if (yaw2_ecd_err < -45) {
                 yaw2_mode        = YAW2_TURNLEFT;
                 target_yaw[YAW2] = IMU_data_rad->Yaw * RAD_2_DEGREE;
             }
@@ -425,12 +426,12 @@ void GimbalTask(void) {
     }
     // DJIMotorStop(yaw2_motor);
     // LKMotorStop(yaw1_motor);
-    DEBUG_dm_pitch    = DM_IMU_data->pitch;
-    DEBUG_dm_yaw      = DM_IMU_data->yaw;
-    DEBUG_dm_roll     = DM_IMU_data->roll;
-    DEBUG_yaw1_target = AngleFormatfp(NearbyErrFormat(LKMotorGetAngle(yaw1_motor), 180) / 2);
-    DEBUG_yaw1_angle  = LKMotorGetAngle(yaw1_motor);
-    DEBUG_yaw2_angle  = theta_format(DJIMotorGetAngle(yaw2_motor));
+    // DEBUG_dm_pitch    = DM_IMU_data->pitch;
+    // DEBUG_dm_yaw      = DM_IMU_data->yaw;
+    // DEBUG_dm_roll     = DM_IMU_data->roll;
+    // DEBUG_yaw1_target = AngleFormatfp(NearbyErrFormat(LKMotorGetAngle(yaw1_motor), 180) / 2);
+    // DEBUG_yaw1_angle  = LKMotorGetAngle(yaw1_motor);
+    // DEBUG_yaw2_angle  = theta_format(DJIMotorGetAngle(yaw2_motor));
 
     // LKMotorSetRef(yaw_motor, 10.0F);
 
@@ -443,8 +444,9 @@ void GimbalTask(void) {
     gimbal_feedback_data.yaw2_motor_single_round_angle = DJIMotorGetAngle(yaw2_motor);
     gimbal_feedback_data.yaw1_motor_single_round_angle = LKMotorGetAngle(yaw1_motor);
     gimbal_feedback_data.pitch_ecd_angle               = pitch_motor->measure.position;
-    DEBUG_pitch_rad                                    = -IMU_data_rad->Pitch;
+    DEBUG_pitch_rad                                    = -(IMU_data_rad->Pitch);
     DEBUG_IMU_yaw                                      = IMU_data_rad->Yaw * RAD_2_DEGREE;
+    DEBUG_Pitch_target                                 = gimbal_cmd_recv.pitch;
 
     // gimbal_feedback_data.pitch_ecd_angle              = pitch_motor->measure.total_angle;
 

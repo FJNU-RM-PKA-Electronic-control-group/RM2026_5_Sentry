@@ -141,6 +141,9 @@ void ShootTask(void) {
         DJIMotorEnable(loader);
         break;
     case SHOOT_STOP:
+        // DJIMotorEnable(friction_l);
+        // DJIMotorEnable(friction_r);
+        // DJIMotorStop(loader);
         load_state = LOAD_STOP;
         break;
     default:
@@ -172,8 +175,8 @@ void ShootTask(void) {
 
             break;
         default: // 当前为了调试设定的默认值4000,因为还没有加入裁判系统无法读取弹速.
-            DJIMotorSetRef(friction_l, 30000);
-            DJIMotorSetRef(friction_r, 30000);
+            DJIMotorSetRef(friction_l, 40000);
+            DJIMotorSetRef(friction_r, 40000);
 
             break;
         }
@@ -207,7 +210,7 @@ void ShootTask(void) {
     // 也有可能需要从switch-case中独立出来
     case LOAD_REVERSE:
         DJIMotorOuterLoop(loader, SPEED_LOOP);
-        DJIMotorSetRef(loader, -50000);
+        DJIMotorSetRef(loader, -55000);
         // ...
         break;
     default:

@@ -23,12 +23,11 @@
   */
 #include "bsp_dwt.h"
 #include "chassis.h"
+#include "cmd_receive.h"
 #include "robot.h"
 #include "robot_cmd.h"
 #include "robot_def.h"
 #include "robot_task.h"
-#include "cmd_receive.h"
-
 
 // 后续需要添加的头文件，具体通过英雄的gimbal移植
 #include "buzzer.h"

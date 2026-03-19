@@ -21,20 +21,20 @@ typedef struct {
 typedef struct {
     referee_id_t referee_id;
 
-    xFrameHeader FrameHeader;                              // 接收到的帧头信息
+    xFrameHeader FrameHeader;              // 接收到的帧头信息
     uint16_t CmdID;
-    ext_game_state_t GameState;                            // 0x0001
-    ext_game_result_t GameResult;                          // 0x0002
-    ext_game_robot_HP_t GameRobotHP;                       // 0x0003
-    ext_event_data_t EventData;                            // 0x0101
-    ext_supply_projectile_action_t SupplyProjectileAction; // 0x0102
-    ext_game_robot_state_t GameRobotState;                 // 0x0201
-    ext_power_heat_data_t PowerHeatData;                   // 0x0202
-    ext_game_robot_pos_t GameRobotPos;                     // 0x0203
-    ext_buff_musk_t BuffMusk;                              // 0x0204
-    aerial_robot_energy_t AerialRobotEnergy;               // 0x0205
-    ext_robot_hurt_t RobotHurt;                            // 0x0206
-    ext_shoot_data_t ShootData;                            // 0x0207
+    ext_game_state_t GameState;            // 0x0001
+    ext_game_result_t GameResult;          // 0x0002
+    ext_game_robot_HP_t GameRobotHP;       // 0x0003
+    ext_event_data_t EventData;            // 0x0101
+    ext_game_robot_state_t GameRobotState; // 0x0201
+    ext_power_heat_data_t PowerHeatData;   // 0x0202
+    ext_game_robot_pos_t GameRobotPos;     // 0x0203
+    ext_buff_musk_t BuffMusk;              // 0x0204
+    ext_robot_hurt_t RobotHurt;            // 0x0206
+    ext_shoot_data_t ShootData;            // 0x0207
+    ext_rfid_status_t RFIDStatus;          // 0x0209
+    ext_sentry_info_t SentryInfo;          // 0x020D
     // 自定义交互数据的接收
     Communicate_ReceiveData_t ReceiveData;
 

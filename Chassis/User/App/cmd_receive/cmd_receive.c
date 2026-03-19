@@ -5,7 +5,7 @@
 #include "stdlib.h"
 #include "string.h"
 
-static CANCommInstance *ins;
+CANCommInstance *ins;
 chassis_data_rev *data_ptr;
 static Publisher_t *chassis_cmd_p;   // 底盘控制消息发布者
 static Subscriber_t *chassis_feed_s; // 底盘反馈信息订阅者
@@ -33,6 +33,6 @@ void CmdRevTask(void) {
     chassis_send.offset_angle = data_ptr->offset_angle;
     chassis_send.chassis_mode = data_ptr->chassis_mode;
 
-    // CANCommSend(ins, (uint8_t *)&chassis_get_data);
+    CANCommSend(ins, (uint8_t *)&chassis_get_data);
     PubPushMessage(chassis_cmd_p, (void *)&chassis_send);
 }

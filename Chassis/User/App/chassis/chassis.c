@@ -55,7 +55,7 @@
 #define VECTORMOTOR_OFFSET_LF 227.107758
 #define VECTORMOTOR_OFFSET_RF 17.1824951
 #define VECTORMOTOR_OFFSET_LB 72.6410828
-#define VECTORMOTOR_OFFSET_RB 44.0768356
+#define VECTORMOTOR_OFFSET_RB 222.49353
 
 /* 底盘应用包含的模块和信息存储,底盘是单例模式,因此不需要为底盘建立单独的结构体 */
 static Publisher_t *chassis_pub;                    // 用于发布底盘的数据
@@ -247,7 +247,7 @@ void ChassisInit(void) {
     //    cap = SuperCapInit(&cap_conf); // 超级电容初始化
 
     PID_Init_Config_s pid_config = {
-        .Kp            = 0.9, // 0.4
+        .Kp            = 1.2, // 0.4
         .Ki            = 0,   // 0
         .Kd            = 0.0f,
         .IntegralLimit = 3000,
@@ -259,8 +259,8 @@ void ChassisInit(void) {
     PIDInit(&follow_pid, &pid_config);
 
     PID_Init_Config_s force_pid_config = {
-        .Kp            = 1, // 0.4
-        .Ki            = 0, // 0
+        .Kp            = 1.2, // 0.4
+        .Ki            = 0,   // 0
         .Kd            = 0.05,
         .IntegralLimit = 3000,
         .DeadBand      = 0,
