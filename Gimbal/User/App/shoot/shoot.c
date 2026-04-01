@@ -5,6 +5,13 @@
 #include "dji_motor.h"
 #include "message_center.h"
 
+#define LOADER_STALL_CURRENT_THRESHOLD   4000.0f
+#define LOADER_STALL_SPEED_THRESHOLD_APS 100.0f
+#define LOADER_STALL_DETECT_TIME_MS      120.0f
+#define LOADER_REVERSE_TIME_MS           220.0f
+#define LOADER_FORWARD_REF               -55000.0f
+#define LOADER_REVERSE_REF               50000.0f
+
 // #include "general_def.h"
 
 /* 对于双发射机构的机器人,将下面的数据封装成结构体即可,生成两份shoot应用实例 */
@@ -123,11 +130,19 @@ void ShootInit(void) {
 /* 机器人发射机构控制核心任务 */
 void ShootTask(void) {
     static loader_mode_e load_state;
+    static float stall_start_ms   = -1.0f;
+    static float reverse_until_ms = 0.0f;
     // 从cmd获取控制数据
     SubGetMessage(shoot_sub, &shoot_cmd_recv);
     load_state       = shoot_cmd_recv.load_mode;
     DEBUG_friction_l = *friction_l;
     DEBUG_loader     = *loader;
+
+    float now_ms             = DWT_GetTimeline_ms();
+    float loader_speed_aps   = loader->measure.speed_aps;
+    float loader_current     = (float)loader->measure.real_current;
+    float loader_speed_abs   = loader_speed_aps >= 0.0f ? loader_speed_aps : -loader_speed_aps;
+    float loader_current_abs = loader_current >= 0.0f ? loader_current : -loader_current;
 
     switch (shoot_cmd_recv.shoot_mode) {
     case SHOOT_OFF:
@@ -150,9 +165,9 @@ void ShootTask(void) {
         while (1)
             ;
     }
-    if (shoot_cmd_recv.rest_heat + 100 > shoot_cmd_recv.heat_limit) { // 枪口热量限制
+    if (shoot_cmd_recv.rest_heat + 50 >= 240 /*shoot_cmd_recv.heat_limit*/) { // 枪口热量限制
 
-        //  load_state = LOAD_STOP;
+        load_state = LOAD_STOP;
     }
 
     // 确定是否开启摩擦轮,后续可能修改为键鼠模式下始终开启摩擦轮(上场时建议一直开启)
@@ -175,8 +190,8 @@ void ShootTask(void) {
 
             break;
         default: // 当前为了调试设定的默认值4000,因为还没有加入裁判系统无法读取弹速.
-            DJIMotorSetRef(friction_l, 40000);
-            DJIMotorSetRef(friction_r, 40000);
+            DJIMotorSetRef(friction_l, 35000);
+            DJIMotorSetRef(friction_r, 35000);
 
             break;
         }
@@ -187,6 +202,28 @@ void ShootTask(void) {
         DJIMotorSetRef(friction_r, 0);
 
         load_state = LOAD_STOP;
+    }
+
+    uint8_t loader_forward_working = (load_state == LOAD_BURSTFIRE || load_state == LOAD_1_BULLET);
+    uint8_t reverse_active         = now_ms < reverse_until_ms;
+
+    if (!reverse_active && loader_forward_working) {
+        if (loader_current_abs > LOADER_STALL_CURRENT_THRESHOLD &&
+            loader_speed_abs < LOADER_STALL_SPEED_THRESHOLD_APS) {
+            if (stall_start_ms < 0.0f)
+                stall_start_ms = now_ms;
+            else if ((now_ms - stall_start_ms) >= LOADER_STALL_DETECT_TIME_MS) {
+                reverse_until_ms = now_ms + LOADER_REVERSE_TIME_MS;
+                reverse_active   = 1;
+                stall_start_ms   = -1.0f;
+            }
+        }
+        else {
+            stall_start_ms = -1.0f;
+        }
+    }
+    else {
+        stall_start_ms = -1.0f;
     }
 
     switch (load_state) {
@@ -201,7 +238,7 @@ void ShootTask(void) {
     // 连发模式,对速度闭环
     case LOAD_BURSTFIRE:
         DJIMotorOuterLoop(loader, SPEED_LOOP);
-        DJIMotorSetRef(loader, 50000);
+        DJIMotorSetRef(loader, LOADER_FORWARD_REF);
         // x颗/秒换算成速度:
         // 已知一圈的载弹量,由此计算出1s需要转的角度,注意换算角速度(DJIMotor的速度单位是angle
         // per second)
@@ -210,12 +247,17 @@ void ShootTask(void) {
     // 也有可能需要从switch-case中独立出来
     case LOAD_REVERSE:
         DJIMotorOuterLoop(loader, SPEED_LOOP);
-        DJIMotorSetRef(loader, -55000);
+        DJIMotorSetRef(loader, LOADER_REVERSE_REF);
         // ...
         break;
     default:
         while (1)
             ; // 未知模式,停止运行,检查指针越界,内存溢出等问题
+    }
+
+    if (reverse_active && loader_forward_working) {
+        DJIMotorOuterLoop(loader, SPEED_LOOP);
+        DJIMotorSetRef(loader, LOADER_REVERSE_REF);
     }
 
     // 反馈数据,目前暂时没有要设定的反馈数据,后续可能增加应用离线监测以及卡弹反馈

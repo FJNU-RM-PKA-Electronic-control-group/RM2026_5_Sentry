@@ -18,6 +18,13 @@ typedef enum
     YAW2_TURNRIGHT,
 
 } Yaw2_mode_e;
+typedef enum
+{
+    PITCH_NOMOVE,
+    PITCH_UP,
+    PITCH_DOWN,
+
+} pitch_mode_e;
 /**
  * @brief 初始化云台,会被RobotInit()调用
  *

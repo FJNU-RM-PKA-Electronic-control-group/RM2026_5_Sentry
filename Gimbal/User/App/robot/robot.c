@@ -36,8 +36,9 @@ void RobotTask(void) {
     RobotCMDTask();
     GimbalTask();
     ShootTask();
-    if (cnt % 2 == 0) {
+    if (cnt % 5 == 0) {
         CmdRevTask();
+        cnt = 0;
     }
     cnt++;
 }

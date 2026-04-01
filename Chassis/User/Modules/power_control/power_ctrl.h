@@ -2,6 +2,8 @@
 #define __POWER_CTRL_H
 
 #include "stdint.h"
+#define STEER 0
+#define WHEEL 1
 
 typedef struct {
 
@@ -44,7 +46,15 @@ typedef struct {
 typedef struct {
     motor_power_t motor[4][2];
     float total_power;
+    float steer_power;
+    float wheel_power;
     float max_power;
+    float steer_power_ratio; // 舵向电机总功率占比 (例如 0.6 表示舵向电机占总功率的60%)
 } PowerControlInstance;
+
+PowerControlInstance *ChassisPowerInit(power_control_init_t *config);
+void ChassisPowerRatioSet(PowerControlInstance *ins, float steer_ratio);
+void ChassisMaxPowerSet(PowerControlInstance *ins, float power);
+void ChassisPowerControl(PowerControlInstance *ins);
 
 #endif

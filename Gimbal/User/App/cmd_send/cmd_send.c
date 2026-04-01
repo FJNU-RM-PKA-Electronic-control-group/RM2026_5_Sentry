@@ -32,5 +32,5 @@ void CmdRevTask(void) {
     data_send.chassis_mode = cmd_send_data.chassis_mode;
 
     CANCommSend(ins, (uint8_t *)&data_send);
-    // PubPushMessage(cmd_send_pub, chassis_can_fetch_data);
+    PubPushMessage(cmd_send_pub, chassis_can_fetch_data);
 }

@@ -49,6 +49,24 @@
  *
  */
 // 机器人状�?
+
+typedef enum
+{
+    GAME_NOT_STARTED         = 0, // 0：未开始比赛
+    GAME_PREPARATION         = 1, // 1：准备阶段
+    GAME_15S_SELF_CHECK      = 2, // 2：十五秒裁判系统自检阶段
+    GAME_5S_COUNTDOWN        = 3, // 3：五秒倒计时
+    GAME_IN_PROGRESS         = 4, // 4：比赛中
+    GAME_CALCULATING_RESULTS = 5  // 5：比赛结算中
+} Game_Progress_e;
+
+typedef enum
+{
+    RFID_NONE        = 0, // 0：什么都没有 (未检测到或不在上述区域)
+    RFID_SUPPLY_ZONE = 1, // 1：补给区
+    RFID_CENTER_GAIN = 2  // 2：中心增益点 (仅 RMUL 适用)
+} RFID_Status_e;
+
 typedef enum
 {
     ROBOT_STOP = 0,
@@ -132,6 +150,16 @@ typedef __packed struct {
 
 } Chassis_Ctrl_Cmd_s;
 
+typedef __packed struct {
+    uint16_t power_limit;
+    uint16_t buffer_energy;
+    
+
+    // UI部分
+    //  ...
+
+} Referee_Ctrl_Cmd_s;
+
 // cmd发布的云台控制数�?,由gimbal订阅
 typedef struct {
     INS_t *imu_data;
@@ -157,11 +185,11 @@ typedef struct {
     //     float real_vx;
     //     float real_vy;
     //     float real_wz;
-    float pitch;
-    float yaw;
-    float roll;
-    float yaw_total;
-    Enemy_Color_e enemy_color; // 0 for blue, 1 for red
+    RFID_Status_e rfid_status;     // RFID状态
+    Game_Progress_e game_progress; // 比赛进程状态
+    Enemy_Color_e enemy_color;     // 0 for blue, 1 for red
+    uint16_t current_HP;
+    uint16_t shooter_heat;
 
 } Chassis_Upload_Data_s;
 

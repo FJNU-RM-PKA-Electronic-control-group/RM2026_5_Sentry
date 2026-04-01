@@ -228,8 +228,8 @@ static void IMU_UpdateData(CANInstance *instance) {
 static void DM_IMU_Can_Init(void) {
     CAN_Init_Config_s imu_can_config; // 配置结构体
     imu_can_config.can_handle          = &hcan2;
-    imu_can_config.tx_id               = 0x01;
-    imu_can_config.rx_id               = 0x11;
+    imu_can_config.tx_id               = 0x0B;
+    imu_can_config.rx_id               = 0x0C;
     imu_can_config.can_module_callback = IMU_UpdateData;
     imu_can_config.id                  = &DM_IMU;
     DM_IMU                             = (DMIMUInstance *)malloc(sizeof(DMIMUInstance));
@@ -255,7 +255,7 @@ void DM_IMU_Init(DMIMU_Init_Config_s *config) {
     imu_set_mode(DM_IMU, DM_IMU->send_mode);
     imu_set_baud(DM_IMU, DM_IMU->baudrate);
     imu_change_com_port(DM_IMU, DM_IMU->com_port);
-    imu_set_active_mode_delay(10); // 主动模式下5ms发送一次
+    imu_set_active_mode_delay(15); // 主动模式下5ms发送一次
     // 上电先校准
     imu_accel_calibration();
     HAL_Delay(6000);

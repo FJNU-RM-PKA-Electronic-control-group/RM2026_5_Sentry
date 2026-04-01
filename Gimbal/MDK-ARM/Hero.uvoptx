@@ -312,20 +312,15 @@
         <Ww>
           <count>31</count>
           <WinNumber>1</WinNumber>
-          <ItemText>\\Hero\../User/App/cmd_send/cmd_send.c\chassis_can_fetch_data-&gt;roll</ItemText>
+          <ItemText>\\Hero\../User/App/cmd_send/cmd_send.c\ins-&gt;can_ins-&gt;can_handle-&gt;ErrorCode</ItemText>
         </Ww>
         <Ww>
           <count>32</count>
           <WinNumber>1</WinNumber>
-          <ItemText>\\Hero\../User/App/cmd_send/cmd_send.c\ins-&gt;can_ins-&gt;can_handle-&gt;ErrorCode</ItemText>
-        </Ww>
-        <Ww>
-          <count>33</count>
-          <WinNumber>1</WinNumber>
           <ItemText>chassis_can_fetch_data</ItemText>
         </Ww>
         <Ww>
-          <count>34</count>
+          <count>33</count>
           <WinNumber>1</WinNumber>
           <ItemText>sentry_state</ItemText>
         </Ww>
@@ -530,6 +525,16 @@
           <count>39</count>
           <WinNumber>2</WinNumber>
           <ItemText>\\Hero\../User/App/shoot/shoot.c\loader</ItemText>
+        </Ww>
+        <Ww>
+          <count>40</count>
+          <WinNumber>2</WinNumber>
+          <ItemText>chassis_can_fetch_data</ItemText>
+        </Ww>
+        <Ww>
+          <count>41</count>
+          <WinNumber>2</WinNumber>
+          <ItemText>chassis_fetch_data</ItemText>
         </Ww>
       </WatchWindow2>
       <Tracepoint>
@@ -1490,7 +1495,7 @@
 
   <Group>
     <GroupName>Modules</GroupName>
-    <tvExp>1</tvExp>
+    <tvExp>0</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <RteFlg>0</RteFlg>

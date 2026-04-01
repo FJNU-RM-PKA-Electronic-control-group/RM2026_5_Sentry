@@ -113,8 +113,8 @@ uint8_t BMI088_init(uint8_t calibrate) {
         .can_init_config =
             {
                 .can_handle = &hcan2,
-                .tx_id      = 0x10,
-                .rx_id      = 0x11,
+                .tx_id      = 0x0B,
+                .rx_id      = 0x0C,
             },
         .send_mode = ACTIVE_MODE,
     };
@@ -123,7 +123,7 @@ uint8_t BMI088_init(uint8_t calibrate) {
     BMI088_SPI = &hspi1;
     error      = BMI088_NO_ERROR;
 
-    error |= bmi088_accel_init();  
+    error |= bmi088_accel_init();
     error |= bmi088_gyro_init();
     if (calibrate)
         Calibrate_MPU_Offset(&BMI088);

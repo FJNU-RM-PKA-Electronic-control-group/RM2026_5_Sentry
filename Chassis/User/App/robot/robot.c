@@ -79,7 +79,7 @@ void RobotTask(void) {
     static uint8_t cnt = 0; // 设定不同任务频率(控制负载)
     RobotCMDTask();         // 传参之类的核心参数
     ChassisTask();
-    if (cnt % 2 == 0) {
+    if (cnt % 10 == 0) {
         CmdRevTask(); // AC板通信，太有用了，现在恢复
     }
     cnt++;

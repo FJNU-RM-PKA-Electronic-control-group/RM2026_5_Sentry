@@ -33,6 +33,7 @@
 #include "dji_motor.h"
 #include "fliter.h"
 #include "message_center.h"
+#include "power_ctrl.h"
 #include "referee_UI.h"
 #include "referee_task.h"
 #include "robot_def.h"
@@ -52,14 +53,15 @@
 #define LB                    3
 #define RB                    2
 #define WHEEL_COUNT           4
-#define VECTORMOTOR_OFFSET_LF 227.107758
-#define VECTORMOTOR_OFFSET_RF 17.1824951
-#define VECTORMOTOR_OFFSET_LB 72.6410828
-#define VECTORMOTOR_OFFSET_RB 222.49353
+#define VECTORMOTOR_OFFSET_LF 225.437851
+#define VECTORMOTOR_OFFSET_RF 134.779312
+#define VECTORMOTOR_OFFSET_LB 13.3592796
+#define VECTORMOTOR_OFFSET_RB 223.855835
 
 /* 底盘应用包含的模块和信息存储,底盘是单例模式,因此不需要为底盘建立单独的结构体 */
 static Publisher_t *chassis_pub;                    // 用于发布底盘的数据
 static Subscriber_t *chassis_sub;                   // 用于订阅底盘的控制命令 // !ONE_BOARD
+static Subscriber_t *referee_chassis_sub;           // 用于订阅裁判系统发送的底盘相关数据
 Chassis_Ctrl_Cmd_s chassis_cmd_recv;                // 底盘接收到的控制命令
 static Chassis_Upload_Data_s chassis_feedback_data; // 底盘回传的反馈数据
 
@@ -71,6 +73,8 @@ static Chassis_Upload_Data_s chassis_feedback_data; // 底盘回传的反馈数�
 DJIMotorInstance *speed_motor[4], *vector_motor[4]; // left right forward back
 PIDInstance follow_pid;
 DJIMotorInstance DEBUG_CHASSIS;
+PowerControlInstance *power_ctrl;        // 功率控制实例
+Referee_Ctrl_Cmd_s referee_chassis_recv; // 裁判系统的底盘相关数据
 
 // 用于正解算的变量
 PIDInstance Force_PID_vx, Force_PID_vy, Force_PID_wz;
@@ -87,6 +91,7 @@ float force_ff[4];
 float chassis_vx, chassis_vy; // 将云台系的速度投影到底盘
 float vt[4], anglet[4];       // 底盘速度解算后的临时输出,待进行限幅
 float vector_feedback[4];
+static float steer_current_feedback[WHEEL_COUNT];
 float debug_anglet[4];
 void ChassisInit(void) {
     // 四个轮子的参数一样,改tx_id和反转标志位即可
@@ -125,6 +130,7 @@ void ChassisInit(void) {
                 .close_loop_type       = (Closeloop_Type_e)(SPEED_LOOP | CURRENT_LOOP),
                 .pid_mode              = MOTOR_PID_MUTILOOP,
                 .feedforward_flag      = CURRENT_FEEDFORWARD,
+                .output_flag           = OTHER_OUTPUT,
             },
         .motor_type = M3508,
     };
@@ -246,6 +252,114 @@ void ChassisInit(void) {
     //        }};
     //    cap = SuperCapInit(&cap_conf); // 超级电容初始化
 
+    // 6020电机统一参数，稍后直接统一赋值即可，增强可读性
+    motor_power_init_t steer_power_config = {
+
+        .arg =
+            {
+                .K1       = 6.0021f,
+                .K2       = -0.0005f,
+                .K_torque = 0.8130f,
+                .P_const  = 1.3715f,
+            },
+    };
+    // C620电调统一参数，稍后直接统一赋值即可，增强可读性
+    motor_power_init_t wheel_power_config = {
+
+        .arg =
+            {
+                .K1       = 0.12785662198126574f,
+                .K2       = 0.00004319062337601348f,
+                .K_torque = 0.0171687401695532f,
+                .P_const  = 1.598658371452403f,
+            },
+    };
+    power_control_init_t power_config = {
+        .motor_steer_data[LF] =
+            {
+                .power_input_data =
+                    {
+                        .I_cmd = &steer_current_feedback[LF],
+                        .w_aps = &vector_motor[LF]->measure.speed_aps,
+                    },
+                .arg = steer_power_config.arg,
+            },
+        .motor_steer_data[RF] =
+            {
+                .power_input_data =
+                    {
+                        .I_cmd = &steer_current_feedback[RF],
+                        .w_aps = &vector_motor[RF]->measure.speed_aps,
+                    },
+                .arg = steer_power_config.arg,
+            },
+        .motor_steer_data[LB] =
+            {
+                .power_input_data =
+                    {
+                        .I_cmd = &steer_current_feedback[LB],
+                        .w_aps = &vector_motor[LB]->measure.speed_aps,
+                    },
+                .arg = steer_power_config.arg,
+            },
+        .motor_steer_data[RB] =
+            {
+                .power_input_data =
+                    {
+                        .I_cmd = &steer_current_feedback[RB],
+                        .w_aps = &vector_motor[RB]->measure.speed_aps,
+                    },
+                .arg = steer_power_config.arg,
+            },
+        .motor_wheel_data[LF] =
+            {
+                .power_input_data =
+                    {
+                        .I_cmd = &speed_motor[LF]->motor_controller.current_PID.Output,
+                        .w_aps = &speed_motor[LF]->measure.speed_aps,
+                    },
+                .arg = wheel_power_config.arg,
+            },
+        .motor_wheel_data[RF] =
+            {
+                .power_input_data =
+                    {
+                        .I_cmd = &speed_motor[RF]->motor_controller.current_PID.Output,
+                        .w_aps = &speed_motor[RF]->measure.speed_aps,
+                    },
+                .arg = wheel_power_config.arg,
+            },
+        .motor_wheel_data[LB] =
+            {
+                .power_input_data =
+                    {
+                        .I_cmd = &speed_motor[LB]->motor_controller.current_PID.Output,
+                        .w_aps = &speed_motor[LB]->measure.speed_aps,
+                    },
+                .arg = wheel_power_config.arg,
+            },
+        .motor_wheel_data[RB] =
+            {
+                .power_input_data =
+                    {
+                        .I_cmd = &speed_motor[RB]->motor_controller.current_PID.Output,
+                        .w_aps = &speed_motor[RB]->measure.speed_aps,
+                    },
+                .arg = wheel_power_config.arg,
+            },
+    };
+    power_ctrl = ChassisPowerInit(&power_config);
+    ChassisPowerRatioSet(power_ctrl, 0.1f); // 舵向电机功率占比设置为60%
+
+    DJIMotorSetOtherOutput(speed_motor[LF], &power_ctrl->motor[LF][WHEEL].I_out);
+    DJIMotorSetOtherOutput(speed_motor[RF], &power_ctrl->motor[RF][WHEEL].I_out);
+    DJIMotorSetOtherOutput(speed_motor[LB], &power_ctrl->motor[LB][WHEEL].I_out);
+    DJIMotorSetOtherOutput(speed_motor[RB], &power_ctrl->motor[RB][WHEEL].I_out);
+    DJIMotorSetOtherOutput(vector_motor[LF], &power_ctrl->motor[LF][STEER].I_out);
+    DJIMotorSetOtherOutput(vector_motor[RF], &power_ctrl->motor[RF][STEER].I_out);
+    DJIMotorSetOtherOutput(vector_motor[LB], &power_ctrl->motor[LB][STEER].I_out);
+    DJIMotorSetOtherOutput(vector_motor[RB], &power_ctrl->motor[RB][STEER].I_out);
+
     PID_Init_Config_s pid_config = {
         .Kp            = 1.2, // 0.4
         .Ki            = 0,   // 0
@@ -279,8 +393,9 @@ void ChassisInit(void) {
     LowPassFliterInit(&wz_fliter, &lp_fliter_config);
 
     // 发布订阅初始化,如果为双板,则需要can comm来传递消息
-    chassis_sub = SubRegister("chassis_cmd", sizeof(Chassis_Ctrl_Cmd_s));
-    chassis_pub = PubRegister("chassis_feed", sizeof(Chassis_Upload_Data_s));
+    chassis_sub         = SubRegister("chassis_cmd", sizeof(Chassis_Ctrl_Cmd_s));
+    referee_chassis_sub = SubRegister("referee_chassis", sizeof(Referee_Ctrl_Cmd_s));
+    chassis_pub         = PubRegister("chassis_feed", sizeof(Chassis_Upload_Data_s));
 }
 
 #define LF_CENTER                                                                                  \
@@ -416,10 +531,14 @@ static void SteeringWheelIK(void) {
  *
  */
 static void LimitChassisOutput(void) {
+    for (uint8_t i = 0; i < WHEEL_COUNT; i++) {
+        steer_current_feedback[i] = (float)vector_motor[i]->measure.real_current;
+    }
     // 功率限制待添加
     // referee_data->PowerHeatData.chassis_power;
     // referee_data->PowerHeatData.chassis_power_buffer;
-
+    ChassisMaxPowerSet(power_ctrl, 70.0f);
+    ChassisPowerControl(power_ctrl);
     // 完成功率限制后进行电机参考输入设定
     DJIMotorSetRef(speed_motor[LF], vt[LF]);
     DJIMotorSetRef(speed_motor[RF], vt[RF]);
@@ -449,6 +568,7 @@ void ChassisTask(void) {
     // 后续增加没收到消息的处理(双板的情况)
     // 获取新的控制信息
     SubGetMessage(chassis_sub, &chassis_cmd_recv);
+    SubGetMessage(referee_chassis_sub, &referee_chassis_recv);
     DEBUG_CHASSIS = *speed_motor[LF];
 
     // VectorFeedbackCheck();
@@ -487,7 +607,7 @@ void ChassisTask(void) {
         chassis_cmd_recv.wz = PIDCalculate(&follow_pid, 0, -chassis_cmd_recv.offset_angle);
         break;
     case CHASSIS_SPIN: // 自旋,同时保持全向机动;当前wz维持定值,后续增加不规则的变速策略
-        chassis_cmd_recv.wz = 20;
+        // chassis_cmd_recv.wz = 20;
         break;
     default:
         break;

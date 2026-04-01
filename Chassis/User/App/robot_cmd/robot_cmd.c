@@ -1,22 +1,25 @@
 /**
   ****************************(C) COPYRIGHT 2022 YUELU*********************************
   * @file      robot_cmd.c\h
-  * @brief     robot_cmdÊÇÕû¸ö»úÆ÷ÈËµÄºËÐÄÓ¦ÓÃ£¬Æä¸ºÔð½ÓÊÜÒ£¿ØÆ÷/ÉÏÎ»»ú·¢À´µÄÖ¸Áî£¬²¢½«Ö¸
-  *            Áî×ª»¯ÎªÊµ¼ÊµÄÔË¶¯¿ØÖÆÄ¿±ê£¬·¢ËÍ¸øÆäËûÈý¸öÓ¦ÓÃ¡£ºóÕß»á¸ù¾Ýrobot_cmd·¢À´µÄÃü
-  *            Áî£¬Éè¶¨µç»úºÍÆäËûÖ´ÐÐµ¥ÔªµÄ²Î¿¼ÖµµÈ¡£(Ïàµ±ÓÚ¼¯³ÉÁË¾É´úÂëgimbal_behaviourºÍ
-  *             chassis_behaviour²¿·Ö£¬ÇÒ¾ßÓÐ·ÀµôÏß¹¦ÄÜ£©
+  * @brief
+  robot_cmdï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ËµÄºï¿½ï¿½ï¿½Ó¦ï¿½Ã£ï¿½ï¿½ä¸ºï¿½ï¿½ï¿½ï¿½ï¿½Ò£ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½Î»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½î£¬ï¿½ï¿½ï¿½ï¿½Ö¸
   *
-  * @todo      1.ÍêÉÆ×Ô¶¨Òå¿ØÖÆÆ÷Ä£Ê½
-  *            2.ÍêÉÆÒ£¿ØÆ÷Ä£Ê½ÏÂµÄÂ¼ÖÆÄ£Ê½Ñ¡Ôñ»¹ÓÐÐ£×¼²¿·ÖÉè¼Æ
-  *            3.±àÐ´×Ô¶¨Òå¿ØÖÆÆ÷µôÏßµÄÏà¹ØÓ¦¶Ô´ëÊ©
-               4.µ×ÅÌmessage¹¦ÄÜÐèÒªÐÞ¸Ä
+  ï¿½ï¿½×ªï¿½ï¿½ÎªÊµï¿½Êµï¿½ï¿½Ë¶ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿ï¿½ê£¬ï¿½ï¿½ï¿½Í¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½Ã¡ï¿½ï¿½ï¿½ï¿½ß»ï¿½ï¿½ï¿½ï¿½robot_cmdï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+  *
+  ï¿½î£¬ï¿½è¶¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö´ï¿½Ðµï¿½Ôªï¿½Ä²Î¿ï¿½Öµï¿½È¡ï¿½(ï¿½àµ±ï¿½Ú¼ï¿½ï¿½ï¿½ï¿½Ë¾É´ï¿½ï¿½ï¿½gimbal_behaviourï¿½ï¿½
+  *             chassis_behaviourï¿½ï¿½ï¿½Ö£ï¿½ï¿½Ò¾ï¿½ï¿½Ð·ï¿½ï¿½ï¿½ï¿½ß¹ï¿½ï¿½Ü£ï¿½
+  *
+  * @todo      1.ï¿½ï¿½ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£Ê½
+  *            2.ï¿½ï¿½ï¿½ï¿½Ò£ï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½Âµï¿½Â¼ï¿½ï¿½Ä£Ê½Ñ¡ï¿½ï¿½ï¿½ï¿½Ð£×¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+  *            3.ï¿½ï¿½Ð´ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ßµï¿½ï¿½ï¿½ï¿½Ó¦ï¿½Ô´ï¿½Ê©
+               4.ï¿½ï¿½ï¿½ï¿½messageï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½Þ¸ï¿½
   *
   * @note
   * @history
   *  Version    Date            Author          Modification
-  *  V1.0.0                     YUELU              1. Íê³É
-  *  V2.0.0                      qhp               1.ÊÊÅä¶ÔÓ¦»úÆ÷ÈË
-  *  V2.1.0                     nan_97             1.ÍêÉÆ×Ô¶¨Òå¿ØÖÆÆ÷Ä£Ê½£¬ÊÊÅä¹¤³Ì
+  *  V1.0.0                     YUELU              1. ï¿½ï¿½ï¿½
+  *  V2.0.0                      qhp               1.ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+  *  V2.1.0                     nan_97             1.ï¿½ï¿½ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ä¹¤ï¿½ï¿½
   *
   @verbatim
   ===================================================================================
@@ -55,43 +58,48 @@
 // #include "bsp_log.h"
 #include "bsp_gpio.h"
 #include "bsp_usb.h"
+#include "referee_task.h"
+#include "rm_referee.h"
 #include "user_lib.h"
 
-// Ë½ÓÐºê,×Ô¶¯½«±àÂëÆ÷×ª»»³É½Ç¶ÈÖµ
-// #define YAW_ALIGN_ANGLE (YAW_CHASSIS_ALIGN_ECD * ECD_ANGLE_COEF_DJI) // ¶ÔÆëÊ±µÄ½Ç¶È,0-360
+// Ë½ï¿½Ðºï¿½,ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½É½Ç¶ï¿½Öµ
+// #define YAW_ALIGN_ANGLE (YAW_CHASSIS_ALIGN_ECD * ECD_ANGLE_COEF_DJI) // ï¿½ï¿½ï¿½ï¿½Ê±ï¿½Ä½Ç¶ï¿½,0-360
 // #define PTICH_HORIZON_ANGLE (PITCH_HORIZON_ECD * ECD_ANGLE_COEF_DJI) //
-// pitchË®Æ½Ê±µç»úµÄ½Ç¶È,0-360
+// pitchË®Æ½Ê±ï¿½ï¿½ï¿½ï¿½Ä½Ç¶ï¿½,0-360
 
-// ÕâÁ½¸öºê´ý¶¨
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 #define YAW_ALIGN_ANGLE     0
 #define PTICH_HORIZON_ANGLE 0
 #define PITCH_MAX           15
 #define PITCH_MIN           -8
 
-RC_ctrl_t *rc_data;                                       // Ò£¿ØÆ÷Êý¾Ý,³õÊ¼»¯Ê±·µ»Ø
-INS_t *ins_data;                                          // IMUÊý¾Ý,³õÊ¼»¯Ê±·µ»Ø
+RC_ctrl_t *rc_data;                                       // Ò£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½Ê¼ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½
+INS_t *ins_data;                                          // IMUï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½Ê¼ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½
 cali_data_t *calibrate_data;
-AirPumpInstance *ee_airpump, left_airpump, right_airpump; // Æø±ÃÊµÀý×¢²á
+AirPumpInstance *ee_airpump, left_airpump, right_airpump; // ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½×¢ï¿½ï¿½
+referee_info_t *referee_info;
 
-static Publisher_t *chassis_cmd_pub;                      // µ×ÅÌ¿ØÖÆÏûÏ¢·¢²¼Õß
+static Publisher_t *chassis_cmd_pub;   // ï¿½ï¿½ï¿½Ì¿ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 static Publisher_t *chassis_feed_pub;
-static Subscriber_t *chassis_feed_sub;                    // µ×ÅÌ·´À¡ÐÅÏ¢¶©ÔÄÕß
-Chassis_Ctrl_Cmd_s chassis_cmd_send; // ·¢ËÍ¸øµ×ÅÌÓ¦ÓÃµÄÐÅÏ¢,°üÀ¨¿ØÖÆÐÅÏ¢ºÍUI»æÖÆÏà¹Ø
-Chassis_Upload_Data_s
-    chassis_fetch_data; // ´Óµ×ÅÌÓ¦ÓÃ½ÓÊÕµÄ·´À¡ÐÅÏ¢ÐÅÏ¢,µ×ÅÌ¹¦ÂÊÇ¹¿ÚÈÈÁ¿Óëµ×ÅÌÔË¶¯×´Ì¬µÈ
+static Subscriber_t *chassis_feed_sub; // ï¿½ï¿½ï¿½Ì·ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+static Publisher_t *referee_info_pub;
+Chassis_Ctrl_Cmd_s
+    chassis_cmd_send; // ï¿½ï¿½ï¿½Í¸ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½Ãµï¿½ï¿½ï¿½Ï¢,ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½UIï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+Chassis_Upload_Data_s chassis_fetch_data; // ï¿½Óµï¿½ï¿½ï¿½Ó¦ï¿½Ã½ï¿½ï¿½ÕµÄ·ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½Ï¢,ï¿½ï¿½ï¿½Ì¹ï¿½ï¿½ï¿½Ç¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë¶ï¿½×´Ì¬ï¿½ï¿½
+Referee_Ctrl_Cmd_s referee_chassis_send;
 
-static Publisher_t *robotarm_cmd_pub;       // ÔÆÌ¨¿ØÖÆÏûÏ¢·¢²¼Õß
-static Subscriber_t *robotarm_feed_sub;     // ÔÆÌ¨·´À¡ÐÅÏ¢¶©ÔÄÕß
-Robotarm_Ctrl_Cmd_s robotarm_cmd_send;      // ´«µÝ¸øÔÆÌ¨µÄ¿ØÖÆÐÅÏ¢
-Robotarm_Upload_Data_s robotarm_fetch_data; // ´ÓÔÆÌ¨»ñÈ¡µÄ·´À¡ÐÅÏ¢
-USB_Rx_t *Vision_message;                   // ´ÓÐéÄâ´®¿Ú¶ÁÈ¡µÄÊý¾Ý
+static Publisher_t *robotarm_cmd_pub;       // ï¿½ï¿½Ì¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+static Subscriber_t *robotarm_feed_sub;     // ï¿½ï¿½Ì¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+Robotarm_Ctrl_Cmd_s robotarm_cmd_send;      // ï¿½ï¿½ï¿½Ý¸ï¿½ï¿½ï¿½Ì¨ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
+Robotarm_Upload_Data_s robotarm_fetch_data; // ï¿½ï¿½ï¿½ï¿½Ì¨ï¿½ï¿½È¡ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
+USB_Rx_t *Vision_message;                   // ï¿½ï¿½ï¿½ï¿½ï¿½â´®ï¿½Ú¶ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
 float abslute_vx, abslute_vy;
 
-// static Subscriber_t *vision_feed_sub;         // ÊÓ¾õ·´À¡ÐÅÏ¢¶©ÔÄÕß
-// Vision_Upload_Data_s vision_fetch_data; // ´ÓÊÓ¾õ»ñÈ¡µÄ·´À¡ÐÅÏ¢
+// static Subscriber_t *vision_feed_sub;         // ï¿½Ó¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+// Vision_Upload_Data_s vision_fetch_data; // ï¿½ï¿½ï¿½Ó¾ï¿½ï¿½ï¿½È¡ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
 
-Robot_Status_e robot_state; // »úÆ÷ÈËÕûÌå¹¤×÷×´Ì¬
+Robot_Status_e robot_state; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½å¹¤ï¿½ï¿½×´Ì¬
 
 // static float PitchLimit(float origin) {
 //     if (robotarm_cmd_send.gimbal_mode != GIMBAL_ZERO_FORCE) {
@@ -108,24 +116,24 @@ Robot_Status_e robot_state; // »úÆ÷ÈËÕûÌå¹¤×÷×´Ì¬
 // }
 
 /**
- * @brief  ¼ÆËãÆ«ÒÆ½Ç¶È
+ * @brief  ï¿½ï¿½ï¿½ï¿½Æ«ï¿½Æ½Ç¶ï¿½
  *
- * @todo  ºóÐøÐèÒªÕë¶Ô±Û½øÐÐÓÅ»¯£¬¿¼ÂÇÊÇ·ñ¸Ä³ÉÍÓÂÝÒÇ·´À¡Êý¾Ý½øÐÐ¼ÆËã
+ * @todo  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½Ô±Û½ï¿½ï¿½ï¿½ï¿½Å»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½Ä³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý½ï¿½ï¿½Ð¼ï¿½ï¿½ï¿½
  *
  */
 
 static void CalcOffsetAngle() {
-    // ±ðÃûangleÌá¸ß¿É¶ÁÐÔ,²»È»Ì«³¤ÁË²»ºÃ¿´,ËäÈ»»ù±¾²»»á¶¯Õâ¸öº¯Êý
+    // ï¿½ï¿½ï¿½ï¿½angleï¿½ï¿½ß¿É¶ï¿½ï¿½ï¿½,ï¿½ï¿½È»Ì«ï¿½ï¿½ï¿½Ë²ï¿½ï¿½Ã¿ï¿½,ï¿½ï¿½È»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½á¶¯ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     static float angle;
-    angle = robotarm_fetch_data.yaw_relative_angle; // ´ÓÔÆÌ¨»ñÈ¡µÄµ±Ç°yawµç»úµ¥È¦½Ç¶È
-#if YAW_ECD_GREATER_THAN_4096                       // Èç¹û´óÓÚ180¶È
+    angle = robotarm_fetch_data.yaw_relative_angle; // ï¿½ï¿½ï¿½ï¿½Ì¨ï¿½ï¿½È¡ï¿½Äµï¿½Ç°yawï¿½ï¿½ï¿½ï¿½ï¿½È¦ï¿½Ç¶ï¿½
+#if YAW_ECD_GREATER_THAN_4096                       // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½180ï¿½ï¿½
     if (angle > YAW_ALIGN_ANGLE && angle <= 180.0f + YAW_ALIGN_ANGLE)
         chassis_cmd_send.offset_angle = angle - YAW_ALIGN_ANGLE;
     else if (angle > 180.0f + YAW_ALIGN_ANGLE)
         chassis_cmd_send.offset_angle = angle - YAW_ALIGN_ANGLE - 360.0f;
     else
         chassis_cmd_send.offset_angle = angle - YAW_ALIGN_ANGLE;
-#else // Ð¡ÓÚ180¶È
+#else // Ð¡ï¿½ï¿½180ï¿½ï¿½
     if (angle > YAW_ALIGN_ANGLE)
         chassis_cmd_send.offset_angle = (angle - YAW_ALIGN_ANGLE);
     else if (angle <= YAW_ALIGN_ANGLE && angle >= YAW_ALIGN_ANGLE - PI)
@@ -136,9 +144,10 @@ static void CalcOffsetAngle() {
 }
 
 /**
- * @brief ¿ØÖÆÊäÈëÎªÒ£¿ØÆ÷(µ÷ÊÔÊ±)µÄÄ£Ê½ºÍ¿ØÖÆÁ¿ÉèÖÃ
- * @todo  ¹Ø½ÚÐ£×¼ÉèÖÃÐèÒªÐ´Èë£¬»¹ÓÐÂ¼ÖÆÄ£Ê½£¬ÒÔ¼°ÔÆÌ¨²ÎÊý¡£ÕâÒ»²¿·ÖÒª¸ù¾ÝÂ¼ÖÆÄ£Ê½½øÐÐÓÅ»¯£¬
- *        Í¬Ê±Òª×¢Òâ´úÂëµÄ¼ò½àÐÔ£¬²»ÄÜÖ±½ÓÒÆÖ²¡£µ×ÅÌÏµÊýÐèÒª¸ü¸Ä£¬300Ì«´óÁË
+ * @brief ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÎªÒ£ï¿½ï¿½ï¿½ï¿½(ï¿½ï¿½ï¿½ï¿½Ê±)ï¿½ï¿½Ä£Ê½ï¿½Í¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ * @todo
+ * ï¿½Ø½ï¿½Ð£×¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÒªÐ´ï¿½ë£¬ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½Ä£Ê½ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½Ì¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½Ä£Ê½ï¿½ï¿½ï¿½ï¿½ï¿½Å»ï¿½ï¿½ï¿½
+ *        Í¬Ê±Òª×¢ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½Ô£ï¿½ï¿½ï¿½ï¿½ï¿½Ö±ï¿½ï¿½ï¿½ï¿½Ö²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½Ä£ï¿½300Ì«ï¿½ï¿½ï¿½ï¿½
  */
 uint8_t debug_mode1;
 uint8_t debug_mode2;
@@ -154,7 +163,9 @@ static void RemoteControlSet(void) {
         robot_state = ROBOT_READY;
     }
 
-    if (switch_is_up(rc_data[TEMP].rc.switch_right)) // ÓÒ²à¿ª¹Ø×´Ì¬[ÉÏ],µ×ÅÌ¸úËæÔÆÌ¨
+    if (switch_is_up(
+            rc_data[TEMP]
+                .rc.switch_right)) // ï¿½Ò²à¿ªï¿½ï¿½×´Ì¬[ï¿½ï¿½],ï¿½ï¿½ï¿½Ì¸ï¿½ï¿½ï¿½ï¿½ï¿½Ì¨
     {
         chassis_cmd_send.chassis_mode = CHASSIS_FOLLOW_GIMBAL_YAW;
         robotarm_cmd_send.gimbal_mode = GIMBAL_FOLLOW_GIMBAL_YAW;
@@ -170,14 +181,17 @@ static void RemoteControlSet(void) {
             chassis_cmd_send.chassis_mode = CHASSIS_FOLLOW_GIMBAL_YAW;
         }
     }
-    else if (switch_is_mid(
-                 rc_data[TEMP].rc.switch_right)) // ÓÒ²à¿ª¹Ø×´Ì¬[ÖÐ],µ×ÅÌºÍÔÆÌ¨·ÖÀë,µ×ÅÌ±£³Ö²»×ª¶¯
+    else if (
+        switch_is_mid(
+            rc_data[TEMP]
+                .rc
+                .switch_right)) // ï¿½Ò²à¿ªï¿½ï¿½×´Ì¬[ï¿½ï¿½],ï¿½ï¿½ï¿½Ìºï¿½ï¿½ï¿½Ì¨ï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½Ì±ï¿½ï¿½Ö²ï¿½×ªï¿½ï¿½
     {
         chassis_cmd_send.chassis_mode = CHASSIS_NO_FOLLOW;
         robotarm_cmd_send.gimbal_mode = GIMBAL_NO_FOLLOW;
     }
 
-    if (switch_is_down(rc_data[TEMP].rc.switch_right)) // ÓÒ²à¿ª¹Ø×´Ì¬[ÏÂ],ÎÞÁ¦
+    if (switch_is_down(rc_data[TEMP].rc.switch_right)) // ï¿½Ò²à¿ªï¿½ï¿½×´Ì¬[ï¿½ï¿½],ï¿½ï¿½ï¿½ï¿½
     {
         robot_state                   = ROBOT_STOP;
         chassis_cmd_send.chassis_mode = CHASSIS_ZERO_FORCE;
@@ -190,13 +204,13 @@ static void RemoteControlSet(void) {
 
     // robotarm_cmd_send.robotarm_mode = current_mode;
 
-    // Ò£¿ØÆ÷×ªµ×ÅÌ²ÎÊý
+    // Ò£ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½Ì²ï¿½ï¿½ï¿½
     if (chassis_cmd_send.chassis_mode == CHASSIS_SPIN) {
         if (last_chassis_mode != CHASSIS_SPIN)
             yaw_offset = ins_data->Yaw;
 
-        abslute_vx = 6.0f * (float)rc_data->rc.rocker_r_; // _Ë®Æ½·½Ïò
-        abslute_vy = 6.0f * (float)rc_data->rc.rocker_r1; // 1ÊýÖµ·½Ïò
+        abslute_vx = 6.0f * (float)rc_data->rc.rocker_r_; // _Ë®Æ½ï¿½ï¿½ï¿½ï¿½
+        abslute_vy = 6.0f * (float)rc_data->rc.rocker_r1; // 1ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½
 
         float sin_theta     = arm_sin_f32(RadFormat((yaw_offset - ins_data->Yaw) * DEGREE_2_RAD));
         float cos_theta     = arm_cos_f32(RadFormat((yaw_offset - ins_data->Yaw) * DEGREE_2_RAD));
@@ -205,22 +219,22 @@ static void RemoteControlSet(void) {
         chassis_cmd_send.wz = 0.05f * (float)rc_data->rc.rocker_l_;
     }
     else {
-        chassis_cmd_send.vx = 20.0f * (float)rc_data->rc.rocker_r_; // _Ë®Æ½·½Ïò
-        chassis_cmd_send.vy = 20.0f * (float)rc_data->rc.rocker_r1; // 1ÊýÖµ·½Ïò
+        chassis_cmd_send.vx = 20.0f * (float)rc_data->rc.rocker_r_; // _Ë®Æ½ï¿½ï¿½ï¿½ï¿½
+        chassis_cmd_send.vy = 20.0f * (float)rc_data->rc.rocker_r1; // 1ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½
         chassis_cmd_send.wz = 5.0f * (float)rc_data->rc.rocker_l_;
     }
 }
 
 /**
- * @brief ÊäÈëÎª¼üÊóÊ±Ä£Ê½ºÍ¿ØÖÆÁ¿ÉèÖÃ£¨Ä¿Ç°Ö»±£Áôµ×ÅÌ¿ØÖÆ£©
+ * @brief ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½Ê±Ä£Ê½ï¿½Í¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã£ï¿½Ä¿Ç°Ö»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì¿ï¿½ï¿½Æ£ï¿½
  *
- * @todo  ÐèÒªºÍ×Ô¶¨Òå¿ØÖÆÆ÷ÅäºÏ£¬ÉÏÈü³¡Ê±ºòÔÙ¿¼ÂÇ°É
+ * @todo  ï¿½ï¿½Òªï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½Ù¿ï¿½ï¿½Ç°ï¿½
  */
 // static void MouseKeySet(void)
 // {
 //     chassis_cmd_send.vy = rc_data[TEMP].key[KEY_PRESS].w * 15000 -
 //     rc_data[TEMP].key[KEY_PRESS].s
-//     * 15000; // ÏµÊý´ý²â chassis_cmd_send.vx = rc_data[TEMP].key[KEY_PRESS].d * 15000 -
+//     * 15000; // Ïµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ chassis_cmd_send.vx = rc_data[TEMP].key[KEY_PRESS].d * 15000 -
 //     rc_data[TEMP].key[KEY_PRESS].a * 15000;
 
 // 	rc_data[TEMP].mouse.x *= -1;
@@ -229,35 +243,36 @@ static void RemoteControlSet(void) {
 // }
 
 /**
- * @brief  ½ô¼±Í£Ö¹,°üÀ¨Ò£¿ØÆ÷×óÉÏ²à²¦ÂÖ´òÂú/ÖØÒªÄ£¿éÀëÏß/Ë«°åÍ¨ÐÅÊ§Ð§µÈ
- *         Í£Ö¹µÄãÐÖµ'300'´ýÐÞ¸Ä³ÉºÏÊÊµÄÖµ,»ò¸ÄÎª¿ª¹Ø¿ØÖÆ.
+ * @brief  ï¿½ï¿½ï¿½ï¿½Í£Ö¹,ï¿½ï¿½ï¿½ï¿½Ò£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï²à²¦ï¿½Ö´ï¿½ï¿½ï¿½/ï¿½ï¿½ÒªÄ£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½/Ë«ï¿½ï¿½Í¨ï¿½ï¿½Ê§Ð§ï¿½ï¿½
+ *         Í£Ö¹ï¿½ï¿½ï¿½ï¿½Öµ'300'ï¿½ï¿½ï¿½Þ¸Ä³Éºï¿½ï¿½Êµï¿½Öµ,ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½Ø¿ï¿½ï¿½ï¿½.
  *
- * @todo   ºóÐøÐÞ¸ÄÎªÒ£¿ØÆ÷ÀëÏßÔòµç»úÍ£Ö¹(¹Ø±ÕÒ£¿ØÆ÷¼±Í£),Í¨¹ý¸øÒ£¿ØÆ÷Ä£¿éÌí¼ÓdaemonÊµÏÖ
- *         ÕâÒ»²¿·ÖÊÊÅäÐèÒªÔÙ½øÐÐ¿¼ÂÇ£¬¿¼ÂÇ¼ÓÈë×Ô¶¨Òå¿ØÖÆÆ÷µôÏßµÄ»Ø¸´Ä£Ê½
+ * @todo
+ * ï¿½ï¿½ï¿½ï¿½ï¿½Þ¸ï¿½ÎªÒ£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í£Ö¹(ï¿½Ø±ï¿½Ò£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í£),Í¨ï¿½ï¿½ï¿½ï¿½Ò£ï¿½ï¿½ï¿½ï¿½Ä£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½daemonÊµï¿½ï¿½
+ *         ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½Ù½ï¿½ï¿½Ð¿ï¿½ï¿½Ç£ï¿½ï¿½ï¿½ï¿½Ç¼ï¿½ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ßµÄ»Ø¸ï¿½Ä£Ê½
  */
 static void EmergencyHandler(void) {
-    // Ò£¿ØÆ÷µôÏßÎÞÁ¦
+    // Ò£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     if (rc_data->rc_state == 0) {
         robot_state = ROBOT_STOP;
     }
-    if (robot_state == ROBOT_STOP) // »¹ÐèÌí¼ÓÖØÒªÓ¦ÓÃºÍÄ£¿éÀëÏßµÄÅÐ¶Ï
+    if (robot_state == ROBOT_STOP) // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÒªÓ¦ï¿½Ãºï¿½Ä£ï¿½ï¿½ï¿½ï¿½ï¿½ßµï¿½ï¿½Ð¶ï¿½
     {
         //        gimbal_cmd_send.gimbal_mode = GIMBAL_ZERO_FORCE;
         chassis_cmd_send.chassis_mode = CHASSIS_ZERO_FORCE;
-        // ²¹³äÆø±ÃÏà¹ØÄ£Ê½
-        // Æø±Ã¹Ø±Õ
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£Ê½
+        // ï¿½ï¿½ï¿½Ã¹Ø±ï¿½
         // LOGERROR("[CMD] emergency stop!");
     }
-    // Ò£¿ØÆ÷ÓÒ²à¿ª¹ØÎª[ÉÏ],»Ö¸´Õý³£ÔËÐÐ
+    // Ò£ï¿½ï¿½ï¿½ï¿½ï¿½Ò²à¿ªï¿½ï¿½Îª[ï¿½ï¿½],ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     if (switch_is_up(rc_data[TEMP].rc.switch_right)) {
         //      LOGINFO("[CMD] reinstate, robot ready");
     }
 }
 
 /**
- * @brief  »úÆ÷ÈËÖØÒªÄ£¿é³õÊ¼»¯
+ * @brief  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÒªÄ£ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½
  *
- * @todo  Ìí¼Ó¶ÔÓ¦µÄÍâÉè£¬ºÍ±ØÒªÎÄ¼þ
+ * @todo  ï¿½ï¿½ï¿½Ó¶ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½è£¬ï¿½Í±ï¿½Òªï¿½Ä¼ï¿½
  */
 void RobotCmdInit(void) {
     ins_data = GetInsData();
@@ -268,40 +283,61 @@ void RobotCmdInit(void) {
     robotarm_feed_sub = SubRegister("robotarm_feed", sizeof(Robotarm_Upload_Data_s));
     chassis_cmd_pub   = PubRegister("chassis_cmd", sizeof(Chassis_Ctrl_Cmd_s));
     chassis_feed_sub  = SubRegister("chassis_feed", sizeof(Chassis_Upload_Data_s));
+    referee_info_pub  = PubRegister("referee_info", sizeof(Referee_Ctrl_Cmd_s));
 
     chassis_feed_pub           = PubRegister("chassis_feed", sizeof(Chassis_Upload_Data_s));
     robotarm_cmd_send.imu_data = ins_data;
     Vision_message             = USB_RxBufferRegister();
+    referee_info               = RefereeInit(&huart8);
     // robotarm_cmd_send.customdate = customdate;
 
-    //	gimbal_cmd_send.pitch = 0;		×÷ÓÃ²»Ã÷£¬±£Áô
+    //	gimbal_cmd_send.pitch = 0;		ï¿½ï¿½ï¿½Ã²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     robot_state = ROBOT_READY;
+}
+/**
+ * @brief ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý¸ï¿½ï¿½ï¿½Ì¨ï¿½ï¿½RMULï¿½ï¿½
+ *
+ */
+void RefereeDataTransmit(void) {
+    referee_chassis_send.power_limit   = referee_info->GameRobotState.chassis_power_limit;
+    referee_chassis_send.buffer_energy = referee_info->PowerHeatData.buffer_energy;
+    chassis_fetch_data.current_HP      = referee_info->GameRobotState.current_HP;
+    chassis_fetch_data.game_progress   = referee_info->GameState.game_progress;
+    chassis_fetch_data.shooter_heat    = referee_info->PowerHeatData.shooter_17mm_barrel_heat;
+    if ((referee_info->RFIDStatus.rfid_status >> 19) & 0x01) {
+        chassis_fetch_data.rfid_status = RFID_SUPPLY_ZONE;
+    }
+    else if ((referee_info->RFIDStatus.rfid_status >> 23) & 0x01) {
+        chassis_fetch_data.rfid_status = RFID_CENTER_GAIN;
+    }
+    else {
+        chassis_fetch_data.rfid_status = RFID_NONE;
+    }
 }
 
 /**
- * @brief  »úÆ÷ÈËºËÐÄ¿ØÖÆÈÎÎñ,200HzÆµÂÊÔËÐÐ(±ØÐë¸ßÓÚÊÓ¾õ·¢ËÍÆµÂÊ)
+ * @brief  ï¿½ï¿½ï¿½ï¿½ï¿½Ëºï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,200HzÆµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½(ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¾ï¿½ï¿½ï¿½ï¿½ï¿½Æµï¿½ï¿½)
  *
- * @todo  ´ýÐÞ¸Ä¿ØÖÆÄ£Ê½Ñ¡Ôñ
+ * @todo  ï¿½ï¿½ï¿½Þ¸Ä¿ï¿½ï¿½ï¿½Ä£Ê½Ñ¡ï¿½ï¿½
  */
 void RobotCMDTask(void) {
-    // ´ÓÆäËûÓ¦ÓÃ»ñÈ¡»Ø´«Êý¾Ý
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½Ã»ï¿½È¡ï¿½Ø´ï¿½ï¿½ï¿½ï¿½ï¿½
     SubGetMessage(chassis_feed_sub, &chassis_fetch_data);
     SubGetMessage(robotarm_feed_sub, &robotarm_fetch_data);
 
-    // ¸ù¾ÝgimbalµÄ·´À¡Öµ¼ÆËãÔÆÌ¨ºÍµ×ÅÌÕý·½ÏòµÄ¼Ð½Ç,²»ÐèÒª´«²Î,Í¨¹ýstaticË½ÓÐ±äÁ¿Íê³É
-    // ´ýÐÞ¸Ä£¬¿ÉÄÜÕâÀï·ÅÐ£×¼£¿»òÕßÆäËû
+    // ï¿½ï¿½ï¿½ï¿½gimbalï¿½Ä·ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì¨ï¿½Íµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼Ð½ï¿½,ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½,Í¨ï¿½ï¿½staticË½ï¿½Ð±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    // ï¿½ï¿½ï¿½Þ¸Ä£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð£×¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     CalcOffsetAngle();
 
     RemoteControlSet();
     CalibrateTask(rc_data);
-    EmergencyHandler(); // ´¦ÀíÄ£¿éÀëÏßºÍÒ£¿ØÆ÷¼±Í£µÈ½ô¼±Çé¿ö
-    chassis_fetch_data.pitch     = ins_data->Pitch;
-    chassis_fetch_data.yaw       = ins_data->Yaw;
-    chassis_fetch_data.roll      = ins_data->Roll;
-    chassis_fetch_data.yaw_total = ins_data->YawTotalAngle;
+    EmergencyHandler(); // ï¿½ï¿½ï¿½ï¿½Ä£ï¿½ï¿½ï¿½ï¿½ï¿½ßºï¿½Ò£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í£ï¿½È½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    RefereeDataTransmit();
+    // chassis_fetch_data
 
-    // ÆäËûÓ¦ÓÃËùÐèµÄ¿ØÖÆÊý¾ÝÔÚremotecontrolsetmodeºÍmousekeysetmodeÖÐÍê³ÉÉèÖÃ
+    // ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½remotecontrolsetmodeï¿½ï¿½mousekeysetmodeï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     PubPushMessage(chassis_feed_pub, (void *)&chassis_fetch_data);
     // PubPushMessage(chassis_cmd_pub, (void *)&chassis_cmd_send);
     PubPushMessage(robotarm_cmd_pub, (void *)&robotarm_cmd_send);
+    PubPushMessage(referee_info_pub, (void *)&referee_chassis_send);
 }
