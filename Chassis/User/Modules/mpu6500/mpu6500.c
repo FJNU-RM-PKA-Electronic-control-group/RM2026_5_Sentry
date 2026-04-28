@@ -53,9 +53,9 @@ void EarthFrameToBodyFrame(const float *vecEF, float *vecBF, float *q);
 void BodyFrameToEarthFrame(const float *vecBF, float *vecEF, float *q);
 /**
  *
- * @brief �¶ȿ���
- * @note  ԭ�����temp_set�Ǵӱ궨ʱ��õ��¶�+10,
- * ����ֱ��ʹ��40��Ϊ�ο��¶ȣ����ǵ�������ɢ������
+ * @brief �¶ȿ���
+ * @note  ԭ�����temp_set�Ǵӱ궨ʱ��õ��¶�+10,
+ * ����ֱ��ʹ��40��Ϊ�ο��¶ȣ����ǵ�������ɢ������
  *
  */
 static void IMU_Temperature_Ctrl(void) {
@@ -66,16 +66,16 @@ static void IMU_Temperature_Ctrl(void) {
 //
 /**
  *
- * @brief 初�?�化四元�?
+ * @brief 初�?�化四元�?
  * @note
- * 使用加速度计的数据初�?�化Roll和Pitch,而Yaw�?0,这样�?以避免在初�?�时候的姿态估计�??�?
+ * 使用加速度计的数据初�?�化Roll和Pitch,而Yaw�?0,这样�?以避免在初�?�时候的姿态估计�??�?
  *
  */
 static void InitQuaternion(float *init_q4) {
     float acc_init[3]     = {0};
-    float gravity_norm[3] = {0, 0, 1}; // 导航系重力加速度矢量,归一化后�?(0,0,1)
-    float axis_rot[3]     = {0};       // 旋转�?
-    // 读取100次加速度计数�?,取平均值作为初始�?
+    float gravity_norm[3] = {0, 0, 1}; // 导航系重力加速度矢量,归一化后�?(0,0,1)
+    float axis_rot[3]     = {0};       // 旋转�?
+    // 读取100次加速度计数�?,取平均值作为初始�?
     for (uint8_t i = 0; i < 100; ++i) {
         mpu_get_data();
         acc_init[0] += mpu_data.Accel[0];
@@ -86,14 +86,13 @@ static void InitQuaternion(float *init_q4) {
     for (uint8_t i = 0; i < 3; ++i)
         acc_init[i] /= 100;
     Norm3d(acc_init);
-    // 计算原�?�加速度矢量和�?�航系重力加速度矢量的夹�?
+    // 计算原�?�加速度矢量和�?�航系重力加速度矢量的夹�?
     float angle = acosf(Dot3d(acc_init, gravity_norm));
     Cross3d(acc_init, gravity_norm, axis_rot);
     Norm3d(axis_rot);
     init_q4[0] = cosf(angle / 2.0f);
     for (uint8_t i = 0; i < 2; ++i)
-        init_q4[i + 1] =
-            axis_rot[i] * sinf(angle / 2.0f); // 轴�?�公�?,�?三轴�?0(没有z轴分�?)
+        init_q4[i + 1] = axis_rot[i] * sinf(angle / 2.0f); // 轴�?�公�?,�?三轴�?0(没有z轴分�?)
 }
 
 /**
@@ -149,7 +148,7 @@ void INS_Init(void) {
     }
     DEBUG_INS = &INS;
 
-    mpu6500_device_init(); // �?动mpu6500和ist8310
+    mpu6500_device_init(); // �?动mpu6500和ist8310
     IMU_Temperature_Init();
     PID_Init_Config_s config = {.MaxOut        = 100,
                                 .IntegralLimit = 15,
@@ -284,7 +283,7 @@ void mpu_offset_cali(void) {
     //                           mpu_data.Accel[2] * mpu_data.Accel[2]);
     //         mpu_data.gNorm += gNormTemp;
     //         IMU_Temperature_Ctrl();
-    //         // ��¼���ݼ���
+    //         // ��¼���ݼ���
     //         if (i == 0) {
     //             gNormMax = gNormTemp;
     //             gNormMin = gNormTemp;
@@ -305,7 +304,8 @@ void mpu_offset_cali(void) {
     //                     gyroMin[j] = mpu_data.Gyro[j];
     //             }
     //         }
-    //         // �����쳣����Ϊ�յ��ⲿǿ�Ҹ��ţ���Ҫ����У׼
+    //         //
+    //         �����쳣����Ϊ�յ��ⲿǿ�Ҹ��ţ���Ҫ����У׼
     //         gNormDiff = gNormMax - gNormMin;
     //         for (uint8_t j = 0; j < 3; ++j)
     //             gyroDiff[j] = gyroMax[j] - gyroMin[j];
@@ -316,7 +316,7 @@ void mpu_offset_cali(void) {
     //         DWT_Delay(0.0005);
     //     }
 
-    //     // ȡƽ��ֵ����õ��궨���
+    //     // ȡƽ��ֵ����õ��궨���
     //     mpu_data.gNorm /= (float)CaliTimes;
     //     for (uint8_t i = 0; i < 3; i++) {
     //         mpu_data.GyroOffset[i] /= (float)CaliTimes;
@@ -326,7 +326,7 @@ void mpu_offset_cali(void) {
     //          gyroDiff[1] > 0.15f || gyroDiff[2] > 0.15f || fabsf(mpu_data.GyroOffset[0]) > 0.011f
     //          || fabsf(mpu_data.GyroOffset[1]) > 0.01f || fabsf(mpu_data.GyroOffset[2]) > 0.01f);
 
-    mpu_data.AccelScale = 9.81 / mpu_data.gNorm;
+    mpu_data.AccelScale = (float)9.81 / mpu_data.gNorm;
     AlarmSetStatus(buzzer_imu, ALARM_OFF);
 }
 
@@ -351,33 +351,33 @@ void INS_Task(void) {
         INS.Gyro[1]  = mpu_data.Gyro[1];
         INS.Gyro[2]  = mpu_data.Gyro[2];
         mpu_dat      = mpu_data;
-        // demo function,用于�?正安装�??�?,�?以不�?,本demo暂时没用
+        // demo function,用于�?正安装�??�?,�?以不�?,本demo暂时没用
         IMU_Param_Correction(&IMU_Param, INS.Gyro, INS.Accel);
 
-        // 计算重力加速度矢量和b系的XY两轴的夹�?,�?用作功能扩展,本demo暂时没用
+        // 计算重力加速度矢量和b系的XY两轴的夹�?,�?用作功能扩展,本demo暂时没用
         // INS.atanxz = -atan2f(INS.Accel[X], INS.Accel[Z]) * 180 / PI;
         // INS.atanyz = atan2f(INS.Accel[Y], INS.Accel[Z]) * 180 / PI;
 
-        // 核心函数,EKF更新四元�?
+        // 核心函数,EKF更新四元�?
         IMU_QuaternionEKF_Update(INS.Gyro[0], INS.Gyro[1], INS.Gyro[2], INS.Accel[0], INS.Accel[1],
                                  INS.Accel[2], dt);
 
         memcpy(INS.q, QEKF_INS.q, sizeof(QEKF_INS.q));
 
-        // 机体系基向量�?换到导航坐标系，�?例选取�?性系为�?�航�?
+        // 机体系基向量�?换到导航坐标系，�?例选取�?性系为�?�航�?
         BodyFrameToEarthFrame(xb, INS.xn, INS.q);
         BodyFrameToEarthFrame(yb, INS.yn, INS.q);
         BodyFrameToEarthFrame(zb, INS.zn, INS.q);
 
-        // 将重力从导航坐标系n�?换到机体系b,随后根据加速度计数�?计算运动加速度
+        // 将重力从导航坐标系n�?换到机体系b,随后根据加速度计数�?计算运动加速度
         float gravity_b[3];
         EarthFrameToBodyFrame(gravity, gravity_b, INS.q);
-        for (uint8_t i = 0; i < 3; ++i) // 同样过一�?低通滤�?
+        for (uint8_t i = 0; i < 3; ++i) // 同样过一�?低通滤�?
         {
             INS.MotionAccel_b[i] = (INS.Accel[i] - gravity_b[i]) * dt / (INS.AccelLPF + dt) +
                                    INS.MotionAccel_b[i] * INS.AccelLPF / (INS.AccelLPF + dt);
         }
-        BodyFrameToEarthFrame(INS.MotionAccel_b, INS.MotionAccel_n, INS.q); // �?换回导航系n
+        BodyFrameToEarthFrame(INS.MotionAccel_b, INS.MotionAccel_n, INS.q); // �?换回导航系n
 
         INS.Yaw           = QEKF_INS.Yaw;
         INS.Pitch         = QEKF_INS.Pitch;
@@ -392,12 +392,12 @@ void INS_Task(void) {
     }
 
     if ((count++ % 1000) == 0) {
-        // 1Hz �?以加�?monitor函数,检�?IMU�?否�?�常运�??/离线
+        // 1Hz �?以加�?monitor函数,检�?IMU�?否�?�常运�??/离线
     }
 }
 /**
  * @brief
- * reserved.用于�?�?IMU安�?��??�?与标度因数�??�?,即陀螺仪轴和云台轴的安�?�偏�?
+ * reserved.用于�?�?IMU安�?��??�?与标度因数�??�?,即陀螺仪轴和云台轴的安�?�偏�?
  * @param param IMU参数
  * @param gyro  角速度
  * @param accel 加速度

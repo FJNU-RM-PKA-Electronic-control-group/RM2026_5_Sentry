@@ -1,7 +1,7 @@
 #include "fliter.h"
 
 void LowPassFliterInit(LPFliterInstance *instance, Low_Pass_Fliter_Init_Config_s *config) {
-    // ¿ÕÖ¸Õë¼ì²é
+    // ç©ºæŒ‡é’ˆæ£€æŸ¥
     if (instance == NULL || config == NULL) {
         return;
     }
@@ -12,25 +12,25 @@ void LowPassFliterInit(LPFliterInstance *instance, Low_Pass_Fliter_Init_Config_s
 
 float FliterCalcutale(FliterInstance *fliter_ptr, float input) {
     if (fliter_ptr == NULL) {
-        return 0.0f; // ·µ»ØÄ¬ÈÏÖµ
+        return 0.0f; // è¿”å›é»˜è®¤å€¼
     }
     float out_put;
 
     switch (fliter_ptr->fliter_type) {
     case LOW_PASS: {
-        //  »ñÈ¡Ö¸Õë
+        //  è·å–æŒ‡é’ˆ
         LPFliterInstance *instance = (LPFliterInstance *)fliter_ptr;
-        // »ñÈ¡ËùĞè²ÎÊı
+        // è·å–æ‰€éœ€å‚æ•°
         float current_input = input;
         float RC            = instance->RC;
         float dt            = DWT_GetDeltaT(&instance->DWT_CNT);
-        // ¼ÆËãÈ¨ÖØ
+        // è®¡ç®—æƒé‡
         float RC_dt_sum = RC + dt;
         float alpha     = dt / RC_dt_sum;
         float beta      = RC / RC_dt_sum;
-        // ¼ÆËãµÍÍ¨ÂË²¨
+        // è®¡ç®—ä½é€šæ»¤æ³¢
         out_put = current_input * alpha + instance->prev_out * beta;
-        // ¸üĞÂÊä³öÖµ
+        // æ›´æ–°è¾“å‡ºå€¼
         instance->prev_out = out_put;
         break;
     }

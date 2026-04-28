@@ -21,7 +21,7 @@ static DJIMotorInstance *dji_motor_instance[DJI_MOTOR_CNT] = {
  */
 CANInstance sender_assignment[6] = {
     [0] = {.can_handle   = &hcan1,
-           .txconf.StdId = 0x1ff,
+           .txconf.StdId = 0x1fe,
            .txconf.IDE   = CAN_ID_STD,
            .txconf.RTR   = CAN_RTR_DATA,
            .txconf.DLC   = 0x08,
@@ -334,8 +334,8 @@ void DJIMotorControl() {
 
             if (motor_setting->speed_feedback_source == OTHER_FEED)
                 pid_measure = *motor_controller->other_speed_feedback_ptr;
-            else                                         // MOTOR_FEED
-                pid_measure = measure->speed_aps / 6.0f; // ?????????��??????,????rpm
+            else                                  // MOTOR_FEED
+                pid_measure = measure->speed_aps; // ?????????��??????,????rpm
             // ????pid_ref???????????
             pid_ref = PIDCalculate(&motor_controller->speed_PID, pid_measure, pid_ref);
         }

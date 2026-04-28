@@ -41,10 +41,14 @@
 #include "user_lib.h"
 
 /* 根据robot_def.h中的macro自动计算的参数 */
-#define HALF_WHEEL_BASE  (WHEEL_BASE / 2.0f)     // 半轴距
-#define HALF_TRACK_WIDTH (TRACK_WIDTH / 2.0f)    // 半轮距
-#define PERIMETER_WHEEL  (RADIUS_WHEEL * 2 * PI) // 轮子周长
-#define Square(x)        (x) * (x)
+#define HALF_WHEEL_BASE  (WHEEL_BASE / 2.0f)            // 半轴距
+#define HALF_TRACK_WIDTH (TRACK_WIDTH / 2.0f)           // 半轮距
+#define PERIMETER_WHEEL  (RADIUS_WHEEL * 2 * PI)        // 轮子周长
+#define MOTOR_RPM_TO_WHEEL_MMPS                                                                    \
+    (PERIMETER_WHEEL / (60.0f * REDUCTION_RATIO_WHEEL)) // 电机rpm转轮缘线速度mm/s
+#define WHEEL_MMPS_TO_MOTOR_RPM                                                                    \
+    ((60.0f * REDUCTION_RATIO_WHEEL) / PERIMETER_WHEEL) // 轮缘线速度mm/s转电机rpm
+#define Square(x) (x) * (x)
 
 #define VECTOR 0
 
@@ -53,10 +57,10 @@
 #define LB                    3
 #define RB                    2
 #define WHEEL_COUNT           4
-#define VECTORMOTOR_OFFSET_LF 225.437851
-#define VECTORMOTOR_OFFSET_RF 134.779312
-#define VECTORMOTOR_OFFSET_LB 13.3592796
-#define VECTORMOTOR_OFFSET_RB 223.855835
+#define VECTORMOTOR_OFFSET_LF 43.8131638
+#define VECTORMOTOR_OFFSET_RF 196.785706
+#define VECTORMOTOR_OFFSET_LB 73.7836533
+#define VECTORMOTOR_OFFSET_RB 163.914856
 
 /* 底盘应用包含的模块和信息存储,底盘是单例模式,因此不需要为底盘建立单独的结构体 */
 static Publisher_t *chassis_pub;                    // 用于发布底盘的数据
@@ -90,7 +94,6 @@ float force_ff[4];
 /* 私有函数计算的中介变量,设为静态避免参数传递的开销 */
 float chassis_vx, chassis_vy; // 将云台系的速度投影到底盘
 float vt[4], anglet[4];       // 底盘速度解算后的临时输出,待进行限幅
-float vector_feedback[4];
 static float steer_current_feedback[WHEEL_COUNT];
 float debug_anglet[4];
 void ChassisInit(void) {
@@ -101,7 +104,7 @@ void ChassisInit(void) {
             {
                 .speed_PID =
                     {
-                        .Kp            = 5,    // 4.5
+                        .Kp            = 4.5,  // 4.5
                         .Ki            = 0,    // 0
                         .Kd            = 0.01, // 0
                         .IntegralLimit = 3000,
@@ -127,7 +130,7 @@ void ChassisInit(void) {
                 .angle_feedback_source = MOTOR_FEED,
                 .speed_feedback_source = MOTOR_FEED,
                 .outer_loop_type       = SPEED_LOOP,
-                .close_loop_type       = (Closeloop_Type_e)(SPEED_LOOP | CURRENT_LOOP),
+                .close_loop_type       = (Closeloop_Type_e)(SPEED_LOOP),
                 .pid_mode              = MOTOR_PID_MUTILOOP,
                 .feedforward_flag      = CURRENT_FEEDFORWARD,
                 .output_flag           = OTHER_OUTPUT,
@@ -140,25 +143,27 @@ void ChassisInit(void) {
             {
                 .angle_PID =
                     {
-                        .Kp            = 50,  // 4.5
-                        .Ki            = 0,   // 0
-                        .Kd            = 0.1, // 0
+                        .Kp            = 40,   // 4.5
+                        .Ki            = 0,    // 0
+                        .Kd            = 0.05, // 0
                         .IntegralLimit = 3000,
                         .Improve =
                             (PID_Improvement_e)(PID_Trapezoid_Intergral | PID_Integral_Limit |
                                                 PID_Derivative_On_Measurement),
-                        .MaxOut = 12000,
+                        .MaxOut            = 12000,
+                        .Derivative_LPF_RC = 0.05,
                     },
                 .speed_PID =
                     {
-                        .Kp            = 25, // 0.4
-                        .Ki            = 0,  // 0
-                        .Kd            = 0.3,
-                        .IntegralLimit = 3000,
+                        .Kp            = 20.0f, // 0.4
+                        .Ki            = 0.0f,  // 0
+                        .Kd            = 0.10f,
+                        .IntegralLimit = 3000.0f,
                         .Improve =
                             (PID_Improvement_e)(PID_Trapezoid_Intergral | PID_Integral_Limit |
                                                 PID_Derivative_On_Measurement),
-                        .MaxOut = 15000,
+                        .MaxOut            = 10000,
+                        .Derivative_LPF_RC = 0.05f,
                     },
             },
         .controller_setting_init_config =
@@ -168,6 +173,7 @@ void ChassisInit(void) {
                 .outer_loop_type       = ANGLE_LOOP,
                 .close_loop_type       = (Closeloop_Type_e)(ANGLE_LOOP | SPEED_LOOP),
                 .pid_mode              = MOTOR_PID_SINGLELOOP,
+                // .output_flag           = OTHER_OUTPUT,
             },
         .motor_type = GM6020,
     };
@@ -206,8 +212,6 @@ void ChassisInit(void) {
     // chassis_vector_motor_config.can_init_config.rx_id = 1;
     chassis_vector_motor_config.controller_setting_init_config.motor_reverse_flag =
         MOTOR_DIRECTION_NORMAL;
-    chassis_vector_motor_config.controller_param_init_config.other_angle_feedback_ptr =
-        &vector_feedback[LF];
     chassis_vector_motor_config.controller_param_init_config.angle_zero_point_offset =
         VECTORMOTOR_OFFSET_LF;
     vector_motor[LF] = DJIMotorInit(&chassis_vector_motor_config);
@@ -216,16 +220,12 @@ void ChassisInit(void) {
     // chassis_vector_motor_config.can_init_config.rx_id = 2;
     chassis_vector_motor_config.controller_setting_init_config.motor_reverse_flag =
         MOTOR_DIRECTION_NORMAL;
-    chassis_vector_motor_config.controller_param_init_config.other_angle_feedback_ptr =
-        &vector_feedback[RF];
     chassis_vector_motor_config.controller_param_init_config.angle_zero_point_offset =
         VECTORMOTOR_OFFSET_RF;
     vector_motor[RF] = DJIMotorInit(&chassis_vector_motor_config);
 
     chassis_vector_motor_config.can_init_config.tx_id = 4;
     // chassis_vector_motor_config.can_init_config.rx_id = 4;
-    chassis_vector_motor_config.controller_param_init_config.other_angle_feedback_ptr =
-        &vector_feedback[LB];
     chassis_vector_motor_config.controller_setting_init_config.motor_reverse_flag =
         MOTOR_DIRECTION_NORMAL;
     chassis_vector_motor_config.controller_param_init_config.angle_zero_point_offset =
@@ -234,8 +234,6 @@ void ChassisInit(void) {
 
     chassis_vector_motor_config.can_init_config.tx_id = 3;
     // chassis_vector_motor_config.can_init_config.rx_id = 3;
-    chassis_vector_motor_config.controller_param_init_config.other_angle_feedback_ptr =
-        &vector_feedback[RB];
     chassis_vector_motor_config.controller_setting_init_config.motor_reverse_flag =
         MOTOR_DIRECTION_NORMAL;
     chassis_vector_motor_config.controller_param_init_config.angle_zero_point_offset =
@@ -257,10 +255,13 @@ void ChassisInit(void) {
 
         .arg =
             {
-                .K1       = 6.0021f,
-                .K2       = -0.0005f,
-                .K_torque = 0.8130f,
-                .P_const  = 1.3715f,
+                .k0                      = 0.7507578,
+                .k1                      = -0.0759636,
+                .k2                      = -0.00153397,
+                .k3                      = 0.01225624,
+                .k4                      = 0.19101805,
+                .k5                      = 0.0000066450,
+                .real_current_conversion = 1000,
             },
     };
     // C620电调统一参数，稍后直接统一赋值即可，增强可读性
@@ -268,10 +269,13 @@ void ChassisInit(void) {
 
         .arg =
             {
-                .K1       = 0.12785662198126574f,
-                .K2       = 0.00004319062337601348f,
-                .K_torque = 0.0171687401695532f,
-                .P_const  = 1.598658371452403f,
+                .k0                      = 0.65213,
+                .k1                      = -0.15659,
+                .k2                      = 0.00041660,
+                .k3                      = 0.00235415,
+                .k4                      = 0.20022,
+                .k5                      = 1.08e-7,
+                .real_current_conversion = 1000,
             },
     };
     power_control_init_t power_config = {
@@ -279,8 +283,9 @@ void ChassisInit(void) {
             {
                 .power_input_data =
                     {
-                        .I_cmd = &steer_current_feedback[LF],
-                        .w_aps = &vector_motor[LF]->measure.speed_aps,
+                        .I_cmd   = &vector_motor[LF]->motor_controller.speed_PID.Output,
+                        .w_aps   = &vector_motor[LF]->measure.speed_aps,
+                        .pid_err = &vector_motor[LF]->motor_controller.speed_PID.Err,
                     },
                 .arg = steer_power_config.arg,
             },
@@ -288,8 +293,9 @@ void ChassisInit(void) {
             {
                 .power_input_data =
                     {
-                        .I_cmd = &steer_current_feedback[RF],
-                        .w_aps = &vector_motor[RF]->measure.speed_aps,
+                        .I_cmd   = &vector_motor[RF]->motor_controller.speed_PID.Output,
+                        .w_aps   = &vector_motor[RF]->measure.speed_aps,
+                        .pid_err = &vector_motor[RF]->motor_controller.speed_PID.Err,
                     },
                 .arg = steer_power_config.arg,
             },
@@ -297,8 +303,9 @@ void ChassisInit(void) {
             {
                 .power_input_data =
                     {
-                        .I_cmd = &steer_current_feedback[LB],
-                        .w_aps = &vector_motor[LB]->measure.speed_aps,
+                        .I_cmd   = &vector_motor[LB]->motor_controller.speed_PID.Output,
+                        .w_aps   = &vector_motor[LB]->measure.speed_aps,
+                        .pid_err = &vector_motor[LB]->motor_controller.speed_PID.Err,
                     },
                 .arg = steer_power_config.arg,
             },
@@ -306,8 +313,9 @@ void ChassisInit(void) {
             {
                 .power_input_data =
                     {
-                        .I_cmd = &steer_current_feedback[RB],
-                        .w_aps = &vector_motor[RB]->measure.speed_aps,
+                        .I_cmd   = &vector_motor[RB]->motor_controller.speed_PID.Output,
+                        .w_aps   = &vector_motor[RB]->measure.speed_aps,
+                        .pid_err = &vector_motor[RB]->motor_controller.speed_PID.Err,
                     },
                 .arg = steer_power_config.arg,
             },
@@ -315,8 +323,9 @@ void ChassisInit(void) {
             {
                 .power_input_data =
                     {
-                        .I_cmd = &speed_motor[LF]->motor_controller.current_PID.Output,
-                        .w_aps = &speed_motor[LF]->measure.speed_aps,
+                        .I_cmd   = &speed_motor[LF]->motor_controller.speed_PID.Output,
+                        .w_aps   = &speed_motor[LF]->measure.speed_aps,
+                        .pid_err = &speed_motor[LF]->motor_controller.speed_PID.Err,
                     },
                 .arg = wheel_power_config.arg,
             },
@@ -324,8 +333,9 @@ void ChassisInit(void) {
             {
                 .power_input_data =
                     {
-                        .I_cmd = &speed_motor[RF]->motor_controller.current_PID.Output,
-                        .w_aps = &speed_motor[RF]->measure.speed_aps,
+                        .I_cmd   = &speed_motor[RF]->motor_controller.speed_PID.Output,
+                        .w_aps   = &speed_motor[RF]->measure.speed_aps,
+                        .pid_err = &speed_motor[RF]->motor_controller.speed_PID.Err,
                     },
                 .arg = wheel_power_config.arg,
             },
@@ -333,8 +343,9 @@ void ChassisInit(void) {
             {
                 .power_input_data =
                     {
-                        .I_cmd = &speed_motor[LB]->motor_controller.current_PID.Output,
-                        .w_aps = &speed_motor[LB]->measure.speed_aps,
+                        .I_cmd   = &speed_motor[LB]->motor_controller.speed_PID.Output,
+                        .w_aps   = &speed_motor[LB]->measure.speed_aps,
+                        .pid_err = &speed_motor[LB]->motor_controller.speed_PID.Err,
                     },
                 .arg = wheel_power_config.arg,
             },
@@ -342,23 +353,24 @@ void ChassisInit(void) {
             {
                 .power_input_data =
                     {
-                        .I_cmd = &speed_motor[RB]->motor_controller.current_PID.Output,
-                        .w_aps = &speed_motor[RB]->measure.speed_aps,
+                        .I_cmd   = &speed_motor[RB]->motor_controller.speed_PID.Output,
+                        .w_aps   = &speed_motor[RB]->measure.speed_aps,
+                        .pid_err = &speed_motor[RB]->motor_controller.speed_PID.Err,
                     },
                 .arg = wheel_power_config.arg,
             },
     };
     power_ctrl = ChassisPowerInit(&power_config);
-    ChassisPowerRatioSet(power_ctrl, 0.1f); // 舵向电机功率占比设置为60%
+    ChassisPowerRatioSet(power_ctrl, 0.0f); // 舵向电机功率占比设置为60%
 
-    DJIMotorSetOtherOutput(speed_motor[LF], &power_ctrl->motor[LF][WHEEL].I_out);
-    DJIMotorSetOtherOutput(speed_motor[RF], &power_ctrl->motor[RF][WHEEL].I_out);
-    DJIMotorSetOtherOutput(speed_motor[LB], &power_ctrl->motor[LB][WHEEL].I_out);
-    DJIMotorSetOtherOutput(speed_motor[RB], &power_ctrl->motor[RB][WHEEL].I_out);
-    DJIMotorSetOtherOutput(vector_motor[LF], &power_ctrl->motor[LF][STEER].I_out);
-    DJIMotorSetOtherOutput(vector_motor[RF], &power_ctrl->motor[RF][STEER].I_out);
-    DJIMotorSetOtherOutput(vector_motor[LB], &power_ctrl->motor[LB][STEER].I_out);
-    DJIMotorSetOtherOutput(vector_motor[RB], &power_ctrl->motor[RB][STEER].I_out);
+    DJIMotorSetOtherOutput(speed_motor[LF], &power_ctrl->motor[WHEEL][LF].I_out);
+    DJIMotorSetOtherOutput(speed_motor[RF], &power_ctrl->motor[WHEEL][RF].I_out);
+    DJIMotorSetOtherOutput(speed_motor[LB], &power_ctrl->motor[WHEEL][LB].I_out);
+    DJIMotorSetOtherOutput(speed_motor[RB], &power_ctrl->motor[WHEEL][RB].I_out);
+    DJIMotorSetOtherOutput(vector_motor[LF], &power_ctrl->motor[STEER][LF].I_out);
+    DJIMotorSetOtherOutput(vector_motor[RF], &power_ctrl->motor[STEER][RF].I_out);
+    DJIMotorSetOtherOutput(vector_motor[LB], &power_ctrl->motor[STEER][LB].I_out);
+    DJIMotorSetOtherOutput(vector_motor[RB], &power_ctrl->motor[STEER][RB].I_out);
 
     PID_Init_Config_s pid_config = {
         .Kp            = 1.2, // 0.4
@@ -418,8 +430,8 @@ void ChassisInit(void) {
 static void SteeringWheelFK(void) {
     // 获取计算所需反馈值
     for (size_t i = 0; i < 4; i++) {
-        float speed = speed_motor[i]->measure.speed_aps * DEGREE_2_RAD * RADIUS_WHEEL; // aps转mmps
-        float angle = RadFormat(DJIMotorGetAngle(vector_motor[i]) * DEGREE_2_RAD);
+        float speed            = speed_motor[i]->measure.speed_aps / 6.0f * MOTOR_RPM_TO_WHEEL_MMPS;
+        float angle            = RadFormat(DJIMotorGetAngle(vector_motor[i]) * DEGREE_2_RAD);
         float wheel_sin_theta  = arm_sin_f32(angle);
         float wheel_cos_theta  = arm_cos_f32(angle);
         debug_anglet[i]        = angle;
@@ -436,10 +448,10 @@ static void SteeringWheelFK(void) {
     // 解算部分，应该视情况进行加权平均
     //注意，因为我希望底盘初始化时3508屁股朝内部，所以RF，RB两个轮向电机速度反馈是负的
     vx_output = (chassis_vx_feedback[LF] + chassis_vx_feedback[RF] + 
-                chassis_vx_feedback[LB] + chassis_vx_feedback[RB]) / 40;
+                chassis_vx_feedback[LB] + chassis_vx_feedback[RB]) / 4;
 
     vy_output = (chassis_vy_feedback[LF] + chassis_vy_feedback[RF] + 
-                chassis_vy_feedback[LB] + chassis_vy_feedback[RB]) / 40;
+                chassis_vy_feedback[LB] + chassis_vy_feedback[RB]) / 4;
 
     wz_output = (chassis_vx_feedback[LF] + chassis_vx_feedback[LB] - 
                 chassis_vx_feedback[RB] - chassis_vx_feedback[RF] + 
@@ -512,13 +524,12 @@ static void SteeringWheelIK(void) {
     // 将输出值化为电机需要的单位，同时做一个舵向电机就近转向优化
     for (uint8_t i = 0; i < WHEEL_COUNT; i++) {
         float angle_single_round = DJIMotorGetAngle(vector_motor[i]);
-        // vt[i] /= RADIUS_WHEEL; // 将线速度化为角速度
+        vt[i] *= WHEEL_MMPS_TO_MOTOR_RPM; // 将轮缘线速度换算为电机rpm
         anglet[i] /= DEGREE_2_RAD;
         anglet[i] = AngleFormatfp(anglet[i]);
         //  计算舵向电机的角度差
         float delta_angle = anglet[i] - angle_single_round;
         // 轮向电机换向，以及防打滑优化
-        // 新写的待测试
         vt[i] *= arm_cos_f32(NearbyErrFormat((delta_angle), 180.0F) * DEGREE_2_RAD);
 
         // 舵向电机就近转向
@@ -537,7 +548,7 @@ static void LimitChassisOutput(void) {
     // 功率限制待添加
     // referee_data->PowerHeatData.chassis_power;
     // referee_data->PowerHeatData.chassis_power_buffer;
-    ChassisMaxPowerSet(power_ctrl, 70.0f);
+    ChassisMaxPowerSet(power_ctrl, 100.0f);
     ChassisPowerControl(power_ctrl);
     // 完成功率限制后进行电机参考输入设定
     DJIMotorSetRef(speed_motor[LF], vt[LF]);
@@ -604,7 +615,8 @@ void ChassisTask(void) {
         break;
     case CHASSIS_FOLLOW_GIMBAL_YAW:
         // 跟随云台,不单独设置pid,以误差角度平方为速度输出
-        chassis_cmd_recv.wz = PIDCalculate(&follow_pid, 0, -chassis_cmd_recv.offset_angle);
+        chassis_cmd_recv.wz =
+            PIDCalculate(&follow_pid, 0, -chassis_cmd_recv.offset_angle); //* DEGREE_2_RAD;
         break;
     case CHASSIS_SPIN: // 自旋,同时保持全向机动;当前wz维持定值,后续增加不规则的变速策略
         // chassis_cmd_recv.wz = 20;
@@ -631,7 +643,7 @@ void ChassisTask(void) {
     LimitChassisOutput();
 
     // 根据电机的反馈速度和IMU(如果有)计算真实速度
-    // EstimateSpeed();
+    EstimateSpeed();
 
     // // 获取裁判系统数据   建议将裁判系统与底盘分离，所以此处数据应使用消息中心发送
     // // 我方颜色id小于7是红色,大于7是蓝色,注意这里发送的是对方的颜色, 0:blue , 1:red

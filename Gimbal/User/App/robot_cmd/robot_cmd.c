@@ -127,8 +127,8 @@ void StateControlSet() {
             gimbal_cmd_send.yaw         = vision_fetch_data.aim_yaw;
         }
 
-        chassis_cmd_send.vx *= 0.5;
-        chassis_cmd_send.vy *= 0.5;
+        chassis_cmd_send.vx *= 0.5F;
+        chassis_cmd_send.vy *= 0.5F;
         chassis_cmd_send.wz = 20;
         break;
     case STATE_DEFENDING:
@@ -164,18 +164,18 @@ void VisionControlSet(void) {
         gimbal_cmd_send.pitch = vision_fetch_data.aim_pitch; // 0.027;
         gimbal_cmd_send.yaw   = vision_fetch_data.aim_yaw;
     }
-    if ((chassis_fetch_data.game_progress != GAME_IN_PROGRESS) &&
-        (chassis_fetch_data.game_progress != GAME_CALCULATING_RESULTS)) {
-        chassis_cmd_send.wz = 0; // guidence_fetch_data.wz;
-        return;
-    }
+    // if ((chassis_fetch_data.game_progress != GAME_IN_PROGRESS) &&
+    //     (chassis_fetch_data.game_progress != GAME_CALCULATING_RESULTS)) {
+    //     chassis_cmd_send.wz = 0; // guidence_fetch_data.wz;
+    //     return;
+    // }
 
     chassis_cmd_send.vx = guidence_fetch_data.vx;
     chassis_cmd_send.vy = guidence_fetch_data.vy;
-    chassis_cmd_send.wz = 25; // guidence_fetch_data.wz;
-    if (chassis_fetch_data.rfid_status == RFID_CENTER_GAIN) {
-        chassis_cmd_send.wz = 30;
-    }
+    chassis_cmd_send.wz = 0; // guidence_fetch_data.wz;
+    // if (chassis_fetch_data.rfid_status == RFID_CENTER_GAIN) {
+    //     chassis_cmd_send.wz = 0;
+    // }
 
     chassis_cmd_send.chassis_mode = CHASSIS_ROTATE;
     shoot_cmd_send.friction_mode  = FRICTION_ON;
@@ -452,7 +452,6 @@ void RobotCmdInit(void) {
     lp_fliter.RC = 0.08;
     LowPassFliterInit(&vx_fliter, &lp_fliter);
     LowPassFliterInit(&vy_fliter, &lp_fliter);
-
     //	gimbal_cmd_send.pitch = 0;		???��?????????
     robot_state = ROBOT_READY;
 }
@@ -482,7 +481,6 @@ void RobotCMDTask(void) {
     //     StateControlSet();
     // }
     // ???????????????,?????????????????????
-    // VisionTask(RadToDeg(ins_data->Roll), -RadToDeg(ins_data->Pitch), RadToDeg(ins_data->Yaw));
 
     // ???????,??????,???????
     shoot_cmd_send.rest_heat      = chassis_fetch_data.shooter_heat;
@@ -490,6 +488,8 @@ void RobotCMDTask(void) {
         (FliterInstance *)&yaw_offset_fliter, gimbal_fetch_data.yaw1_motor_single_round_angle));
     chassis_cmd_send.vx = FliterCalcutale((FliterInstance *)&vx_fliter, chassis_cmd_send.vx);
     chassis_cmd_send.vy = FliterCalcutale((FliterInstance *)&vy_fliter, chassis_cmd_send.vy);
+    chassis_cmd_send.vx = (fabs(chassis_cmd_send.vx) < 0.01f) ? 0 : chassis_cmd_send.vx;
+    chassis_cmd_send.vy = (fabs(chassis_cmd_send.vy) < 0.01f) ? 0 : chassis_cmd_send.vy;
     // ?????????????????????remotecontrolsetmode??mousekeysetmode?????????
 
     PubPushMessage(chassis_cmd_pub, (void *)&chassis_cmd_send);

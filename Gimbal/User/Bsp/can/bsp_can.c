@@ -5,14 +5,14 @@
 #include "string.h"
 
 static CANInstance *can_instance[CAN_MX_REGISTER_CNT] = {NULL};
-static uint8_t idx; // È«¾ÖCANÊµÀýË÷Òý,Ã¿´ÎÓÐÐÂµÄÄ£¿é×¢²á»á×ÔÔö
+static uint8_t idx; // å…¨å±€CANå®žä¾‹ç´¢å¼•,æ¯æ¬¡æœ‰æ–°çš„æ¨¡å—æ³¨å†Œä¼šè‡ªå¢ž
 
-/* ----------------------- ÄÚ²¿µ÷ÓÃº¯Êý -----------------------*/
+/* ----------------------- å†…éƒ¨è°ƒç”¨å‡½æ•° -----------------------*/
 
 /**
- * @brief ÔÚµÚÒ»¸öCANÊµÀý³õÊ¼»¯µÄÊ±ºò»á×Ô¶¯µ÷ÓÃ´Ëº¯Êý,Æô¶¯CAN·þÎñ
+ * @brief åœ¨ç¬¬ä¸€ä¸ªCANå®žä¾‹åˆå§‹åŒ–çš„æ—¶å€™ä¼šè‡ªåŠ¨è°ƒç”¨æ­¤å‡½æ•°,å¯åŠ¨CANæœåŠ¡
  *
- * @note ´Ëº¯Êý»áÆô¶¯CAN1ºÍCAN2,¿ªÆôCAN1ºÍCAN2µÄFIFO0 & FIFO1Òç³öÍ¨Öª
+ * @note æ­¤å‡½æ•°ä¼šå¯åŠ¨CAN1å’ŒCAN2,å¼€å¯CAN1å’ŒCAN2çš„FIFO0 & FIFO1æº¢å‡ºé€šçŸ¥
  *
  */
 static void CANServiceInit(void) {
@@ -25,54 +25,54 @@ static void CANServiceInit(void) {
 }
 
 /**
- * @brief Ìí¼Ó¹ýÂËÆ÷ÒÔÊµÏÖ¶ÔÌØ¶¨idµÄ±¨ÎÄµÄ½ÓÊÕ,»á±»CANRegister()µ÷ÓÃ
- *        ¸øCANÌí¼Ó¹ýÂËÆ÷ºó,BxCAN»á¸ù¾Ý½ÓÊÕµ½µÄ±¨ÎÄµÄid½øÐÐÏûÏ¢¹ýÂË,·ûºÏ¹æÔòµÄid»á±»ÌîÈëFIFO´¥·¢ÖÐ¶Ï
+ * @brief æ·»åŠ è¿‡æ»¤å™¨ä»¥å®žçŽ°å¯¹ç‰¹å®šidçš„æŠ¥æ–‡çš„æŽ¥æ”¶,ä¼šè¢«CANRegister()è°ƒç”¨
+ *        ç»™CANæ·»åŠ è¿‡æ»¤å™¨åŽ,BxCANä¼šæ ¹æ®æŽ¥æ”¶åˆ°çš„æŠ¥æ–‡çš„idè¿›è¡Œæ¶ˆæ¯è¿‡æ»¤,ç¬¦åˆè§„åˆ™çš„idä¼šè¢«å¡«å…¥FIFOè§¦å‘ä¸­æ–­
  *
- * @note f407µÄbxCANÓÐ28¸ö¹ýÂËÆ÷,ÕâÀï½«ÆäÅäÖÃÎªÇ°14¸ö¹ýÂËÆ÷¸øCAN1Ê¹ÓÃ,ºó14¸ö±»CAN2Ê¹ÓÃ
- *       ³õÊ¼»¯Ê±,ÆæÊýidµÄÄ£¿é»á±»·ÖÅäµ½FIFO0,Å¼ÊýidµÄÄ£¿é»á±»·ÖÅäµ½FIFO1
- *       ×¢²áµ½CAN1µÄÄ£¿éÊ¹ÓÃ¹ýÂËÆ÷0-13,CAN2Ê¹ÓÃ¹ýÂËÆ÷14-27
+ * @note f407çš„bxCANæœ‰28ä¸ªè¿‡æ»¤å™¨,è¿™é‡Œå°†å…¶é…ç½®ä¸ºå‰14ä¸ªè¿‡æ»¤å™¨ç»™CAN1ä½¿ç”¨,åŽ14ä¸ªè¢«CAN2ä½¿ç”¨
+ *       åˆå§‹åŒ–æ—¶,å¥‡æ•°idçš„æ¨¡å—ä¼šè¢«åˆ†é…åˆ°FIFO0,å¶æ•°idçš„æ¨¡å—ä¼šè¢«åˆ†é…åˆ°FIFO1
+ *       æ³¨å†Œåˆ°CAN1çš„æ¨¡å—ä½¿ç”¨è¿‡æ»¤å™¨0-13,CAN2ä½¿ç”¨è¿‡æ»¤å™¨14-27
  *
- * @param _instance ÌØ¶¨Ä£¿éÓµÓÐµÄ can ÊµÀý
+ * @param _instance ç‰¹å®šæ¨¡å—æ‹¥æœ‰çš„ can å®žä¾‹
  */
 static void CANAddFilter(CANInstance *_instance) {
     CAN_FilterTypeDef can_filter_conf;
-    static uint8_t can1_filter_idx = 0, can2_filter_idx = 14; // 0-13¸øcan1ÓÃ,14-27¸øcan2ÓÃ
+    static uint8_t can1_filter_idx = 0, can2_filter_idx = 14; // 0-13ç»™can1ç”¨,14-27ç»™can2ç”¨
 
     can_filter_conf.FilterMode =
-        CAN_FILTERMODE_IDLIST; // Ê¹ÓÃid
-                               // listÄ£Ê½,¼´Ö»ÓÐ½«rxidÌí¼Óµ½¹ýÂËÆ÷ÖÐ²Å»á½ÓÊÕµ½,ÆäËû±¨ÎÄ»á±»¹ýÂË
-    can_filter_conf.FilterScale = CAN_FILTERSCALE_16BIT; // Ê¹ÓÃ16Î»idÄ£Ê½,¼´Ö»ÓÐµÍ16Î»ÓÐÐ§
+        CAN_FILTERMODE_IDLIST; // ä½¿ç”¨id
+                               // listæ¨¡å¼,å³åªæœ‰å°†rxidæ·»åŠ åˆ°è¿‡æ»¤å™¨ä¸­æ‰ä¼šæŽ¥æ”¶åˆ°,å…¶ä»–æŠ¥æ–‡ä¼šè¢«è¿‡æ»¤
+    can_filter_conf.FilterScale = CAN_FILTERSCALE_16BIT; // ä½¿ç”¨16ä½idæ¨¡å¼,å³åªæœ‰ä½Ž16ä½æœ‰æ•ˆ
     can_filter_conf.FilterFIFOAssignment =
         (_instance->tx_id & 1)
             ? CAN_RX_FIFO0
-            : CAN_RX_FIFO1; // ÆæÊýidµÄÄ£¿é»á±»·ÖÅäµ½FIFO0,Å¼ÊýidµÄÄ£¿é»á±»·ÖÅäµ½FIFO1
+            : CAN_RX_FIFO1; // å¥‡æ•°idçš„æ¨¡å—ä¼šè¢«åˆ†é…åˆ°FIFO0,å¶æ•°idçš„æ¨¡å—ä¼šè¢«åˆ†é…åˆ°FIFO1
     can_filter_conf.SlaveStartFilterBank =
-        14; // ´ÓµÚ14¸ö¹ýÂËÆ÷¿ªÊ¼ÅäÖÃ´Ó»ú¹ýÂËÆ÷(ÔÚSTM32µÄBxCAN¿ØÖÆÆ÷ÖÐCAN2ÊÇCAN1µÄ´Ó»ú)
+        14; // ä»Žç¬¬14ä¸ªè¿‡æ»¤å™¨å¼€å§‹é…ç½®ä»Žæœºè¿‡æ»¤å™¨(åœ¨STM32çš„BxCANæŽ§åˆ¶å™¨ä¸­CAN2æ˜¯CAN1çš„ä»Žæœº)
     can_filter_conf.FilterIdLow =
-        _instance->rx_id << 5; // ¹ýÂËÆ÷¼Ä´æÆ÷µÄµÍ16Î»,ÒòÎªÊ¹ÓÃSTDID,ËùÒÔÖ»ÓÐµÍ11Î»ÓÐÐ§,¸ß5Î»ÒªÌî0
+        _instance->rx_id << 5; // è¿‡æ»¤å™¨å¯„å­˜å™¨çš„ä½Ž16ä½,å› ä¸ºä½¿ç”¨STDID,æ‰€ä»¥åªæœ‰ä½Ž11ä½æœ‰æ•ˆ,é«˜5ä½è¦å¡«0
     can_filter_conf.FilterBank =
         _instance->can_handle == &hcan1
             ? (can1_filter_idx++)
-            : (can2_filter_idx++); // ¸ù¾Ýcan_handleÅÐ¶ÏÊÇCAN1»¹ÊÇCAN2,È»ºó×ÔÔö
-    can_filter_conf.FilterActivation = CAN_FILTER_ENABLE; // ÆôÓÃ¹ýÂËÆ÷
+            : (can2_filter_idx++); // æ ¹æ®can_handleåˆ¤æ–­æ˜¯CAN1è¿˜æ˜¯CAN2,ç„¶åŽè‡ªå¢ž
+    can_filter_conf.FilterActivation = CAN_FILTER_ENABLE; // å¯ç”¨è¿‡æ»¤å™¨
 
     HAL_CAN_ConfigFilter(_instance->can_handle, &can_filter_conf);
 }
 
-/* ----------------------- Íâ²¿½Ó¿Úº¯Êý -----------------------*/
+/* ----------------------- å¤–éƒ¨æŽ¥å£å‡½æ•° -----------------------*/
 
 CANInstance *CANRegister(CAN_Init_Config_s *config) {
     if (!idx) {
-        CANServiceInit(); // µÚÒ»´Î×¢²á,ÏÈ½øÐÐÓ²¼þ³õÊ¼»¯
+        CANServiceInit(); // ç¬¬ä¸€æ¬¡æ³¨å†Œ,å…ˆè¿›è¡Œç¡¬ä»¶åˆå§‹åŒ–
         LOGINFO("[bsp_can] CAN Service Init");
     }
-    if (idx >= CAN_MX_REGISTER_CNT) // ³¬¹ý×î´óÊµÀýÊý
+    if (idx >= CAN_MX_REGISTER_CNT) // è¶…è¿‡æœ€å¤§å®žä¾‹æ•°
     {
         while (1)
             LOGERROR(
                 "[bsp_can] CAN instance exceeded MAX num, consider balance the load of CAN bus");
     }
-    for (size_t i = 0; i < idx; i++) { // ÖØ¸´×¢²á | idÖØ¸´
+    for (size_t i = 0; i < idx; i++) { // é‡å¤æ³¨å†Œ | idé‡å¤
         if (can_instance[i]->rx_id == config->rx_id &&
             can_instance[i]->can_handle == config->can_handle) {
             while (1)
@@ -81,41 +81,41 @@ CANInstance *CANRegister(CAN_Init_Config_s *config) {
         }
     }
 
-    CANInstance *instance = (CANInstance *)malloc(sizeof(CANInstance)); // ·ÖÅä¿Õ¼ä
-    memset(instance, 0, sizeof(CANInstance)); // ·ÖÅäµÄ¿Õ¼äÎ´±ØÊÇ0,ËùÒÔÒªÏÈÇå¿Õ
-    // ½øÐÐ·¢ËÍ±¨ÎÄµÄÅäÖÃ
-    instance->txconf.StdId = config->tx_id; // ·¢ËÍid
-    instance->txconf.IDE   = CAN_ID_STD;    // Ê¹ÓÃ±ê×¼id,À©Õ¹idÔòÊ¹ÓÃCAN_ID_EXT(Ä¿Ç°Ã»ÓÐÐèÇó)
-    instance->txconf.RTR   = CAN_RTR_DATA;  // ·¢ËÍÊý¾ÝÖ¡
-    instance->txconf.DLC   = 0x08;          // Ä¬ÈÏ·¢ËÍ³¤¶ÈÎª8
-    // ÉèÖÃ»Øµ÷º¯ÊýºÍ½ÓÊÕ·¢ËÍid
+    CANInstance *instance = (CANInstance *)malloc(sizeof(CANInstance)); // åˆ†é…ç©ºé—´
+    memset(instance, 0, sizeof(CANInstance)); // åˆ†é…çš„ç©ºé—´æœªå¿…æ˜¯0,æ‰€ä»¥è¦å…ˆæ¸…ç©º
+    // è¿›è¡Œå‘é€æŠ¥æ–‡çš„é…ç½®
+    instance->txconf.StdId = config->tx_id; // å‘é€id
+    instance->txconf.IDE   = CAN_ID_STD;    // ä½¿ç”¨æ ‡å‡†id,æ‰©å±•idåˆ™ä½¿ç”¨CAN_ID_EXT(ç›®å‰æ²¡æœ‰éœ€æ±‚)
+    instance->txconf.RTR   = CAN_RTR_DATA;  // å‘é€æ•°æ®å¸§
+    instance->txconf.DLC   = 0x08;          // é»˜è®¤å‘é€é•¿åº¦ä¸º8
+    // è®¾ç½®å›žè°ƒå‡½æ•°å’ŒæŽ¥æ”¶å‘é€id
     instance->can_handle          = config->can_handle;
-    instance->tx_id               = config->tx_id; // ºÃÏñÃ»ÓÃ,¿ÉÒÔÉ¾µô
+    instance->tx_id               = config->tx_id; // å¥½åƒæ²¡ç”¨,å¯ä»¥åˆ æŽ‰
     instance->rx_id               = config->rx_id;
     instance->can_module_callback = config->can_module_callback;
     instance->id                  = config->id;
 
-    CANAddFilter(instance);         // Ìí¼ÓCAN¹ýÂËÆ÷¹æÔò
-    can_instance[idx++] = instance; // ½«ÊµÀý±£´æµ½can_instanceÖÐ
+    CANAddFilter(instance);         // æ·»åŠ CANè¿‡æ»¤å™¨è§„åˆ™
+    can_instance[idx++] = instance; // å°†å®žä¾‹ä¿å­˜åˆ°can_instanceä¸­
 
-    return instance;                // ·µ»ØcanÊµÀýÖ¸Õë
+    return instance;                // è¿”å›žcanå®žä¾‹æŒ‡é’ˆ
 }
 
 // uint8_t CANTransmit(CANInstance *_instance, float timeout)
 // {
 //     static uint32_t busy_count;
 //     static volatile float wait_time;// __attribute__((unused)); // for cancel warning
-//     __attribute__((unused))È¡Ïûunused¾¯¸æ float dwt_start = DWT_GetTimeline_ms(); while
-//     (HAL_CAN_GetTxMailboxesFreeLevel(_instance->can_handle) == 0) // µÈ´ýÓÊÏä¿ÕÏÐ
+//     __attribute__((unused))å–æ¶ˆunusedè­¦å‘Š float dwt_start = DWT_GetTimeline_ms(); while
+//     (HAL_CAN_GetTxMailboxesFreeLevel(_instance->can_handle) == 0) // ç­‰å¾…é‚®ç®±ç©ºé—²
 //     {
-//         if (DWT_GetTimeline_ms() - dwt_start > timeout) // ³¬Ê±
+//         if (DWT_GetTimeline_ms() - dwt_start > timeout) // è¶…æ—¶
 //         {
 //             LOGWARNING("[bsp_can] CAN MAILbox full! failed to add msg to mailbox. Cnt [%d]",
 //             busy_count); busy_count++; return 0;
 //         }
 //     }
 //     wait_time = DWT_GetTimeline_ms() - dwt_start;
-//     // tx_mailbox»á±£´æÊµ¼ÊÌîÈëÁËÕâÒ»Ö¡ÏûÏ¢µÄÓÊÏä,µ«ÊÇÖªµÀÊÇÄÄ¸öÓÊÏä·¢µÄËÆºõÒ²Ã»É¶ÓÃ
+//     // tx_mailboxä¼šä¿å­˜å®žé™…å¡«å…¥äº†è¿™ä¸€å¸§æ¶ˆæ¯çš„é‚®ç®±,ä½†æ˜¯çŸ¥é“æ˜¯å“ªä¸ªé‚®ç®±å‘çš„ä¼¼ä¹Žä¹Ÿæ²¡å•¥ç”¨
 //     if (HAL_CAN_AddTxMessage(_instance->can_handle, &_instance->txconf, _instance->tx_buff,
 //     &_instance->tx_mailbox))
 //     {
@@ -123,23 +123,23 @@ CANInstance *CANRegister(CAN_Init_Config_s *config) {
 //         busy_count++;
 //         return 0;
 //     }
-//     return 1; // ·¢ËÍ³É¹¦
+//     return 1; // å‘é€æˆåŠŸ
 // }
 uint8_t CANTransmit(CANInstance *_instance, float timeout) {
     // float dwt_start = DWT_GetTimeline_ms();
-    // while (HAL_CAN_GetTxMailboxesFreeLevel(_instance->can_handle) == 0) // µÈ´ýÓÊÏä¿ÕÏÐ
+    // while (HAL_CAN_GetTxMailboxesFreeLevel(_instance->can_handle) == 0) // ç­‰å¾…é‚®ç®±ç©ºé—²
     // {
-    //     if (DWT_GetTimeline_ms() - dwt_start > timeout)                 // ³¬Ê±
+    //     if (DWT_GetTimeline_ms() - dwt_start > timeout)                 // è¶…æ—¶
     //     {
     //         return 0;
     //     }
     // }
-    // // tx_mailbox»á±£´æÊµ¼ÊÌîÈëÁËÕâÒ»Ö¡ÏûÏ¢µÄÓÊÏä,µ«ÊÇÖªµÀÊÇÄÄ¸öÓÊÏä·¢µÄËÆºõÒ²Ã»É¶ÓÃ
+    // // tx_mailboxä¼šä¿å­˜å®žé™…å¡«å…¥äº†è¿™ä¸€å¸§æ¶ˆæ¯çš„é‚®ç®±,ä½†æ˜¯çŸ¥é“æ˜¯å“ªä¸ªé‚®ç®±å‘çš„ä¼¼ä¹Žä¹Ÿæ²¡å•¥ç”¨
     // HAL_CAN_AddTxMessage(_instance->can_handle, &_instance->txconf, _instance->tx_buff,
     //                      &_instance->tx_mailbox);
-    // return 1; // ·¢ËÍ³É¹¦
+    // return 1; // å‘é€æˆåŠŸ
     if (HAL_CAN_GetTxMailboxesFreeLevel(_instance->can_handle) == 0) {
-        return 0; // ÓÊÏäÂú£¬¶ªÆú±¨ÎÄ
+        return 0; // é‚®ç®±æ»¡ï¼Œä¸¢å¼ƒæŠ¥æ–‡
     }
     HAL_CAN_AddTxMessage(_instance->can_handle, &_instance->txconf, _instance->tx_buff,
                          &_instance->tx_mailbox);
@@ -147,36 +147,36 @@ uint8_t CANTransmit(CANInstance *_instance, float timeout) {
 }
 
 void CANSetDLC(CANInstance *_instance, uint8_t length) {
-    // ·¢ËÍ³¤¶È´íÎó!¼ì²éµ÷ÓÃ²ÎÊýÊÇ·ñ³ö´í,»ò³öÏÖÒ°Ö¸Õë/Ô½½ç·ÃÎÊ
-    if (length > 8 || length == 0) // °²È«¼ì²é
+    // å‘é€é•¿åº¦é”™è¯¯!æ£€æŸ¥è°ƒç”¨å‚æ•°æ˜¯å¦å‡ºé”™,æˆ–å‡ºçŽ°é‡ŽæŒ‡é’ˆ/è¶Šç•Œè®¿é—®
+    if (length > 8 || length == 0) // å®‰å…¨æ£€æŸ¥
         while (1)
             LOGERROR("[bsp_can] CAN DLC error! check your code or wild pointer");
     _instance->txconf.DLC = length;
 }
 
-/* ----------------------- CANÖÐ¶Ï»Øµ÷º¯Êý -----------------------*/
+/* ----------------------- CANä¸­æ–­å›žè°ƒå‡½æ•° -----------------------*/
 
 /**
- * @brief ´Ëº¯Êý»á±»ÏÂÃæÁ½¸öº¯Êýµ÷ÓÃ,ÓÃÓÚ´¦ÀíFIFO0ºÍFIFO1Òç³öÖÐ¶Ï(ËµÃ÷ÊÕµ½ÁËÐÂµÄÊý¾Ý)
- *        ËùÓÐµÄÊµÀý¶¼»á±»±éÀú,ÕÒµ½can_handleºÍrx_idÏàµÈµÄÊµÀýÊ±,µ÷ÓÃ¸ÃÊµÀýµÄ»Øµ÷º¯Êý
+ * @brief æ­¤å‡½æ•°ä¼šè¢«ä¸‹é¢ä¸¤ä¸ªå‡½æ•°è°ƒç”¨,ç”¨äºŽå¤„ç†FIFO0å’ŒFIFO1æº¢å‡ºä¸­æ–­(è¯´æ˜Žæ”¶åˆ°äº†æ–°çš„æ•°æ®)
+ *        æ‰€æœ‰çš„å®žä¾‹éƒ½ä¼šè¢«éåŽ†,æ‰¾åˆ°can_handleå’Œrx_idç›¸ç­‰çš„å®žä¾‹æ—¶,è°ƒç”¨è¯¥å®žä¾‹çš„å›žè°ƒå‡½æ•°
  *
  * @param _hcan
  * @param fifox passed to HAL_CAN_GetRxMessage() to get mesg from a specific fifo
  */
 static void CANFIFOxCallback(CAN_HandleTypeDef *_hcan, uint32_t fifox) {
-    static CAN_RxHeaderTypeDef rxconf;               // Í¬ÉÏ
+    static CAN_RxHeaderTypeDef rxconf;               // åŒä¸Š
     uint8_t can_rx_buff[8];
-    while (HAL_CAN_GetRxFifoFillLevel(_hcan, fifox)) // FIFO²»Îª¿Õ,ÓÐ¿ÉÄÜÔÚÆäËûÖÐ¶ÏÊ±ÓÐ¶àÖ¡Êý¾Ý½øÈë
+    while (HAL_CAN_GetRxFifoFillLevel(_hcan, fifox)) // FIFOä¸ä¸ºç©º,æœ‰å¯èƒ½åœ¨å…¶ä»–ä¸­æ–­æ—¶æœ‰å¤šå¸§æ•°æ®è¿›å…¥
     {
-        HAL_CAN_GetRxMessage(_hcan, fifox, &rxconf, can_rx_buff); // ´ÓFIFOÖÐ»ñÈ¡Êý¾Ý
-        for (size_t i = 0; i < idx; ++i) {                        // Á½ÕßÏàµÈËµÃ÷ÕâÊÇÒªÕÒµÄÊµÀý
+        HAL_CAN_GetRxMessage(_hcan, fifox, &rxconf, can_rx_buff); // ä»ŽFIFOä¸­èŽ·å–æ•°æ®
+        for (size_t i = 0; i < idx; ++i) {                        // ä¸¤è€…ç›¸ç­‰è¯´æ˜Žè¿™æ˜¯è¦æ‰¾çš„å®žä¾‹
             if (_hcan == can_instance[i]->can_handle && rxconf.StdId == can_instance[i]->rx_id) {
-                if (can_instance[i]->can_module_callback != NULL) // »Øµ÷º¯Êý²»Îª¿Õ¾Íµ÷ÓÃ
+                if (can_instance[i]->can_module_callback != NULL) // å›žè°ƒå‡½æ•°ä¸ä¸ºç©ºå°±è°ƒç”¨
                 {
-                    can_instance[i]->rx_len = rxconf.DLC;         // ±£´æ½ÓÊÕµ½µÄÊý¾Ý³¤¶È
-                    memcpy(can_instance[i]->rx_buff, can_rx_buff, rxconf.DLC); // ÏûÏ¢¿½±´µ½¶ÔÓ¦ÊµÀý
+                    can_instance[i]->rx_len = rxconf.DLC;         // ä¿å­˜æŽ¥æ”¶åˆ°çš„æ•°æ®é•¿åº¦
+                    memcpy(can_instance[i]->rx_buff, can_rx_buff, rxconf.DLC); // æ¶ˆæ¯æ‹·è´åˆ°å¯¹åº”å®žä¾‹
                     can_instance[i]->can_module_callback(
-                        can_instance[i]); // ´¥·¢»Øµ÷½øÐÐÊý¾Ý½âÎöºÍ´¦Àí
+                        can_instance[i]); // è§¦å‘å›žè°ƒè¿›è¡Œæ•°æ®è§£æžå’Œå¤„ç†
                 }
                 return;
             }
@@ -185,15 +185,15 @@ static void CANFIFOxCallback(CAN_HandleTypeDef *_hcan, uint32_t fifox) {
 }
 
 /**
- * @brief ×¢Òâ,STM32µÄÁ½¸öCANÉè±¸¹²ÏíÁ½¸öFIFO
- * ÏÂÃæÁ½¸öº¯ÊýÊÇHAL¿âÖÐµÄ»Øµ÷º¯Êý,ËûÃÇ±»HALÉùÃ÷Îª__weak,ÕâÀï¶ÔËûÃÇ½øÐÐÖØÔØ(ÖØÐ´)
- * µ±FIFO0»òFIFO1Òç³öÊ±»áµ÷ÓÃÕâÁ½¸öº¯Êý
- * ÏÂÃæµÄº¯Êý»áµ÷ÓÃCANFIFOxCallback()À´½øÒ»²½´¦ÀíÀ´×ÔÌØ¶¨CANÉè±¸µÄÏûÏ¢
+ * @brief æ³¨æ„,STM32çš„ä¸¤ä¸ªCANè®¾å¤‡å…±äº«ä¸¤ä¸ªFIFO
+ * ä¸‹é¢ä¸¤ä¸ªå‡½æ•°æ˜¯HALåº“ä¸­çš„å›žè°ƒå‡½æ•°,ä»–ä»¬è¢«HALå£°æ˜Žä¸º__weak,è¿™é‡Œå¯¹ä»–ä»¬è¿›è¡Œé‡è½½(é‡å†™)
+ * å½“FIFO0æˆ–FIFO1æº¢å‡ºæ—¶ä¼šè°ƒç”¨è¿™ä¸¤ä¸ªå‡½æ•°
+ * ä¸‹é¢çš„å‡½æ•°ä¼šè°ƒç”¨CANFIFOxCallback()æ¥è¿›ä¸€æ­¥å¤„ç†æ¥è‡ªç‰¹å®šCANè®¾å¤‡çš„æ¶ˆæ¯
  */
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
-    CANFIFOxCallback(hcan, CAN_RX_FIFO0); // µ÷ÓÃÎÒÃÇ×Ô¼ºÐ´µÄº¯ÊýÀ´´¦ÀíÏûÏ¢
+    CANFIFOxCallback(hcan, CAN_RX_FIFO0); // è°ƒç”¨æˆ‘ä»¬è‡ªå·±å†™çš„å‡½æ•°æ¥å¤„ç†æ¶ˆæ¯
 }
 
 void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
-    CANFIFOxCallback(hcan, CAN_RX_FIFO1); // µ÷ÓÃÎÒÃÇ×Ô¼ºÐ´µÄº¯ÊýÀ´´¦ÀíÏûÏ¢
+    CANFIFOxCallback(hcan, CAN_RX_FIFO1); // è°ƒç”¨æˆ‘ä»¬è‡ªå·±å†™çš„å‡½æ•°æ¥å¤„ç†æ¶ˆæ¯
 }

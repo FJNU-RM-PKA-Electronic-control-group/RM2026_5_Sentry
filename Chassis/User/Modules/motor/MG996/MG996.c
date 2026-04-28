@@ -1,4 +1,4 @@
-#include "MG996.h"
+ï»¿#include "MG996.h"
 #include "cmsis_os.h"
 #include "crc_ref.h"
 #include "daemon.h"
@@ -11,10 +11,10 @@ static MG996Instance *MG996_instance[MG996_MOTOR_CNT];
 static uint8_t idx = 0;
 
 /**
- * @brief ½«Ä¿±êËÙ¶È×ª»»ÎªPWM²¨Êä³ö
+ * @brief ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½Ù¶ï¿½×ªï¿½ï¿½ÎªPWMï¿½ï¿½ï¿½ï¿½ï¿½
  *
- * @param pwm PWMÊµÀý
- * @param targetspeed Ä¿±êËÙ¶È £¨ÏÞÖÆÔÚ50µ½-50£©£¨µ¥Î»Î´Öª£¬Ö»ÊÇ¸öÖÐ¼äÁ¿£©
+ * @param pwm PWMÊµï¿½ï¿½
+ * @param targetspeed Ä¿ï¿½ï¿½ï¿½Ù¶ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½50ï¿½ï¿½-50ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»Î´Öªï¿½ï¿½Ö»ï¿½Ç¸ï¿½ï¿½Ð¼ï¿½ï¿½ï¿½ï¿½ï¿½
  */
 static void MG996SetSpeed(PWMInstance *pwm, float targetspeed) {
     if (targetspeed > 50) {
@@ -41,10 +41,10 @@ MG996Instance *MG996Init(Motor_Init_Config_s *config, PWM_Init_Config_s *PWM) {
 
     PIDInit(&instance->motor_controller.angle_PID,
             &config->controller_param_init_config
-                 .angle_PID); // ¶æ»úÖ»ÓÃÒ»¸öPIDÊµÀý½øÐÐ¿ØÖÆ£¬Ê¹ÓÃangle_PIDÖÐµÄÊý¾Ý¿ØÖÆ
+                 .angle_PID); // ï¿½ï¿½ï¿½Ö»ï¿½ï¿½Ò»ï¿½ï¿½PIDÊµï¿½ï¿½ï¿½ï¿½ï¿½Ð¿ï¿½ï¿½Æ£ï¿½Ê¹ï¿½ï¿½angle_PIDï¿½Ðµï¿½ï¿½ï¿½ï¿½Ý¿ï¿½ï¿½ï¿½
     PIDInit(&instance->motor_controller.speed_PID,
-            &config->controller_param_init_config.speed_PID); // errÄ£Ê½¿ØÖÆ
-    instance->PID_mode     = NORMAL_MODE;                     // ×¢²áÊ±Ä¬ÈÏÊ¹ÓÃÆÕÍ¨Ä£Ê½
+            &config->controller_param_init_config.speed_PID); // errÄ£Ê½ï¿½ï¿½ï¿½ï¿½
+    instance->PID_mode     = NORMAL_MODE;                     // ×¢ï¿½ï¿½Ê±Ä¬ï¿½ï¿½Ê¹ï¿½ï¿½ï¿½ï¿½Í¨Ä£Ê½
     instance->reverse_flag = config->controller_setting_init_config.motor_reverse_flag;
 
     MG996_instance[idx++] = instance;
@@ -66,7 +66,7 @@ void MG996SetErr(MG996Instance *motor, float err) {
     motor->motor_controller.pid_ref = err;
 }
 /**
- * @brief ¶æ»ú¿ØÖÆºËÐÄº¯Êý
+ * @brief ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æºï¿½ï¿½Äºï¿½ï¿½ï¿½
  *
  */
 void MG996Control(void) {
@@ -88,21 +88,21 @@ void MG996Control(void) {
         case MOTOR_ENALBED:
             if (reverse_flag == MOTOR_DIRECTION_REVERSE)
                 // pid_ref *= -1;
-            if (PID_mode == NORMAL_MODE) {
-                pid_measure = *motor_controller->other_angle_feedback_ptr;
-                speed       = PIDCalculate(&motor_controller->angle_PID, pid_measure, pid_ref);
-            }
-            else if (PID_mode == ERR_MODE) {
-                // »ùÓÚ¹âµçÈüÊÓ¾õÐ­Òé¶øÐ´µÄÌØ¹©°æpid
-                pid_measure =
-                    *motor_controller->other_speed_feedback_ptr; // ÕâÀï½ÓÈëÊÓ¾õÊý¾Ý£¨ÊºÉ½ÒÑ³É£¡)
-                if (reverse_flag == MOTOR_DIRECTION_REVERSE)
-                    pid_measure *= -1;
-                pid_ref     = PIDCalculate(&motor_controller->speed_PID, pid_measure, 0);
-                pid_measure = *motor_controller->other_angle_feedback_ptr;
-                speed       = PIDCalculate(&motor_controller->angle_PID, pid_measure, pid_ref);
-                // ÕâÀï¿¼ÂÇÒ»ÏÂÒª²»Òª¼Ó¸ö½Ç¶È»·
-            }
+                if (PID_mode == NORMAL_MODE) {
+                    pid_measure = *motor_controller->other_angle_feedback_ptr;
+                    speed       = PIDCalculate(&motor_controller->angle_PID, pid_measure, pid_ref);
+                }
+                else if (PID_mode == ERR_MODE) {
+                    // ï¿½ï¿½ï¿½Ú¹ï¿½ï¿½ï¿½ï¿½ï¿½Ó¾ï¿½Ð­ï¿½ï¿½ï¿½Ð´ï¿½ï¿½ï¿½Ø¹ï¿½ï¿½ï¿½pid
+                    pid_measure =
+                        *motor_controller->other_speed_feedback_ptr; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¾ï¿½ï¿½ï¿½ï¿½Ý£ï¿½ÊºÉ½ï¿½Ñ³É£ï¿½)
+                    if (reverse_flag == MOTOR_DIRECTION_REVERSE)
+                        pid_measure *= -1;
+                    pid_ref     = PIDCalculate(&motor_controller->speed_PID, pid_measure, 0);
+                    pid_measure = *motor_controller->other_angle_feedback_ptr;
+                    speed       = PIDCalculate(&motor_controller->angle_PID, pid_measure, pid_ref);
+                    // ï¿½ï¿½ï¿½ï¿¼ï¿½ï¿½Ò»ï¿½ï¿½Òªï¿½ï¿½Òªï¿½Ó¸ï¿½ï¿½Ç¶È»ï¿½
+                }
             break;
 
         case MOTOR_STOP:

@@ -1,33 +1,31 @@
 /**
-  ****************************(C) COPYRIGHT 2022 YUELU*********************************
-  * @file      robot_cmd.c\h
-  * @brief
-  robot_cmd�����������˵ĺ���Ӧ�ã��为�����ң����/��λ��������ָ�����ָ
-  *
-  ��ת��Ϊʵ�ʵ��˶�����Ŀ�꣬���͸���������Ӧ�á����߻����robot_cmd��������
-  *
-  ��趨���������ִ�е�Ԫ�Ĳο�ֵ�ȡ�(�൱�ڼ����˾ɴ���gimbal_behaviour��
-  *             chassis_behaviour���֣��Ҿ��з����߹��ܣ�
-  *
-  * @todo      1.�����Զ��������ģʽ
-  *            2.����ң����ģʽ�µ�¼��ģʽѡ����У׼�������
-  *            3.��д�Զ�����������ߵ����Ӧ�Դ�ʩ
-               4.����message������Ҫ�޸�
-  *
-  * @note
-  * @history
-  *  Version    Date            Author          Modification
-  *  V1.0.0                     YUELU              1. ���
-  *  V2.0.0                      qhp               1.�����Ӧ������
-  *  V2.1.0                     nan_97             1.�����Զ��������ģʽ�����乤��
-  *
-  @verbatim
-  ===================================================================================
+    ****************************(C) COPYRIGHT 2022 YUELU*********************************
+    * @file      robot_cmd.c\h
+    * @brief     robot_cmd模块提供上层的函数应用，为上层的遥控器/位置命令提供数据指令
+    *
+    *            转换为实际的运动控制目标，同时传递给对应的应用。同步获取robot_cmd模块的反馈信息
+    *
+    *            获定义模块内的执行元件的参考值等。(相当于整合了gimbal_behaviour和
+    *             chassis_behaviour的工作，我们进行了功能整合)
+    *
+    * @todo      1.添加自动巡航模式
+    *            2.完善遥控器模式下的标定模式选择与校准参数调整
+    *            3.重写自动控制的反馈与执行的反应应用
+                             4.优化message通信需要修改
+    *
+    * @note
+    * @history
+    *  Version    Date            Author          Modification
+    *  V1.0.0                     YUELU              1. 建立
+    *  V2.0.0                      qhp               1.完善应用代码
+    *
+    @verbatim
+    ===================================================================================
 
-  ===================================================================================
-  @endverbatim
-  ****************************(C) COPYRIGHT 2022 YUELU*******************************
-  */
+    ===================================================================================
+    @endverbatim
+    ****************************(C) COPYRIGHT 2022 YUELU*******************************
+    */
 
 #include "stm32f427xx.h"
 
@@ -73,33 +71,39 @@
 #define PITCH_MAX           15
 #define PITCH_MIN           -8
 
-RC_ctrl_t *rc_data;                                       // ң��������,��ʼ��ʱ����
-INS_t *ins_data;                                          // IMU����,��ʼ��ʱ����
+// 底盘控制命令单位约定: vx/vy 为 mm/s, wz 为 rad/s
+#define CHASSIS_SPIN_MAX_VXY_MMPS 1200.0f
+#define CHASSIS_MAX_VXY_MMPS      3000.0f
+#define CHASSIS_SPIN_MAX_WZ_RADPS 2.5f
+#define CHASSIS_MAX_WZ_RADPS      4.0f
+
+RC_ctrl_t *rc_data;                                       // 遥控器数据,初始化时赋值
+INS_t *ins_data;                                          // IMU数据,初始化时赋值
 cali_data_t *calibrate_data;
-AirPumpInstance *ee_airpump, left_airpump, right_airpump; // ����ʵ��ע��
+AirPumpInstance *ee_airpump, left_airpump, right_airpump; // 气泵实例注册
 referee_info_t *referee_info;
 
-static Publisher_t *chassis_cmd_pub;   // ���̿�����Ϣ������
+static Publisher_t *chassis_cmd_pub;   // 底盘控制信息发布器
 static Publisher_t *chassis_feed_pub;
-static Subscriber_t *chassis_feed_sub; // ���̷�����Ϣ������
+static Subscriber_t *chassis_feed_sub; // 底盘反馈信息订阅器
 static Publisher_t *referee_info_pub;
-Chassis_Ctrl_Cmd_s
-    chassis_cmd_send; // ���͸�����Ӧ�õ���Ϣ,����������Ϣ��UI�������
-Chassis_Upload_Data_s chassis_fetch_data; // �ӵ���Ӧ�ý��յķ�����Ϣ��Ϣ,���̹���ǹ������������˶�״̬��
+Chassis_Ctrl_Cmd_s chassis_cmd_send;   // 发送给底盘应用的控制信息,储存底层信息和UI信息
+Chassis_Upload_Data_s
+    chassis_fetch_data; // 从底盘应用获取的反馈信息,信息,底盘电流,冷却液温度,摩擦轮转速等
 Referee_Ctrl_Cmd_s referee_chassis_send;
 
-static Publisher_t *robotarm_cmd_pub;       // ��̨������Ϣ������
-static Subscriber_t *robotarm_feed_sub;     // ��̨������Ϣ������
-Robotarm_Ctrl_Cmd_s robotarm_cmd_send;      // ���ݸ���̨�Ŀ�����Ϣ
-Robotarm_Upload_Data_s robotarm_fetch_data; // ����̨��ȡ�ķ�����Ϣ
-USB_Rx_t *Vision_message;                   // �����⴮�ڶ�ȡ������
+static Publisher_t *robotarm_cmd_pub;       // 机臂控制信息发布器
+static Subscriber_t *robotarm_feed_sub;     // 机臂反馈信息订阅器
+Robotarm_Ctrl_Cmd_s robotarm_cmd_send;      // 发送给机臂的控制信息
+Robotarm_Upload_Data_s robotarm_fetch_data; // 从机臂获取的反馈信息
+USB_Rx_t *Vision_message;                   // 视觉处理器读取的消息
 
 float abslute_vx, abslute_vy;
 
-// static Subscriber_t *vision_feed_sub;         // �Ӿ�������Ϣ������
-// Vision_Upload_Data_s vision_fetch_data; // ���Ӿ���ȡ�ķ�����Ϣ
+// static Subscriber_t *vision_feed_sub;         // 从视觉获取信息订阅器
+// Vision_Upload_Data_s vision_fetch_data; // 从视觉获取的反馈信息
 
-Robot_Status_e robot_state; // ���������幤��״̬
+Robot_Status_e robot_state; // 机器人工作状态
 
 // static float PitchLimit(float origin) {
 //     if (robotarm_cmd_send.gimbal_mode != GIMBAL_ZERO_FORCE) {
@@ -209,49 +213,31 @@ static void RemoteControlSet(void) {
         if (last_chassis_mode != CHASSIS_SPIN)
             yaw_offset = ins_data->Yaw;
 
-        abslute_vx = 6.0f * (float)rc_data->rc.rocker_r_; // _ˮƽ����
-        abslute_vy = 6.0f * (float)rc_data->rc.rocker_r1; // 1��ֵ����
+        abslute_vx = CHASSIS_SPIN_MAX_VXY_MMPS * (float)rc_data->rc.rocker_r_;
+        abslute_vy = CHASSIS_SPIN_MAX_VXY_MMPS * (float)rc_data->rc.rocker_r1;
 
         float sin_theta     = arm_sin_f32(RadFormat((yaw_offset - ins_data->Yaw) * DEGREE_2_RAD));
         float cos_theta     = arm_cos_f32(RadFormat((yaw_offset - ins_data->Yaw) * DEGREE_2_RAD));
         chassis_cmd_send.vx = abslute_vx * cos_theta - abslute_vy * sin_theta;
         chassis_cmd_send.vy = abslute_vx * sin_theta + abslute_vy * cos_theta;
-        chassis_cmd_send.wz = 0.05f * (float)rc_data->rc.rocker_l_;
+        chassis_cmd_send.wz = CHASSIS_SPIN_MAX_WZ_RADPS * (float)rc_data->rc.rocker_l_;
     }
     else {
-        chassis_cmd_send.vx = 20.0f * (float)rc_data->rc.rocker_r_; // _ˮƽ����
-        chassis_cmd_send.vy = 20.0f * (float)rc_data->rc.rocker_r1; // 1��ֵ����
-        chassis_cmd_send.wz = 5.0f * (float)rc_data->rc.rocker_l_;
+        chassis_cmd_send.vx = CHASSIS_MAX_VXY_MMPS * (float)rc_data->rc.rocker_r_;
+        chassis_cmd_send.vy = CHASSIS_MAX_VXY_MMPS * (float)rc_data->rc.rocker_r1;
+        chassis_cmd_send.wz = CHASSIS_MAX_WZ_RADPS * (float)rc_data->rc.rocker_l_;
     }
 }
 
 /**
- * @brief ����Ϊ����ʱģʽ�Ϳ��������ã�Ŀǰֻ�������̿��ƣ�
+ * @brief  紧急停止,包括遥控器掉线或信号丢失/需要模式切换/双通道失效等
+ *         停止赋值'300'可修改成惯性阻尼值,但作为应急控制.
  *
- * @todo  ��Ҫ���Զ����������ϣ�������ʱ���ٿ��ǰ�
- */
-// static void MouseKeySet(void)
-// {
-//     chassis_cmd_send.vy = rc_data[TEMP].key[KEY_PRESS].w * 15000 -
-//     rc_data[TEMP].key[KEY_PRESS].s
-//     * 15000; // ϵ������ chassis_cmd_send.vx = rc_data[TEMP].key[KEY_PRESS].d * 15000 -
-//     rc_data[TEMP].key[KEY_PRESS].a * 15000;
-
-// 	rc_data[TEMP].mouse.x *= -1;
-// 	rc_data[TEMP].mouse.y *= -1;
-
-// }
-
-/**
- * @brief  ����ֹͣ,����ң�������ϲದ�ִ���/��Ҫģ������/˫��ͨ��ʧЧ��
- *         ֹͣ����ֵ'300'���޸ĳɺ��ʵ�ֵ,���Ϊ���ؿ���.
- *
- * @todo
- * �����޸�Ϊң������������ֹͣ(�ر�ң������ͣ),ͨ����ң����ģ������daemonʵ��
- *         ��һ����������Ҫ�ٽ��п��ǣ����Ǽ����Զ�����������ߵĻظ�ģʽ
+ * @todo   可以修改为遥控器紧急停止(关闭遥控器停止),通过遥控器模式和daemon实现
+ *         这一功能需要进一步检查,目的是完善自动化和手动联动的响应模式
  */
 static void EmergencyHandler(void) {
-    // ң������������
+    // 遥控器数据检查
     if (rc_data->rc_state == 0) {
         robot_state = ROBOT_STOP;
     }
@@ -302,17 +288,36 @@ void RefereeDataTransmit(void) {
     referee_chassis_send.power_limit   = referee_info->GameRobotState.chassis_power_limit;
     referee_chassis_send.buffer_energy = referee_info->PowerHeatData.buffer_energy;
     chassis_fetch_data.current_HP      = referee_info->GameRobotState.current_HP;
-    chassis_fetch_data.game_progress   = referee_info->GameState.game_progress;
+    chassis_fetch_data.game_progress   = (Game_Progress_e)referee_info->GameState.game_progress;
     chassis_fetch_data.shooter_heat    = referee_info->PowerHeatData.shooter_17mm_barrel_heat;
-    if ((referee_info->RFIDStatus.rfid_status >> 19) & 0x01) {
-        chassis_fetch_data.rfid_status = RFID_SUPPLY_ZONE;
+    chassis_fetch_data.ally_base_HP    = referee_info->GameRobotHP.ally_base_HP;
+    chassis_fetch_data.ally_outpost_HP = referee_info->GameRobotHP.ally_outpost_HP;
+    uint8_t communicate_flags          = FLAG_DEFAULT;
+    if ((referee_info->RFIDStatus.rfid_status >> 18) & 0x01) {
+        communicate_flags |= RFID_SUPPLY_OUTPOST;
     }
-    else if ((referee_info->RFIDStatus.rfid_status >> 23) & 0x01) {
-        chassis_fetch_data.rfid_status = RFID_CENTER_GAIN;
+    if (((referee_info->RFIDStatus.rfid_status >> 20) & 0x01) &&
+        ((referee_info->RFIDStatus.rfid_status >> 19) & 0x01)) {
+        communicate_flags |= RFID_SUPPLY_ZONE;
     }
-    else {
-        chassis_fetch_data.rfid_status = RFID_NONE;
+    if (referee_info->GameState.stage_remain_time >= 120) {
+        communicate_flags |= TIME_GT_2MIN;
     }
+    if ((referee_info->SentryInfo.sentry_info_2) & 0x01) {
+        communicate_flags |= STATUS_COMBATING;
+    }
+    chassis_fetch_data.status_flag = communicate_flags;
+
+    // 以下是联盟赛协议
+    //  if ((referee_info->RFIDStatus.rfid_status >> 19) & 0x01) {
+    //      chassis_fetch_data.rfid_status = RFID_SUPPLY_ZONE;
+    //  }
+    //  else if ((referee_info->RFIDStatus.rfid_status >> 23) & 0x01) {
+    //      chassis_fetch_data.rfid_status = RFID_CENTER_GAIN;
+    //  }
+    //  else {
+    //      chassis_fetch_data.rfid_status = RFID_NONE;
+    //  }
 }
 
 /**

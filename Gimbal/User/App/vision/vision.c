@@ -16,14 +16,14 @@
 
 #define PC_DATA_LEN 32
 
-static Publisher_t *vision_pub;                // ����Ӧ����Ϣ������(���鷴����cmd)
-static Publisher_t *guidence_pub;              // ����Ӧ����Ϣ������(���鷴����cmd)
-static Subscriber_t *gimbal_feed_sub;          // ���̻�����Ϣ������(��ȡ���̼н�)
-static Subscriber_t *cmd_feed_sub;
-Vision_Upload_Data_s vision_feedback_data;     // �ش���cmd����̨״̬��Ϣ
-Guidence_Upload_Data_s guidence_feedback_data; // �ش���cmd�ĵ���״̬��Ϣ
-Gimbal_Upload_Data_s gimbal_recv;              // ���Ե��̵Ŀ�����Ϣ(��ȡ���̼н�)
-Chassis_Upload_Data_s chassis_recv;            // ���Ե��̵Ŀ�����Ϣ(��ȡ���̼н�)
+static Publisher_t *vision_pub;                // �Ӿ��������ݷ�����
+static Publisher_t *guidence_pub;              // �����������ݷ�����
+static Subscriber_t *gimbal_feed_sub;          // ��̨�ϴ����ݶ�����
+static Subscriber_t *cmd_feed_sub;             // �����ϴ����ݶ�����
+Vision_Upload_Data_s vision_feedback_data;     // �Ӿ��������ݽṹ��
+Guidence_Upload_Data_s guidence_feedback_data; // �����������ݽṹ��
+Gimbal_Upload_Data_s gimbal_recv;              // ��̨��������
+Chassis_Upload_Data_s chassis_recv;            // ���̽�������
 
 xPC_Data Data_PC;
 TxPC_Data Data_Tx;
@@ -32,10 +32,10 @@ uint8_t message[PC_DATA_LEN];
 uint8_t data_from_pc[PC_DATA_LEN];
 
 void vision_sendmessage(aim_mod_e mode, float roll, float pitch, float yaw) {
-    // ���֡ͷ�����ȣ�cmd1��speed
+    // ��PC������̨����ǶȺ͵���Ѫ����Ϣ
     static uint8_t cnt = 0;
     // cnt++;
-    SubGetMessage(gimbal_feed_sub, &gimbal_recv); // ��ȡ���̼н�
+    SubGetMessage(gimbal_feed_sub, &gimbal_recv); // ��ȡ��̨��������
     SubGetMessage(cmd_feed_sub, &chassis_recv);
     float yaw_offset       = gimbal_recv.yaw2_motor_single_round_angle * DEGREE_2_RAD;
     uint16_t current_HP    = chassis_recv.current_HP;
@@ -48,9 +48,9 @@ void vision_sendmessage(aim_mod_e mode, float roll, float pitch, float yaw) {
     memcpy(&message[10], &yaw, 4);
     memcpy(&message[14], &yaw_offset, 4);
     memcpy(&message[18], &game_progress, 2);
-    message[20] = (uint8_t)chassis_recv.rfid_status;
+    // message[20] = (uint8_t)chassis_recv.rfid_status;
     memcpy(&message[21], &current_HP, 2);
-    // �������ݸ�PC
+    // ?????????PC
     message[10] = 0;
     message[31] = COM6_PACKAGE_TAIL_BYTE;
     // if (cnt % 2 == 0) {
@@ -92,8 +92,8 @@ void VisionTask(float roll, float pitch, float yaw) {
     vision_sendmessage(AIM_BLUE, roll, pitch, yaw);
     vision_feedback_data.aim_pitch = DegToRad(Data_PC.pitch);
     vision_feedback_data.aim_yaw   = Data_PC.yaw;
-    guidence_feedback_data.vx      = -12500 * Data_PC.linear_y;
-    guidence_feedback_data.vy      = 12500 * Data_PC.linear_x;
+    guidence_feedback_data.vx      = -1000 * Data_PC.linear_y;
+    guidence_feedback_data.vy      = 1000 * Data_PC.linear_x;
     guidence_feedback_data.wz      = Data_PC.angular_z;
     guidence_feedback_data.state   = Data_PC.state;
     if (Data_PC.fire_advice == 1)
@@ -113,10 +113,10 @@ void VisionTask(float roll, float pitch, float yaw) {
 #define PC_DATA_LEN 16
 #define PC_DATA_LEN 16
 
-static Publisher_t *vision_pub;                // ����Ӧ����Ϣ������(���鷴����cmd)
-static Publisher_t *guidence_pub;              // ����Ӧ����Ϣ������(���鷴����cmd)
-Vision_Upload_Data_s vision_feedback_data;     // �ش���cmd����̨״̬��Ϣ
-Guidence_Upload_Data_s guidence_feedback_data; // �ش���cmd�ĵ���״̬��Ϣ
+static Publisher_t *vision_pub;                // �Ӿ��������ݷ�����
+static Publisher_t *guidence_pub;              // �����������ݷ�����
+Vision_Upload_Data_s vision_feedback_data;     // �Ӿ��������ݽṹ��
+Guidence_Upload_Data_s guidence_feedback_data; // �����������ݽṹ��
 
 xPC_Data Data_PC;
 xGuidance_Data Data_Guidance;
@@ -124,13 +124,13 @@ uint8_t message[PC_DATA_LEN];
 uint8_t data_from_pc[PC_DATA_LEN];
 
 void vision_sendmessage(aim_mod_e mode, float roll, float pitch, float yaw) {
-    // ���֡ͷ�����ȣ�cmd1��speed
+    // ��PC������̨����Ƕ���Ϣ
     message[0] = COM6_PACKAGE_HEADER;
     message[1] = mode;
     memcpy(&message[2], &roll, 4);
     memcpy(&message[6], &pitch, 4);
     memcpy(&message[10], &yaw, 4);
-    // �������ݸ�PC
+    // Ԥ����PC
     message[14] = 0;
     message[15] = COM6_PACKAGE_TAIL_BYTE;
     CDC_Transmit_FS(message, PC_DATA_LEN);

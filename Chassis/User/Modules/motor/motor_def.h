@@ -31,14 +31,16 @@
 #ifndef PI
 #define PI 3.1415926535f
 #endif
-#define PI2 (PI * 2.0f)                                            // 2 pi
+#define PI2 (PI * 2.0f)                     // 2 pi
 
-#define RAD_2_DEGREE 57.2957795f                                   // 180/pi
-#define DEGREE_2_RAD 0.01745329252f                                // pi/180
+#define RAD_2_DEGREE 57.2957795f            // 180/pi
+#define DEGREE_2_RAD 0.01745329252f         // pi/180
+#define RADPS_2_RPM  9.549296586f           // 30/pi
+#define RPM_2_RADPS  0.104719755f           // pi/30
 
-#define RPM_2_ANGLE_PER_SEC    6.0f                                // ��360��/60sec
-#define RPM_2_RAD_PER_SEC      0.104719755f                        // ��2pi/60sec
-#define RPM_TO_ANGLE_SPEED     0.00290888208665721596153948461415f //(2PI/60)
+#define RPM_2_ANGLE_PER_SEC    6.0f         // ��360��/60sec
+#define RPM_2_RAD_PER_SEC      0.104719755f // ��2pi/60sec
+// #define RPM_TO_ANGLE_SPEED     0.00290888208665721596153948461415f // AHH,WHAT'S THIS
 #define REDUCETION_RATIO_3508  19.203208556f
 #define REDUCETION_RATIO_2006  36
 #define REDUCETION_RATIO_8009  9

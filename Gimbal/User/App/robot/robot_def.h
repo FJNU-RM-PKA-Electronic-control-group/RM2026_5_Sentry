@@ -3,65 +3,74 @@
 
 #include "ins_task.h"
 // #include "master_process.h"
+#include "stdbool.h"
 #include "stdint.h"
 
-/* ���������Ͷ���,��¼ʱע�ⲻҪŪ����Ӧ����;�޸Ķ������Ҫ���±���,ֻ�ܴ���һ������!
+/* 板卡配置与控制,记录时注意不要忽视应用场景;修改的配置需要重新编译,只能选择一个配置!
  */
-// #define ONE_BOARD // �����������
-//  #define CHASSIS_BOARD //���̰�
-//  #define GIMBAL_BOARD  //��̨��
+// #define ONE_BOARD // 一体化单板
+//  #define CHASSIS_BOARD // 底盘板
+//  #define GIMBAL_BOARD  // 云台板
 
-#define VISION_USE_VCP // ʹ�����⴮�ڷ����Ӿ�����
-// #define VISION_USE_UART // ʹ�ô��ڷ����Ӿ�����
+#define VISION_USE_VCP // 使用虚拟串口方式通信接收
+// #define VISION_USE_UART // 使用串口方式通信接收
 
-/* ��������Ҫ��������,ע����ݲ�ͬ�����˽����޸�,��������Ҫ��.0��f��β,�޷�����u��β
+/* 云台相关需要根据实际调试,注意不同机器人需修改,除非要求一致.0或f结尾,无法使用u结尾
  */
-// ��̨����
+// 云台电机
 #define YAW1_ZEROPOINT_ECD                                                                         \
-    3.96606445 // ��̨�͵��̶���ָ����ͬ����ʱ�ĵ��������ֵ,������̨�л�е�Ķ���Ҫ�޸�
+    315.126343 // 云台大电机与云台指针同向时刻的电机编码器数值,如更换云台须仔细测量并调整
 #define YAW2_ZEROPOINT_ECD                                                                         \
-    281.731384 // Сyaw�ʹ�yaw����ָ����ͬ����ʱ�ĵ��������ֵ,������̨�л�е�Ķ���Ҫ�޸�
-#define YAW_ECD_GREATER_THAN_4096 0 // ALIGN_ECDֵ�Ƿ����4096,��Ϊ1,��Ϊ0;���ڼ�����̨ƫת�Ƕ�
+    281.731384 // 小yaw与大yaw电机指针同向时刻的电机编码器数值,如更换云台须仔细测量并调整
+#define YAW_ECD_GREATER_THAN_4096 0        // ALIGN_ECD值是否大于4096,为1,否为0;用于纠正云台偏转角度
 
-#define PITCH_HORIZON_ECD                                                                          \
-    0.373961449 // ��̨����ˮƽλ��ʱ������ֵ,������̨�л�е�Ķ���Ҫ�޸�
-#define PITCH_MAX_ECD          0.7F
-#define PITCH_MIN_ECD          0.0f
-#define PITCH_MAX_ANGLE        -15674.30f // ��̨��ֱ�������Ƕ� (ע�ⷴ������������ǣ�����д�����ǵĽǶ�)
-#define PITCH_MIN_ANGLE        -15746.30f // ��̨��ֱ������С�Ƕ� (ע�ⷴ������������ǣ�����д�����ǵĽǶ�)
-// �������
-#define ONE_BULLET_DELTA_ANGLE 60 // ����һ�����貦��ת���ľ���,�ɻ�е���ͼֽ����
-#define REDUCTION_RATIO_LOADER                                                                     \
-    100.0f // 2006���̵���ļ��ٱ�,Ӣ����Ҫ�޸�Ϊ3508��19.0f
-#define NUM_PER_CIRCLE         6 // ����һȦ��װ����
-// �����˵����޸ĵĲ���,��λΪmm(����)
-#define WHEEL_BASE             469   // �������(ǰ�����˷���)
-#define TRACK_WIDTH            365   // �����־�(����ƽ�Ʒ���)
-#define CENTER_GIMBAL_OFFSET_X 0     // ��̨��ת���ľ���̼������ĵľ���,ǰ����,��̨λ��������ʱĬ����Ϊ0
-#define CENTER_GIMBAL_OFFSET_Y 0     // ��̨��ת���ľ���̼������ĵľ���,���ҷ���,��̨λ��������ʱĬ����Ϊ0
-#define RADIUS_WHEEL           60    // ���Ӱ뾶
-#define REDUCTION_RATIO_WHEEL  19.0f // ������ٱ�,��Ϊ�������������ת�ӵ��ٶȶ������������ٶȹ������ת��
-// YAW 2��3
+#define PITCH_HORIZON_ECD      0.373961449 // 云台处于水平位置时的编码值,如更换云台须仔细测量并调整
+#define PITCH_MAX_ECD          0.9F
+#define PITCH_MIN_ECD          0.2f
+#define PITCH_MAX_ANGLE        -15674.30f // 云台竖直方向最大角度 (注意反向调整,调整时写入实际的角度)
+#define PITCH_MIN_ANGLE        -15746.30f // 云台竖直方向最小角度 (注意反向调整,调整时写入实际的角度)
+// 弹药相关
+#define ONE_BULLET_DELTA_ANGLE 60     // 转动一发弹丸前进转过的角度,可由机械图纸查询
+#define REDUCTION_RATIO_LOADER 100.0f // 2006电机的减速比,英文需要修改为3508的19.0f
+#define NUM_PER_CIRCLE         6      // 转盘一圈装弹数量
+// 底盘参数的修改的参数,单位为mm(毫米)
+#define WHEEL_BASE             469 // 轴距(前后轮的距离)
+#define TRACK_WIDTH            365 // 轮距(左右平行距离)
+#define CENTER_GIMBAL_OFFSET_X                                                                     \
+    0                   // 云台旋转中心到底盘几何中心的距离,前进方,云台位置垂直于地面时默认设为0
+#define CENTER_GIMBAL_OFFSET_Y                                                                     \
+    0                   // 云台旋转中心到底盘几何中心的距离,左右方向,云台位置垂直于地面时默认设为0
+#define RADIUS_WHEEL 60 // 轮胎半径
+#define REDUCTION_RATIO_WHEEL                                                                      \
+    19.0f               // 轮胎减速比,用于将电机转速转到轮胎转速,电机转速除以减速比得轮胎转速
+// YAW 2或3
 
-#define GYRO2GIMBAL_DIR_YAW   1 // �����������������̨��yaw�ķ���,1Ϊ��ͬ,-1Ϊ�෴
-#define GYRO2GIMBAL_DIR_PITCH 1 // �����������������̨��pitch�ķ���,1Ϊ��ͬ,-1Ϊ�෴
-#define GYRO2GIMBAL_DIR_ROLL  1 // �����������������̨��roll�ķ���,1Ϊ��ͬ,-1Ϊ�෴
+#define GYRO2GIMBAL_DIR_YAW   1      // 陀螺仪方向与云台的yaw的方向,1为同向,-1为反向
+#define GYRO2GIMBAL_DIR_PITCH 1      // 陀螺仪方向与云台的pitch的方向,1为同向,-1为反向
+#define GYRO2GIMBAL_DIR_ROLL  1      // 陀螺仪方向与云台的roll的方向,1为同向,-1为反向
 
-// ����Ƿ�������ذ嶨���ͻ,ֻ����һ�������嶨�����,���������Զ�����
+#define FLAG_DEFAULT        0        // 默认状态
+#define RFID_SUPPLY_ZONE    (1 << 0) // 第一位:基地补给区RFID
+#define RFID_SUPPLY_OUTPOST (1 << 1) // 第二位:前哨站RFID
+#define STATUS_COMBATING    (1 << 2) // 第三位:脱战状态 脱战:1 非脱战:0
+#define TIME_GT_2MIN        (1 << 3) // 第四位:剩余时间是否大于2min
+#define ENERMY_RED          (1 << 4) // 第五位:敌人颜色 红:1 蓝:0
+
+// 云台是否需要经过某定位处和归零,只能选一个配置生效,其他的自动关闭
 // #if (defined(ONE_BOARD) && defined(CHASSIS_BOARD)) || \
 //    (defined(ONE_BOARD) && defined(GIMBAL_BOARD)) ||  \
 //    (defined(CHASSIS_BOARD) && defined(GIMBAL_BOARD))
 // #error Conflict board definition! You can only define one board type.
 // #endif
 
-#pragma pack(1) // ѹ���ṹ��,ȡ���ֽڶ���,��������ݶ����ܱ�����
-/* -------------------------��������ģʽ���������Ͷ���-------------------------*/
+#pragma pack(1) // 压缩结构体,取消字节对齐,便于数据传输与存储
+/* -------------------------遥控器模式与命令与数据-------------------------*/
 /**
  * @brief
- * ��Щö�����ͺͽṹ�����ΪCMD�������ݺ͸�Ӧ�õķ������ݵ�һ����
+ * 这些枚举类型和结构体用于CMD命令、数据和对应应用的数据的一个映射
  *
  */
-// ������״̬
+// 机器人状态
 typedef enum
 {
     ROBOT_STOP = 0,
@@ -71,22 +80,22 @@ typedef enum
 
 typedef enum
 {
-    GAME_NOT_STARTED         = 0, // 0��δ��ʼ����
-    GAME_PREPARATION         = 1, // 1��׼���׶�
-    GAME_15S_SELF_CHECK      = 2, // 2��ʮ�������ϵͳ�Լ�׶�
-    GAME_5S_COUNTDOWN        = 3, // 3�����뵹��ʱ
-    GAME_IN_PROGRESS         = 4, // 4��������
-    GAME_CALCULATING_RESULTS = 5  // 5������������
+    GAME_NOT_STARTED         = 0, // 0未开始阶段
+    GAME_PREPARATION         = 1, // 1准备阶段
+    GAME_15S_SELF_CHECK      = 2, // 2十五秒系统自检阶段
+    GAME_5S_COUNTDOWN        = 3, // 3五秒倒计时
+    GAME_IN_PROGRESS         = 4, // 4进行中
+    GAME_CALCULATING_RESULTS = 5  // 5计算结果阶段
 } Game_Progress_e;
 
-typedef enum
-{
-    RFID_NONE = 0, // 0��ʲô��û�� (δ��⵽������������)
-    RFID_SUPPLY_ZONE = 1, // 1��������
-    RFID_CENTER_GAIN = 2  // 2����������� (�� RMUL ����)
-} RFID_Status_e;
+// typedef enum
+// {
+//     RFID_NONE        = 0, // 0什么都没有 (未检测到特定区域)
+//     RFID_SUPPLY_ZONE = 1, // 1补给站
+//     RFID_CENTER_GAIN = 2  // 2中心增益区 (仅 RMUL 适用)
+// } RFID_Status_e;
 
-// Ӧ��״̬
+// 应用状态
 typedef enum
 {
     APP_OFFLINE = 0,
@@ -94,33 +103,33 @@ typedef enum
     APP_ERROR,
 } App_Status_e;
 
-// ����ģʽ����
+// 底盘模式定义
 /**
  * @brief
- * ���������޸�Ϊ��̨�������,�������õ���ȥ׷��̨,��̨�Ĺ����ȵ���С.
+ * 建议更改为跟随平台控制,或者去追踪平台,平台的功能要比较小.
  *
  */
 typedef enum
 {
-    CHASSIS_ZERO_FORCE = 0,    // ����ģʽ
-    CHASSIS_NO_FOLLOW,         // ����ģʽ
-    CHASSIS_FOLLOW_GIMBAL_YAW, // ����ģʽ
-    CHASSIS_ROTATE,            // С����ģʽ
+    CHASSIS_ZERO_FORCE = 0,    // 无力模式
+    CHASSIS_NO_FOLLOW,         // 不跟随模式
+    CHASSIS_FOLLOW_GIMBAL_YAW, // 跟随模式
+    CHASSIS_ROTATE,            // 小陀螺模式
     // CHASSIS_MAXSPEED,
 } chassis_mode_e;
 
-// ��̨ģʽ����
+// 云台模式定义
 typedef enum
 {
-    GIMBAL_ZERO_FORCE = 0, // ����������
-    GIMBAL_FREE_MODE, // ��̨�����˶�ģʽ,������̷���(���̴�ʱӦΪNO_FOLLOW)����ֵΪ���total_angle;�ƺ����Ը�Ϊȫ����IMU����?
-    GIMBAL_GYRO_MODE, // ��̨�����Ƿ���ģʽ,����ֵΪ������pitch,total_yaw_angle,���̿���ΪС���ݺ͸���ģʽ
+    GIMBAL_ZERO_FORCE = 0, // 云台无力输出
+    GIMBAL_FREE_MODE, // 云台自由运动模式,控制旋转速度(此时底盘应为NO_FOLLOW)输入值为陀螺仪total_angle;陀螺仪可以作为全局的IMU参考?
+    GIMBAL_GYRO_MODE, // 云台跟随陀螺仪模式,输入值为陀螺仪pitch,total_yaw_angle,此时底盘可以为小陀螺和跟随模式
     GIMBAL_SCAN_MODE,
     GIMBAL_VISION_MODE,
 
 } gimbal_mode_e;
 
-// ����ģʽ����
+// 射击模式定义
 typedef enum
 {
     SHOOT_OFF  = 0,
@@ -130,22 +139,22 @@ typedef enum
 
 typedef enum
 {
-    FRICTION_OFF = 0, // Ħ���ֹر�
-    FRICTION_ON,      // Ħ���ֿ���
+    FRICTION_OFF = 0, // 摩擦轮关闭
+    FRICTION_ON,      // 摩擦轮开启
 } friction_mode_e;
 
 typedef enum
 {
-    LID_OPEN = 0, // ���ոǴ�
-    LID_CLOSE,    // ���ոǹر�
+    LID_OPEN = 0, // 弹舱盖打开
+    LID_CLOSE,    // 弹舱盖关闭
 } lid_mode_e;
 
 typedef enum
 {
-    LOAD_STOP = 0,  // ֹͣ����
-    LOAD_REVERSE,   // ��ת
-    LOAD_1_BULLET,  // ����
-    LOAD_BURSTFIRE, // ����
+    LOAD_STOP = 0,  // 停止装弹
+    LOAD_REVERSE,   // 反转
+    LOAD_1_BULLET,  // 单发
+    LOAD_BURSTFIRE, // 连射
 } loader_mode_e;
 
 typedef enum
@@ -160,8 +169,8 @@ typedef enum
 
 typedef enum
 {
-    ENEMY_RED  = 0, // �췽
-    ENEMY_BLUE = 1, // ����
+    ENEMY_RED  = 0, // 敌方红
+    ENEMY_BLUE = 1, // 敌方蓝
 } Enemy_Color_e;
 
 typedef enum
@@ -185,29 +194,29 @@ typedef enum
 
 } Sentry_State_e;
 
-// ��������,�Ӳ���ϵͳ��ȡ,�Ƿ��б�Ҫ����?
-typedef struct { // ���ʿ���
+// 电源信息,从裁判系统获取,是否需要检查?
+typedef struct { // 底盘功率
     float chassis_power_mx;
 } Chassis_Power_Data_s;
 
-/* ----------------CMDӦ�÷����Ŀ�������,Ӧ����gimbal/chassis/shoot����---------------- */
+/* ----------------CMD应用方向的命令数据,应该在gimbal/chassis/shoot模块---------------- */
 /**
- * @brief ����˫�����,ң������pc����̨,����ϵͳ�ڵ���
+ * @brief 遥控双路拨杆,遥控摇杆pc命令台,控制系统在的地点
  *
  */
-// cmd�����ĵ��̿�������,��chassis����
+// cmd命令的底盘控制命令,给chassis模块
 typedef struct {
-    // ���Ʋ���
-    float vx;           // ǰ�������ٶ�
-    float vy;           // ���Ʒ����ٶ�
-    float wz;           // ��ת�ٶ�
-    float offset_angle; // ���̺�������λ�õļн�
+    // 运动参数
+    float vx;           // 前后方向速度
+    float vy;           // 左右方向速度
+    float wz;           // 旋转速度
+    float offset_angle; // 陀螺和底盘位置的角度
     chassis_mode_e chassis_mode;
     int chassis_speed_buff;
 } Chassis_Ctrl_Cmd_s;
 
-// cmd��������̨��������,��gimbal����
-typedef struct { // ��̨�Ƕȿ���
+// cmd命令的云台控制命令,给gimbal模块
+typedef struct { // 云台角度控制
     float yaw;
     float pitch;
     float chassis_rotate_wz;
@@ -215,29 +224,29 @@ typedef struct { // ��̨�Ƕȿ���
     gimbal_mode_e gimbal_mode;
 } Gimbal_Ctrl_Cmd_s;
 
-// cmd�����ķ����������,��shoot����
+// cmd命令的射击射控命令,给shoot模块
 typedef struct {
     shoot_mode_e shoot_mode;
     loader_mode_e load_mode;
     lid_mode_e lid_mode;
     friction_mode_e friction_mode;
-    Bullet_Speed_e bullet_speed; // ����ö��
+    Bullet_Speed_e bullet_speed; // 弹速枚举
     uint8_t rest_heat;
     uint16_t heat_limit;
-    float shoot_rate; // �����������Ƶ,unit per s,��/��
+    float shoot_rate; // 射击频率射频率,unit per s,发/秒
 } Shoot_Ctrl_Cmd_s;
 
-/* ----------------gimbal/shoot/chassis�����ķ�������----------------*/
+/* ----------------gimbal/shoot/chassis数据的反馈回传----------------*/
 /**
- * @brief ��cmd����,����Ӧ��Ҳ���Ը�����Ҫ��ȡ.
+ * @brief 从cmd来,通常对应的也是可以重新获得需要数据.
  *
  */
 
 // typedef struct {
-// #if defined(CHASSIS_BOARD) || defined(GIMBAL_BOARD) // �ǵ����ʱ����̻���imu���ݻش�(���б�Ҫ)
+// #if defined(CHASSIS_BOARD) || defined(GIMBAL_BOARD) // 是单独时需要接收并回传(可能不需要)
 //     // attitude_t chassis_imu_data;
 // #endif
-//     // �������ӵ��̵���ʵ�ٶ�
+//     // 底层左边的速度的实际速度
 //     // float real_vx;
 //     // float real_vy;
 //     // float real_wz;
@@ -252,14 +261,17 @@ typedef struct {
 
 typedef struct {
 
-    // �������ӵ��̵���ʵ�ٶ�
+    // 后续增加底盘的真实速度
     //     float real_vx;
     //     float real_vy;
     //     float real_wz;
-    RFID_Status_e rfid_status;     // RFID״̬
-    Game_Progress_e game_progress; // ��������״̬
-    Enemy_Color_e enemy_color;     // 0 for blue, 1 for red
-    uint16_t current_HP;
+    // RFID_Status_e rfid_status;     // RFID状态
+    // RFID_Status_e rfid_status;     // RFID状态
+    Game_Progress_e game_progress; // 比赛进程状态
+    uint16_t current_HP;           // 当前血量
+    uint16_t ally_base_HP;
+    uint16_t ally_outpost_HP;
+    uint8_t status_flag; // 状态标志位,可以用来表示一些特殊状态,比如是否打击到敌人,是否进入补给区等
     uint16_t shooter_heat;
 
 } Chassis_Upload_Data_s;
@@ -292,6 +304,6 @@ typedef struct {
     // ...
 } Shoot_Upload_Data_s;
 
-#pragma pack() // �����ֽڶ���,����ǰ���#pragma pack(1)
+#pragma pack() // 恢复字节对齐,取消前面的#pragma pack(1)
 
 #endif

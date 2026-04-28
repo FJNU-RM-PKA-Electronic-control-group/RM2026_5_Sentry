@@ -2,16 +2,16 @@
   ****************************(C) COPYRIGHT 2022 YUELU************************************
   * @file       Robot.c/h
   *
-  * @brief ÔÚmainº¯ÊýÖÐ°üº¬`robot.h`Í·ÎÄ¼þ£¬ÕâÊÇ¶ÔÕû³µµÄ³éÏó¡£½«`INStask`£¬`motortask`£¬
-  * 			`ledtask`£¬`monitortask`ÕâËÄ¸ötask¼ÓÈë`freertos.c`ÖÐ£¬´´½¨¶ÔÓ¦µÄÈÎÎñ£¬ÉèÖÃºÏ
-  * 			ÊÊµÄÈÎÎñÔËÐÐ¼ä¸ô£»È»ºó½«`robottask`·ÅÈëfreertos.cÖÐ£¬Í¬ÑùÒÔÒ»¶¨µÄÆµÂÊÔËÐÐ¡£ ÔÚ
-  * 			³õÊ¼»¯ÊµÊ±ÏµÍ³Ö®Ç°£¬ÔÚ`main()`ÖÐµ÷ÓÃ`RobotInit()`½øÐÐÕû³µµÄ³õÊ¼»¯
+  * @brief åœ¨mainå‡½æ•°ä¸­åŒ…å«`robot.h`å¤´æ–‡ä»¶ï¼Œè¿™æ˜¯å¯¹æ•´è½¦çš„æŠ½è±¡ã€‚å°†`INStask`ï¼Œ`motortask`ï¼Œ
+  * 			`ledtask`ï¼Œ`monitortask`è¿™å››ä¸ªtaskåŠ å…¥`freertos.c`ä¸­ï¼Œåˆ›å»ºå¯¹åº”çš„ä»»åŠ¡ï¼Œè®¾ç½®åˆ
+  * 			é€‚çš„ä»»åŠ¡è¿è¡Œé—´éš”ï¼›ç„¶åŽå°†`robottask`æ”¾å…¥freertos.cä¸­ï¼ŒåŒæ ·ä»¥ä¸€å®šçš„é¢‘çŽ‡è¿è¡Œã€‚ åœ¨
+  * 			åˆå§‹åŒ–å®žæ—¶ç³»ç»Ÿä¹‹å‰ï¼Œåœ¨`main()`ä¸­è°ƒç”¨`RobotInit()`è¿›è¡Œæ•´è½¦çš„åˆå§‹åŒ–
   *
-  * @todo   ÒÆÖ²¶ÔÓ¦ÍâÉè£¬ÍÓÂÝÒÇ£¬ BuzzerInit£¬GimbalInit£¬RobotCmdInit£¬»¹ÓÐ¹Ø½ÚÐ£×¼
+  * @todo   ç§»æ¤å¯¹åº”å¤–è®¾ï¼Œé™€èžºä»ªï¼Œ BuzzerInitï¼ŒGimbalInitï¼ŒRobotCmdInitï¼Œè¿˜æœ‰å…³èŠ‚æ ¡å‡†
   * @history
   *  Version    Date            Author          Modification
   *  V1.0.0     			          YUELU              1. done
-  *  V2.0.0     			           qhp             1. ÊÊÅä¶ÔÓ¦»úÆ÷ÈË
+  *  V2.0.0     			           qhp             1. é€‚é…å¯¹åº”æœºå™¨äºº
   *  V2.1.0                     nan_97
   *
   @verbatim
@@ -29,38 +29,38 @@
 #include "robot_def.h"
 #include "robot_task.h"
 
-// ºóÐøÐèÒªÌí¼ÓµÄÍ·ÎÄ¼þ£¬¾ßÌåÍ¨¹ýÓ¢ÐÛµÄgimbalÒÆÖ²
+// åŽç»­éœ€è¦æ·»åŠ çš„å¤´æ–‡ä»¶ï¼Œå…·ä½“é€šè¿‡è‹±é›„çš„gimbalç§»æ¤
 #include "buzzer.h"
 #include "mpu6500.h"
 
-// ´ý¶¨ÎÄ¼þ
+// å¾…å®šæ–‡ä»¶
 //  #include "vision.h"
 // #include "usbd_cdc_if.h"
 // #include "usb_device.h"
 
 /**
- * @brief  »úÆ÷ÈË³õÊ¼»¯²¿·Ö£¬ÔÚmainµ÷ÓÃRobotInit½øÐÐ³õÊ¼»¯
- *         --> RobotInitµ÷ÓÃ»ù´¡bsp³õÊ¼»¯ÒÔ¼°¸÷¸öappµÄ³õÊ¼»¯¡£
- *         ËùÒÔÕâ¸öº¯ÊýÖÐÐèÒªµ÷ÓÃ²»Í¬ÉèµÄ³õÊ¼»¯ºÍrobot_cmd_init
+ * @brief  æœºå™¨äººåˆå§‹åŒ–éƒ¨åˆ†ï¼Œåœ¨mainè°ƒç”¨RobotInitè¿›è¡Œåˆå§‹åŒ–
+ *         --> RobotInitè°ƒç”¨åŸºç¡€bspåˆå§‹åŒ–ä»¥åŠå„ä¸ªappçš„åˆå§‹åŒ–ã€‚
+ *         æ‰€ä»¥è¿™ä¸ªå‡½æ•°ä¸­éœ€è¦è°ƒç”¨ä¸åŒè®¾çš„åˆå§‹åŒ–å’Œrobot_cmd_init
  *
  *
- * @todo  ºóÐøÐèÒªÒÆÖ²ÍÓÂÝÒÇ£¬
- * BuzzerInit£¬GimbalInit£¬RobotCmdInit£¬»¹ÓÐÑÐ¾¿ÉùÃ÷Ê±ºò¿ª¿ªÆôºÍ¹Ø±ÕÖÐ¶Ï
+ * @todo  åŽç»­éœ€è¦ç§»æ¤é™€èžºä»ªï¼Œ
+ * BuzzerInitï¼ŒGimbalInitï¼ŒRobotCmdInitï¼Œè¿˜æœ‰ç ”ç©¶å£°æ˜Žæ—¶å€™å¼€å¼€å¯å’Œå…³é—­ä¸­æ–­
  *
  */
 void RobotInit(void) {
     HAL_Delay(150);
     DWT_Init(168);
     // MX_USB_DEVICE_Init();
-    // ¹Ø±ÕÖÐ¶Ï,·ÀÖ¹ÔÚ³õÊ¼»¯¹ý³ÌÖÐ·¢ÉúÖÐ¶Ï
-    // Çë²»ÒªÔÚ³õÊ¼»¯¹ý³ÌÖÐÊ¹ÓÃÖÐ¶ÏºÍÑÓÊ±º¯Êý£¡
-    // Èô±ØÐë,ÔòÖ»ÔÊÐíÊ¹ÓÃDWT_Delay()
+    // å…³é—­ä¸­æ–­,é˜²æ­¢åœ¨åˆå§‹åŒ–è¿‡ç¨‹ä¸­å‘ç”Ÿä¸­æ–­
+    // è¯·ä¸è¦åœ¨åˆå§‹åŒ–è¿‡ç¨‹ä¸­ä½¿ç”¨ä¸­æ–­å’Œå»¶æ—¶å‡½æ•°ï¼
+    // è‹¥å¿…é¡»,åˆ™åªå…è®¸ä½¿ç”¨DWT_Delay()
     __disable_irq();
-    // ºóÐøÐèÒª¿ªÆôµÄ³õÊ¼»¯²¿·Ö
+    // åŽç»­éœ€è¦å¼€å¯çš„åˆå§‹åŒ–éƒ¨åˆ†
     RobotCmdInit();
     BuzzerInit();
 
-    CmdRevInit(); // ÓÃÓÚA£¬C°åÍ¨ÐÅ
+    CmdRevInit(); // ç”¨äºŽAï¼ŒCæ¿é€šä¿¡
     ChassisInit();
 
     OSTaskInit();
@@ -69,18 +69,18 @@ void RobotInit(void) {
 }
 
 /**
- * @brief	»úÆ÷ÈËÈÎÎñ
+ * @brief	æœºå™¨äººä»»åŠ¡
  *
- * @todo	ÍêÉÆRobotCMDTask£¬ÒÆÖ²GimbalTask
+ * @todo	å®Œå–„RobotCMDTaskï¼Œç§»æ¤GimbalTask
  *
  */
 
 void RobotTask(void) {
-    static uint8_t cnt = 0; // Éè¶¨²»Í¬ÈÎÎñÆµÂÊ(¿ØÖÆ¸ºÔØ)
-    RobotCMDTask();         // ´«²ÎÖ®ÀàµÄºËÐÄ²ÎÊý
+    static uint8_t cnt = 0; // è®¾å®šä¸åŒä»»åŠ¡é¢‘çŽ‡(æŽ§åˆ¶è´Ÿè½½)
+    RobotCMDTask();         // ä¼ å‚ä¹‹ç±»çš„æ ¸å¿ƒå‚æ•°
     ChassisTask();
     if (cnt % 10 == 0) {
-        CmdRevTask(); // AC°åÍ¨ÐÅ£¬Ì«ÓÐÓÃÁË£¬ÏÖÔÚ»Ö¸´
+        CmdRevTask(); // ACæ¿é€šä¿¡ï¼Œå¤ªæœ‰ç”¨äº†ï¼ŒçŽ°åœ¨æ¢å¤
     }
     cnt++;
 }

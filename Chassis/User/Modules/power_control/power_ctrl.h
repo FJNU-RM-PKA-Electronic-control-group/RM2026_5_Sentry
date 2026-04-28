@@ -5,28 +5,39 @@
 #define STEER 0
 #define WHEEL 1
 
-typedef struct {
+typedef enum
+{
+    MOTORPOWER_PREDICT_DEFAULT,
+    MOTORPOWER_PREDOCT_LIMITED,
+
+} Motor_Power_Predict_Mode_e;
+
+typedef struct
+{
 
     float *I_cmd;
     float *w_aps;
+    float *pid_err;
 
 } power_input_data_t;
 
 typedef struct {
 
-    float K1;
-    float K2;
-    float K_torque;
-    float P_const;
+    float32_t k0, k1, k2, k3, k4, k5;
+    float32_t real_current_conversion;
 
 } power_arg_t;
 
 typedef struct {
     power_input_data_t power_input_data;
     power_arg_t arg;
-    float power;
-    float scaled_give_power;
+    float real_current;
+    // float feedback_power;
+    float managed_power;
+    float predict_power;
+    float power_limit;
     float I_out;
+
 } motor_power_t;
 
 typedef struct {
@@ -44,10 +55,12 @@ typedef struct {
 } power_control_init_t;
 
 typedef struct {
-    motor_power_t motor[4][2];
+    motor_power_t motor[2][4];
     float total_power;
     float steer_power;
     float wheel_power;
+    float steer_limited_power;
+    float wheel_limited_power;
     float max_power;
     float steer_power_ratio; // 舵向电机总功率占比 (例如 0.6 表示舵向电机占总功率的60%)
 } PowerControlInstance;
