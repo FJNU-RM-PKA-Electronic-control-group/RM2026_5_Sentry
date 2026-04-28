@@ -1,5 +1,6 @@
 #include "bsp_dwt.h"
 #include "dji_motor.h"
+#include "power_ctrl.h"
 #include "user_lib.h"
 
 static uint8_t idx = 0; // register idx,?????????????????,?????????
@@ -349,12 +350,20 @@ void DJIMotorControl() {
 
         if (motor_setting->feedback_reverse_flag == FEEDBACK_DIRECTION_REVERSE)
             pid_ref *= -1;
-
+        motor_controller->final_out = pid_ref;
         // ??????????
+    }
+    ChassisPowerControl();
+    for (size_t i = 0; i < idx; ++i) { // ??��??�D??,????????????
+        motor            = dji_motor_instance[i];
+        motor_setting    = &motor->motor_settings;
+        motor_controller = &motor->motor_controller;
+        measure          = &motor->measure;
+
         if (motor_setting->output_flag == OTHER_OUTPUT)
             set = (int16_t)*motor_controller->other_output_ptr;
         else
-            set = (int16_t)pid_ref;
+            set = (int16_t)motor_controller->final_out;
         // ??????????????
         group                                         = motor->sender_group;
         num                                           = motor->message_num;

@@ -11,6 +11,7 @@
 #define CHASSISPOWER_RESERVED_POWER       8.0
 
 float DEBUG_total_power;
+PowerControlInstance *local_ins;
 
 // #define CMD_RAW_MAX         16384.0f
 // #define WHEEL_CURRENT_A_MAX 20.0f
@@ -246,7 +247,8 @@ PowerControlInstance *ChassisPowerInit(power_control_init_t *config) {
     }
 
     ins->steer_power_ratio = 0.5f; // 默认分配50%
-
+    local_ins              = ins;
+    local_ins->init_flag   = true;
     return ins;
 }
 
@@ -265,11 +267,11 @@ void ChassisMaxPowerSet(PowerControlInstance *ins, float power) {
         ins->max_power = power;
 }
 
-void ChassisPowerControl(PowerControlInstance *ins) {
-    if (!ins)
+void ChassisPowerControl(void) {
+    if (!local_ins->init_flag)
         return;
-    ChassisPowerCalculate(ins);
-    ChassisPowerAllocate(ins);
-    ChassisPowerLimiter(ins);
-    DEBUG_total_power = ins->total_power;
+    ChassisPowerCalculate(local_ins);
+    ChassisPowerAllocate(local_ins);
+    ChassisPowerLimiter(local_ins);
+    DEBUG_total_power = local_ins->total_power;
 }

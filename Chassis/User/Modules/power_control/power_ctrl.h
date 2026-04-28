@@ -1,7 +1,9 @@
 #ifndef __POWER_CTRL_H
 #define __POWER_CTRL_H
 
+#include "stdbool.h"
 #include "stdint.h"
+
 #define STEER 0
 #define WHEEL 1
 
@@ -12,8 +14,7 @@ typedef enum
 
 } Motor_Power_Predict_Mode_e;
 
-typedef struct
-{
+typedef struct {
 
     float *I_cmd;
     float *w_aps;
@@ -63,11 +64,12 @@ typedef struct {
     float wheel_limited_power;
     float max_power;
     float steer_power_ratio; // 舵向电机总功率占比 (例如 0.6 表示舵向电机占总功率的60%)
+    bool init_flag;
 } PowerControlInstance;
 
 PowerControlInstance *ChassisPowerInit(power_control_init_t *config);
 void ChassisPowerRatioSet(PowerControlInstance *ins, float steer_ratio);
 void ChassisMaxPowerSet(PowerControlInstance *ins, float power);
-void ChassisPowerControl(PowerControlInstance *ins);
+void ChassisPowerControl(void);
 
 #endif

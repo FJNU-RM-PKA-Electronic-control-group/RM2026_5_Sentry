@@ -158,6 +158,7 @@ typedef struct {
     PIDInstance angle_PID;           // 角度PID实例
 
     float pid_ref;                   // PID参考值，通常用于各控制环
+    float final_out;                 // PID计算后，发送给电机前的值，需要进行功率限制
 } Motor_Controller_s;
 
 /* 电机类型枚举 */

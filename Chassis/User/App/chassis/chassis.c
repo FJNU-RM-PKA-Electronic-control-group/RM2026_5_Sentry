@@ -173,7 +173,7 @@ void ChassisInit(void) {
                 .outer_loop_type       = ANGLE_LOOP,
                 .close_loop_type       = (Closeloop_Type_e)(ANGLE_LOOP | SPEED_LOOP),
                 .pid_mode              = MOTOR_PID_SINGLELOOP,
-                // .output_flag           = OTHER_OUTPUT,
+                .output_flag           = OTHER_OUTPUT,
             },
         .motor_type = GM6020,
     };
@@ -283,7 +283,7 @@ void ChassisInit(void) {
             {
                 .power_input_data =
                     {
-                        .I_cmd   = &vector_motor[LF]->motor_controller.speed_PID.Output,
+                        .I_cmd   = &vector_motor[LF]->motor_controller.final_out,
                         .w_aps   = &vector_motor[LF]->measure.speed_aps,
                         .pid_err = &vector_motor[LF]->motor_controller.speed_PID.Err,
                     },
@@ -293,7 +293,7 @@ void ChassisInit(void) {
             {
                 .power_input_data =
                     {
-                        .I_cmd   = &vector_motor[RF]->motor_controller.speed_PID.Output,
+                        .I_cmd   = &vector_motor[RF]->motor_controller.final_out,
                         .w_aps   = &vector_motor[RF]->measure.speed_aps,
                         .pid_err = &vector_motor[RF]->motor_controller.speed_PID.Err,
                     },
@@ -303,7 +303,7 @@ void ChassisInit(void) {
             {
                 .power_input_data =
                     {
-                        .I_cmd   = &vector_motor[LB]->motor_controller.speed_PID.Output,
+                        .I_cmd   = &vector_motor[LB]->motor_controller.final_out,
                         .w_aps   = &vector_motor[LB]->measure.speed_aps,
                         .pid_err = &vector_motor[LB]->motor_controller.speed_PID.Err,
                     },
@@ -313,7 +313,7 @@ void ChassisInit(void) {
             {
                 .power_input_data =
                     {
-                        .I_cmd   = &vector_motor[RB]->motor_controller.speed_PID.Output,
+                        .I_cmd   = &vector_motor[RB]->motor_controller.final_out,
                         .w_aps   = &vector_motor[RB]->measure.speed_aps,
                         .pid_err = &vector_motor[RB]->motor_controller.speed_PID.Err,
                     },
@@ -323,7 +323,7 @@ void ChassisInit(void) {
             {
                 .power_input_data =
                     {
-                        .I_cmd   = &speed_motor[LF]->motor_controller.speed_PID.Output,
+                        .I_cmd   = &speed_motor[LF]->motor_controller.final_out,
                         .w_aps   = &speed_motor[LF]->measure.speed_aps,
                         .pid_err = &speed_motor[LF]->motor_controller.speed_PID.Err,
                     },
@@ -333,7 +333,7 @@ void ChassisInit(void) {
             {
                 .power_input_data =
                     {
-                        .I_cmd   = &speed_motor[RF]->motor_controller.speed_PID.Output,
+                        .I_cmd   = &speed_motor[RF]->motor_controller.final_out,
                         .w_aps   = &speed_motor[RF]->measure.speed_aps,
                         .pid_err = &speed_motor[RF]->motor_controller.speed_PID.Err,
                     },
@@ -343,7 +343,7 @@ void ChassisInit(void) {
             {
                 .power_input_data =
                     {
-                        .I_cmd   = &speed_motor[LB]->motor_controller.speed_PID.Output,
+                        .I_cmd   = &speed_motor[LB]->motor_controller.final_out,
                         .w_aps   = &speed_motor[LB]->measure.speed_aps,
                         .pid_err = &speed_motor[LB]->motor_controller.speed_PID.Err,
                     },
@@ -353,7 +353,7 @@ void ChassisInit(void) {
             {
                 .power_input_data =
                     {
-                        .I_cmd   = &speed_motor[RB]->motor_controller.speed_PID.Output,
+                        .I_cmd   = &speed_motor[RB]->motor_controller.final_out,
                         .w_aps   = &speed_motor[RB]->measure.speed_aps,
                         .pid_err = &speed_motor[RB]->motor_controller.speed_PID.Err,
                     },
@@ -361,7 +361,7 @@ void ChassisInit(void) {
             },
     };
     power_ctrl = ChassisPowerInit(&power_config);
-    ChassisPowerRatioSet(power_ctrl, 0.0f); // 舵向电机功率占比设置为60%
+    ChassisPowerRatioSet(power_ctrl, 0.3f); // 舵向电机功率占比设置为60%
 
     DJIMotorSetOtherOutput(speed_motor[LF], &power_ctrl->motor[WHEEL][LF].I_out);
     DJIMotorSetOtherOutput(speed_motor[RF], &power_ctrl->motor[WHEEL][RF].I_out);
@@ -548,8 +548,7 @@ static void LimitChassisOutput(void) {
     // 功率限制待添加
     // referee_data->PowerHeatData.chassis_power;
     // referee_data->PowerHeatData.chassis_power_buffer;
-    ChassisMaxPowerSet(power_ctrl, 100.0f);
-    ChassisPowerControl(power_ctrl);
+    ChassisMaxPowerSet(power_ctrl, 600.0f);
     // 完成功率限制后进行电机参考输入设定
     DJIMotorSetRef(speed_motor[LF], vt[LF]);
     DJIMotorSetRef(speed_motor[RF], vt[RF]);
