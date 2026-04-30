@@ -40,24 +40,42 @@ void vision_sendmessage(aim_mod_e mode, float roll, float pitch, float yaw) {
     float yaw_offset       = gimbal_recv.yaw2_motor_single_round_angle * DEGREE_2_RAD;
     uint16_t current_HP    = chassis_recv.current_HP;
     uint16_t game_progress = (uint16_t)chassis_recv.game_progress;
+    uint8_t status_flag    = chassis_recv.status_flag;
 
-    message[0] = COM6_PACKAGE_HEADER;
-    message[1] = mode;
-    memcpy(&message[2], &roll, 4);
-    memcpy(&message[6], &pitch, 4);
-    memcpy(&message[10], &yaw, 4);
-    memcpy(&message[14], &yaw_offset, 4);
-    memcpy(&message[18], &game_progress, 2);
-    // message[20] = (uint8_t)chassis_recv.rfid_status;
-    memcpy(&message[21], &current_HP, 2);
-    // ?????????PC
-    message[10] = 0;
-    message[31] = COM6_PACKAGE_TAIL_BYTE;
+    Data_Tx.header              = COM6_PACKAGE_HEADER;
+    Data_Tx.mode                = mode;
+    Data_Tx.roll                = roll;
+    Data_Tx.pitch               = pitch;
+    Data_Tx.yaw                 = yaw;
+    Data_Tx.offset              = yaw_offset;
+    Data_Tx.game_progress       = game_progress;
+    Data_Tx.rfid_supply_zone    = status_flag & RFID_SUPPLY_ZONE;
+    Data_Tx.current_HP          = current_HP;
+    Data_Tx.ally_base_HP        = chassis_recv.ally_base_HP;
+    Data_Tx.ally_outpost_HP     = chassis_recv.ally_outpost_HP;
+    Data_Tx.is_combating        = status_flag & STATUS_COMBATING;
+    Data_Tx.rfid_supply_outpost = status_flag & RFID_SUPPLY_OUTPOST;
+    Data_Tx.time_gt_2min        = status_flag & TIME_GT_2MIN;
+    Data_Tx.check_bit           = 0; // 校验位
+    Data_Tx.tail_byte           = COM6_PACKAGE_TAIL_BYTE;
+
+    // message[0] = COM6_PACKAGE_HEADER;
+    // message[1] = mode;
+    // memcpy(&message[2], &roll, 4);
+    // memcpy(&message[6], &pitch, 4);
+    // memcpy(&message[10], &yaw, 4);
+    // memcpy(&message[14], &yaw_offset, 4);
+    // memcpy(&message[18], &game_progress, 2);
+    // // message[20] = (uint8_t)chassis_recv.rfid_status;
+    // memcpy(&message[21], &current_HP, 2);
+    // // ?????????PC
+    // message[10] = 0;
+    // message[31] = COM6_PACKAGE_TAIL_BYTE;
     // if (cnt % 2 == 0) {
     //     cnt = 0;
     //     CDC_Transmit_FS(message, PC_DATA_LEN);
     // }
-    memcpy(&Data_Tx, message, sizeof(TxPC_Data));
+    memcpy(&message, &Data_Tx, sizeof(TxPC_Data));
 
     CDC_Transmit_FS(message, PC_DATA_LEN);
 }

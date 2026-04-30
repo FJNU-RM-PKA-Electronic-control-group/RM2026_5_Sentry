@@ -5,5 +5,7 @@
         "dji_motor.h": "c",
         "arm_math.h": "c",
         "custom_arm_math.h": "c"
-    }
+    },
+    "python-envs.defaultEnvManager": "ms-python.python:conda",
+    "python-envs.defaultPackageManager": "ms-python.python:conda"
 }

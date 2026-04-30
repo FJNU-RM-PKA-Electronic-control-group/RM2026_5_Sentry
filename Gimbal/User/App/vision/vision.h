@@ -7,8 +7,8 @@
 
 typedef enum
 {
-    AIM_RED         = 0, // ºì·½
-    AIM_BLUE        = 1, // À¶·½
+    AIM_RED         = 0, // ï¿½ì·½
+    AIM_BLUE        = 1, // ï¿½ï¿½ï¿½ï¿½
     SMALL_RUNE_RED  = 2,
     SMALL_RUNE_BLUE = 3,
     BIG_RUNE_RED    = 4,
@@ -20,17 +20,17 @@ typedef enum
 
 typedef __packed struct {
     uint8_t header;
-    // ÊÓ¾õ
+    // ï¿½Ó¾ï¿½
     uint8_t fire_advice;
     float pitch;
     float yaw;
     float distance;
-    // µ¼º½;
+    // ï¿½ï¿½ï¿½ï¿½;
     float linear_x;
     float linear_y;
     float angular_z;
     Sentry_State_e state;
-    uint8_t NC[3]; // Õ¼Î»·û
+    uint8_t NC[3]; // Õ¼Î»ï¿½ï¿½
     uint8_t check_bit;
     uint8_t tail_byte;
 
@@ -38,14 +38,22 @@ typedef __packed struct {
 
 typedef __packed struct {
     uint8_t header;
-    // ÊÓ¾õ
+    // ï¿½Ó¾ï¿½
     uint8_t mode;
     float roll;
     float pitch;
     float yaw;
-    // µ¼º½
+    // ï¿½ï¿½ï¿½ï¿½
     float offset;
-    uint8_t NC[12]; // Õ¼Î»·û
+    uint16_t game_progress;
+    bool rfid_supply_zone;
+    uint16_t current_HP;
+    uint16_t ally_base_HP;
+    uint16_t ally_outpost_HP;
+    bool is_combating;
+    bool rfid_supply_outpost;
+    bool time_gt_2min;
+    // uint8_t NC[1]; // Õ¼Î»ï¿½ï¿½
     uint8_t check_bit;
     uint8_t tail_byte;
 
@@ -54,7 +62,7 @@ typedef __packed struct {
 #pragma pack()
 // typedef __packed struct {
 //     uint8_t frame_header;
-//     uint8_t NC; // Õ¼Î»·û
+//     uint8_t NC; // Õ¼Î»ï¿½ï¿½
 //     float vx;
 //     float vy;
 //     float wz;
