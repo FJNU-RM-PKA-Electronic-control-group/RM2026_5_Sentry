@@ -108,10 +108,12 @@ void ChassisInit(void) {
                         .Ki            = 0,    // 0
                         .Kd            = 0.01, // 0
                         .IntegralLimit = 3000,
+                        .DeadBand      = 1.0f,
                         .Improve =
                             (PID_Improvement_e)(PID_Trapezoid_Intergral | PID_Integral_Limit |
                                                 PID_Derivative_On_Measurement),
-                        .MaxOut = 13000,
+                        .MaxOut            = 32000,
+                        .Derivative_LPF_RC = 0.1,
                     },
                 .current_PID =
                     {
@@ -122,7 +124,7 @@ void ChassisInit(void) {
                         .Improve =
                             (PID_Improvement_e)(PID_Trapezoid_Intergral | PID_Integral_Limit |
                                                 PID_Derivative_On_Measurement),
-                        .MaxOut = 15000,
+                        .MaxOut = 16000,
                     },
             },
         .controller_setting_init_config =
@@ -130,7 +132,7 @@ void ChassisInit(void) {
                 .angle_feedback_source = MOTOR_FEED,
                 .speed_feedback_source = MOTOR_FEED,
                 .outer_loop_type       = SPEED_LOOP,
-                .close_loop_type       = (Closeloop_Type_e)(SPEED_LOOP),
+                .close_loop_type       = (Closeloop_Type_e)(SPEED_LOOP | CURRENT_LOOP),
                 .pid_mode              = MOTOR_PID_MUTILOOP,
                 .feedforward_flag      = CURRENT_FEEDFORWARD,
                 .output_flag           = OTHER_OUTPUT,
@@ -269,13 +271,13 @@ void ChassisInit(void) {
 
         .arg =
             {
-                .k0                      = 0.65213,
-                .k1                      = -0.15659,
-                .k2                      = 0.00041660,
-                .k3                      = 0.00235415,
-                .k4                      = 0.20022,
-                .k5                      = 1.08e-7,
-                .real_current_conversion = 1000,
+                .k0                      = 3.39233f,
+                .k1                      = 0.0f,
+                .k2                      = 0.0f,
+                .k3                      = 1.99688994e-06f,
+                .k4                      = 1.23e-07f,
+                .k5                      = 1.453e-07f,
+                .real_current_conversion = 1.0f,
             },
     };
     power_control_init_t power_config = {
@@ -380,7 +382,7 @@ void ChassisInit(void) {
         .Improve       = (PID_Improvement_e)(PID_Trapezoid_Intergral | PID_Integral_Limit |
                                        PID_Derivative_On_Measurement),
         .DeadBand      = 7.0,
-        .MaxOut        = 20,
+        .MaxOut        = 50,
     };
     PIDInit(&follow_pid, &pid_config);
 
@@ -548,7 +550,7 @@ static void LimitChassisOutput(void) {
     // 功率限制待添加
     // referee_data->PowerHeatData.chassis_power;
     // referee_data->PowerHeatData.chassis_power_buffer;
-    ChassisMaxPowerSet(power_ctrl, 600.0f);
+    ChassisMaxPowerSet(power_ctrl, 100.0f);
     // 完成功率限制后进行电机参考输入设定
     DJIMotorSetRef(speed_motor[LF], vt[LF]);
     DJIMotorSetRef(speed_motor[RF], vt[RF]);

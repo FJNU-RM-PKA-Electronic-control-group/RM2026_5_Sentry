@@ -1,7 +1,7 @@
 #include "arm_math.h"
 #include "user_lib.h"
 
-// ¿ìËÙ¿ª·½
+// å¿«é€Ÿå¼€æ–¹
 // fp32 invSqrt(fp32 num)
 //{
 //     fp32 halfnum = 0.5f * num;
@@ -14,13 +14,13 @@
 // }
 
 /**
- * @brief          Ğ±²¨º¯Êı³õÊ¼»¯
+ * @brief          æ–œæ³¢å‡½æ•°åˆå§‹åŒ–
  * @author         RM
- * @param[in]      Ğ±²¨º¯Êı½á¹¹Ìå
- * @param[in]      ¼ä¸ôµÄÊ±¼ä£¬µ¥Î» s
- * @param[in]      ×î´óÖµ
- * @param[in]      ×îĞ¡Öµ
- * @retval         ·µ»Ø¿Õ
+ * @param[in]      æ–œæ³¢å‡½æ•°ç»“æ„ä½“
+ * @param[in]      é—´éš”çš„æ—¶é—´ï¼Œå•ä½ s
+ * @param[in]      æœ€å¤§å€¼
+ * @param[in]      æœ€å°å€¼
+ * @retval         è¿”å›ç©º
  */
 void ramp_init(ramp_function_source_t *ramp_source_type, fp32 frame_period, fp32 max, fp32 min) {
     ramp_source_type->frame_period = frame_period;
@@ -31,12 +31,12 @@ void ramp_init(ramp_function_source_t *ramp_source_type, fp32 frame_period, fp32
 }
 
 /**
- * @brief          Ğ±²¨º¯Êı¼ÆËã£¬¸ù¾İÊäÈëµÄÖµ½øĞĞµş¼Ó£¬ ÊäÈëµ¥Î»Îª /s ¼´Ò»ÃëºóÔö¼ÓÊäÈëµÄÖµ
+ * @brief          æ–œæ³¢å‡½æ•°è®¡ç®—ï¼Œæ ¹æ®è¾“å…¥çš„å€¼è¿›è¡Œå åŠ ï¼Œ è¾“å…¥å•ä½ä¸º /s å³ä¸€ç§’åå¢åŠ è¾“å…¥çš„å€¼
  * @author         RM
- * @param[in]      Ğ±²¨º¯Êı½á¹¹Ìå
- * @param[in]      ÊäÈëÖµ
- * @param[in]      ÂË²¨²ÎÊı
- * @retval         ·µ»Ø¿Õ
+ * @param[in]      æ–œæ³¢å‡½æ•°ç»“æ„ä½“
+ * @param[in]      è¾“å…¥å€¼
+ * @param[in]      æ»¤æ³¢å‚æ•°
+ * @retval         è¿”å›ç©º
  */
 void ramp_calc(ramp_function_source_t *ramp_source_type, fp32 input) {
     ramp_source_type->input = input;
@@ -49,12 +49,12 @@ void ramp_calc(ramp_function_source_t *ramp_source_type, fp32 input) {
     }
 }
 /**
- * @brief          Ò»½×µÍÍ¨ÂË²¨³õÊ¼»¯
+ * @brief          ä¸€é˜¶ä½é€šæ»¤æ³¢åˆå§‹åŒ–
  * @author         RM
- * @param[in]      Ò»½×µÍÍ¨ÂË²¨½á¹¹Ìå
- * @param[in]      ¼ä¸ôµÄÊ±¼ä£¬µ¥Î» s
- * @param[in]      ÂË²¨²ÎÊı
- * @retval         ·µ»Ø¿Õ
+ * @param[in]      ä¸€é˜¶ä½é€šæ»¤æ³¢ç»“æ„ä½“
+ * @param[in]      é—´éš”çš„æ—¶é—´ï¼Œå•ä½ s
+ * @param[in]      æ»¤æ³¢å‚æ•°
+ * @retval         è¿”å›ç©º
  */
 void first_order_filter_init(first_order_filter_type_t *first_order_filter_type, fp32 frame_period,
                              const fp32 num[1]) {
@@ -65,11 +65,11 @@ void first_order_filter_init(first_order_filter_type_t *first_order_filter_type,
 }
 
 /**
- * @brief          Ò»½×µÍÍ¨ÂË²¨¼ÆËã
+ * @brief          ä¸€é˜¶ä½é€šæ»¤æ³¢è®¡ç®—
  * @author         RM
- * @param[in]      Ò»½×µÍÍ¨ÂË²¨½á¹¹Ìå
- * @param[in]      ¼ä¸ôµÄÊ±¼ä£¬µ¥Î» s
- * @retval         ·µ»Ø¿Õ
+ * @param[in]      ä¸€é˜¶ä½é€šæ»¤æ³¢ç»“æ„ä½“
+ * @param[in]      é—´éš”çš„æ—¶é—´ï¼Œå•ä½ s
+ * @retval         è¿”å›ç©º
  */
 void first_order_filter_cali(first_order_filter_type_t *first_order_filter_type, fp32 input) {
     first_order_filter_type->input = input;
@@ -83,13 +83,13 @@ void first_order_filter_cali(first_order_filter_type_t *first_order_filter_type,
 }
 
 /**
- * @brief          ³õÊ¼»¯¿¨¶ûÂüÂË²¨Æ÷
- * @param[in,out]  *kf: ¿¨¶ûÂüÂË²¨Æ÷½á¹¹ÌåÖ¸Õë
- * @param[in]      initial_x: ³õÊ¼×´Ì¬
- * @param[in]      initial_P: ³õÊ¼Îó²îĞ­·½²î
- * @param[in]      initial_Q: ³õÊ¼ÏµÍ³ÔëÉùĞ­·½²î
- * @param[in]      initial_R: ³õÊ¼²âÁ¿ÔëÉùĞ­·½²î
- * @retval         ÎŞ
+ * @brief          åˆå§‹åŒ–å¡å°”æ›¼æ»¤æ³¢å™¨
+ * @param[in,out]  *kf: å¡å°”æ›¼æ»¤æ³¢å™¨ç»“æ„ä½“æŒ‡é’ˆ
+ * @param[in]      initial_x: åˆå§‹çŠ¶æ€
+ * @param[in]      initial_P: åˆå§‹è¯¯å·®åæ–¹å·®
+ * @param[in]      initial_Q: åˆå§‹ç³»ç»Ÿå™ªå£°åæ–¹å·®
+ * @param[in]      initial_R: åˆå§‹æµ‹é‡å™ªå£°åæ–¹å·®
+ * @retval         æ— 
  */
 // void Kalman_Filter_Init(KalmanFilter *kf, float initial_x, float initial_P, float initial_Q,
 // float initial_R)
@@ -101,23 +101,23 @@ void first_order_filter_cali(first_order_filter_type_t *first_order_filter_type,
 // }
 
 /**
- * @brief          ¼ÆËã¿¨¶ûÂüÂË²¨
- * @param[in,out]  *kf: ¿¨¶ûÂüÂË²¨Æ÷½á¹¹ÌåÖ¸Õë
- * @param[in]      measurement: ²âÁ¿Öµ
- * @retval         ÎŞ
+ * @brief          è®¡ç®—å¡å°”æ›¼æ»¤æ³¢
+ * @param[in,out]  *kf: å¡å°”æ›¼æ»¤æ³¢å™¨ç»“æ„ä½“æŒ‡é’ˆ
+ * @param[in]      measurement: æµ‹é‡å€¼
+ * @retval         æ— 
  */
 // void Kalman_Filter_Calc(KalmanFilter *kf, float measurement)
 //{
-//     // Ô¤²â²½Öè
+//     // é¢„æµ‹æ­¥éª¤
 //     float predicted_x = kf->x;
 //     float predicted_P = kf->P + kf->Q;
 
-//    // ¸üĞÂ²½Öè
+//    // æ›´æ–°æ­¥éª¤
 //    float K = predicted_P / (predicted_P + kf->R);
 //    kf->x = predicted_x + K * (measurement - predicted_x);
 //    kf->P = (1 - K) * predicted_P;
 //}
-// ¾ø¶ÔÏŞÖÆ
+// ç»å¯¹é™åˆ¶
 void abs_limit(fp32 *num, fp32 Limit) {
     if (*num > Limit) {
         *num = Limit;
@@ -127,7 +127,7 @@ void abs_limit(fp32 *num, fp32 Limit) {
     }
 }
 
-// ÅĞ¶Ï·ûºÅÎ»
+// åˆ¤æ–­ç¬¦å·ä½
 fp32 sign(fp32 value) {
     if (value >= 0.0f) {
         return 1.0f;
@@ -137,7 +137,7 @@ fp32 sign(fp32 value) {
     }
 }
 
-// ¸¡µãËÀÇø
+// æµ®ç‚¹æ­»åŒº
 fp32 fp32_deadline(fp32 Value, fp32 minValue, fp32 maxValue) {
     if (Value < maxValue && Value > minValue) {
         Value = 0.0f;
@@ -145,7 +145,7 @@ fp32 fp32_deadline(fp32 Value, fp32 minValue, fp32 maxValue) {
     return Value;
 }
 
-// int26ËÀÇø
+// int26æ­»åŒº
 int16_t int16_deadline(int16_t Value, int16_t minValue, int16_t maxValue) {
     if (Value < maxValue && Value > minValue) {
         Value = 0;
@@ -153,7 +153,7 @@ int16_t int16_deadline(int16_t Value, int16_t minValue, int16_t maxValue) {
     return Value;
 }
 
-// ÏŞ·ùº¯Êı
+// é™å¹…å‡½æ•°
 fp32 fp32_constrain(fp32 Value, fp32 minValue, fp32 maxValue) {
     if (Value < minValue)
         return minValue;
@@ -163,7 +163,7 @@ fp32 fp32_constrain(fp32 Value, fp32 minValue, fp32 maxValue) {
         return Value;
 }
 
-// ÏŞ·ùº¯Êı
+// é™å¹…å‡½æ•°
 int16_t int16_constrain(int16_t Value, int16_t minValue, int16_t maxValue) {
     if (Value < minValue)
         return minValue;
@@ -173,7 +173,7 @@ int16_t int16_constrain(int16_t Value, int16_t minValue, int16_t maxValue) {
         return Value;
 }
 
-// Ñ­»·ÏŞ·ùº¯Êı
+// å¾ªç¯é™å¹…å‡½æ•°
 fp32 loop_fp32_constrain(fp32 Input, fp32 minValue, fp32 maxValue) {
     if (maxValue < minValue) {
         return Input;
@@ -194,17 +194,17 @@ fp32 loop_fp32_constrain(fp32 Input, fp32 minValue, fp32 maxValue) {
     return Input;
 }
 
-// »¡¶È¸ñÊ½»¯Îª-PI~PI
+// å¼§åº¦æ ¼å¼åŒ–ä¸º-PI~PI
 float RadFormat(float rad) { return loop_fp32_constrain(rad, -PI, PI); }
 
-// ½Ç¶È¸ñÊ½»¯Îª-180~180
+// è§’åº¦æ ¼å¼åŒ–ä¸º-180~180
 fp32 theta_format(fp32 Ang) { return loop_fp32_constrain(Ang, -180.0f, 180.0f); }
 /**
- * @brief          ×îĞ¡¶ş³Ë·¨ÌáÈ¡ĞÅºÅÎ¢·Ö
- * @param[in]      ×îĞ¡¶ş³Ë·¨½á¹¹Ìå
- * @param[in]      ĞÅºÅĞÂÑù±¾¾àÉÏÒ»¸öÑù±¾Ê±¼ä¼ä¸ô
- * @param[in]      ĞÅºÅÖµ
- * @retval         ·µ»ØĞ±ÂÊk
+ * @brief          æœ€å°äºŒä¹˜æ³•æå–ä¿¡å·å¾®åˆ†
+ * @param[in]      æœ€å°äºŒä¹˜æ³•ç»“æ„ä½“
+ * @param[in]      ä¿¡å·æ–°æ ·æœ¬è·ä¸Šä¸€ä¸ªæ ·æœ¬æ—¶é—´é—´éš”
+ * @param[in]      ä¿¡å·å€¼
+ * @retval         è¿”å›æ–œç‡k
  */
 float OLS_Derivative(Ordinary_Least_Squares_t *OLS, float deltax, float y) {
     static float temp = 0;
@@ -240,10 +240,10 @@ float OLS_Derivative(Ordinary_Least_Squares_t *OLS, float deltax, float y) {
     return OLS->k;
 }
 /**
- * @brief          ×îĞ¡¶ş³Ë·¨³õÊ¼»¯
- * @param[in]      ×îĞ¡¶ş³Ë·¨½á¹¹Ìå
- * @param[in]      Ñù±¾Êı
- * @retval         ·µ»Ø¿Õ
+ * @brief          æœ€å°äºŒä¹˜æ³•åˆå§‹åŒ–
+ * @param[in]      æœ€å°äºŒä¹˜æ³•ç»“æ„ä½“
+ * @param[in]      æ ·æœ¬æ•°
+ * @retval         è¿”å›ç©º
  */
 void OLS_Init(Ordinary_Least_Squares_t *OLS, uint16_t order) {
     OLS->Order = order;
@@ -256,7 +256,7 @@ void OLS_Init(Ordinary_Least_Squares_t *OLS, uint16_t order) {
     memset((void *)OLS->y, 0, sizeof(float) * order);
     memset((void *)OLS->t, 0, sizeof(float) * 4);
 }
-// ÏŞ·ùº¯Êı
+// é™å¹…å‡½æ•°
 float float_constrain(float Value, float minValue, float maxValue) {
     if (Value < minValue)
         return minValue;
@@ -289,7 +289,7 @@ float NearbyErrFormat(float pid_err, float max_err) {
     return pid_err;
 }
 
-// »¡¶È¸ñÊ½»¯Îª0~2PI
+// å¼§åº¦æ ¼å¼åŒ–ä¸º0~2PI
 float RadPositiveFormat(float rad) { return loop_fp32_constrain(rad, 0, 2 * PI); }
-// ½Ç¶È¸ñÊ½»¯Îª0~360
+// è§’åº¦æ ¼å¼åŒ–ä¸º0~360
 float AngleFormatfp(float dgree) { return loop_fp32_constrain(dgree, 0, 360); }

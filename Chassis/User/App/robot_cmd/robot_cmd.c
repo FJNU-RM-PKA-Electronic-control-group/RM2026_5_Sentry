@@ -274,7 +274,7 @@ void RobotCmdInit(void) {
     chassis_feed_pub           = PubRegister("chassis_feed", sizeof(Chassis_Upload_Data_s));
     robotarm_cmd_send.imu_data = ins_data;
     Vision_message             = USB_RxBufferRegister();
-    referee_info               = RefereeInit(&huart8);
+    referee_info               = RefereeTaskInit(&huart8);
     // robotarm_cmd_send.customdate = customdate;
 
     //	gimbal_cmd_send.pitch = 0;		���ò���������

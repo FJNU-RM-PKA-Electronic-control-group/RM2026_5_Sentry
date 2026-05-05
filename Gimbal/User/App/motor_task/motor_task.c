@@ -7,8 +7,8 @@
 #include "rmd_motor.h"
 
 void MotorControlTask(void) {
-    static uint8_t cnt = 0; // Éè¶¨²»Í¬µç»úµÄÈÎÎñÆµÂÊ
-    FeedForwardControl();
+    static uint8_t cnt = 0; // ï¿½è¶¨ï¿½ï¿½Í¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æµï¿½ï¿½
+    // FeedForwardControl();
     DJIMotorControl();
     if (cnt % 2 == 0) { // 500hz
         DMMotorControl();

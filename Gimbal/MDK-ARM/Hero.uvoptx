@@ -120,7 +120,6 @@
         <SetRegEntry>
           <Number>0</Number>
           <Key>DLGUARM</Key>
-          <Name>?</Name>
         </SetRegEntry>
         <SetRegEntry>
           <Number>0</Number>
@@ -324,6 +323,11 @@
           <count>33</count>
           <WinNumber>1</WinNumber>
           <ItemText>sentry_state</ItemText>
+        </Ww>
+        <Ww>
+          <count>34</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>data_from_pc</ItemText>
         </Ww>
       </WatchWindow1>
       <WatchWindow2>
@@ -536,6 +540,21 @@
           <count>41</count>
           <WinNumber>2</WinNumber>
           <ItemText>chassis_fetch_data</ItemText>
+        </Ww>
+        <Ww>
+          <count>42</count>
+          <WinNumber>2</WinNumber>
+          <ItemText>\\Hero\../User/App/gimbal/gimbal.c\yaw1_motor-&gt;motor_settings</ItemText>
+        </Ww>
+        <Ww>
+          <count>43</count>
+          <WinNumber>2</WinNumber>
+          <ItemText>Data_Tx</ItemText>
+        </Ww>
+        <Ww>
+          <count>44</count>
+          <WinNumber>2</WinNumber>
+          <ItemText>message</ItemText>
         </Ww>
       </WatchWindow2>
       <Tracepoint>

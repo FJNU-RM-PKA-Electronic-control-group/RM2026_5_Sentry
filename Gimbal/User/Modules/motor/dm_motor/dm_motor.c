@@ -81,6 +81,8 @@ DMMotorInstance *DMMotorInit(Motor_Init_Config_s *config) {
         config->controller_param_init_config.current_feedforward_ptr;
     motor->motor_controller.speed_feedforward_ptr =
         config->controller_param_init_config.speed_feedforward_ptr;
+    motor->motor_controller.zero_point_offset =
+        config->controller_param_init_config.angle_zero_point_offset;
     // 后续增加电机前馈控制器(速度和电流)
 
     config->can_init_config.can_module_callback = DMMotorDecode;
@@ -135,8 +137,15 @@ void DMMotorOuterLoop(DMMotorInstance *motor, Closeloop_Type_e type) {
     motor->motor_settings.outer_loop_type = type;
 }
 
+float DMMotorGetAngle(DMMotorInstance *motor) {
+    if (motor->motor_settings.pid_mode == MOTOR_PID_MUTILOOP)
+        return motor->measure.position;
+    else if (motor->motor_settings.pid_mode == MOTOR_PID_SINGLELOOP)
+        return RadFormat(motor->measure.position - motor->motor_controller.zero_point_offset);
+}
+
 void DMMotorControl(void) {
-    float pid_measure, pid_ref; // 电机PID测量值和设定值
+    float pid_measure, pid_ref, pid_err; // 电机PID测量值和设定值
     DM_Motor_Measure_s *measure;
     DMMotorInstance *motor;
     Motor_Control_Setting_s *motor_setting;
@@ -157,17 +166,38 @@ void DMMotorControl(void) {
         // 计算位置环,只有启用位置环且外层闭环为位置时会计算速度环输出
         if ((motor_setting->close_loop_type & ANGLE_LOOP) &&
             motor_setting->outer_loop_type == ANGLE_LOOP) {
-            if (motor_setting->angle_feedback_source == OTHER_FEED)
-                pid_measure = *motor_controller->other_angle_feedback_ptr;
-            else
-                pid_measure =
-                    measure->position; // MOTOR_FEED,对total angle闭环,防止在边界处出现突跃
-                                       // 更新pid_ref进入下一个环
-            if (motor_setting->angle_rad_format_flag == FORMAT_ENABLE)
-                pid_ref =
-                    PIDCalculate(&motor_controller->angle_PID, RadFormat(pid_measure - pid_ref), 0);
-            else
-                pid_ref = PIDCalculate(&motor_controller->angle_PID, pid_measure, pid_ref);
+            switch (motor_setting->pid_mode) {
+            case MOTOR_PID_MUTILOOP:
+                if (motor_setting->angle_feedback_source == OTHER_FEED)
+                    pid_measure = *motor_controller->other_angle_feedback_ptr;
+                else
+                    pid_measure =
+                        measure->position; // MOTOR_FEED,对total angle闭环,防止在边界处出现突跃
+                                           // 更新pid_ref进入下一个环
+                if (motor_setting->angle_rad_format_flag == FORMAT_ENABLE)
+                    pid_ref = PIDCalculate(&motor_controller->angle_PID,
+                                           RadFormat(pid_measure - pid_ref), 0);
+                else
+                    pid_ref = PIDCalculate(&motor_controller->angle_PID, pid_measure, pid_ref);
+                break;
+            case MOTOR_PID_SINGLELOOP:
+
+                // 出于某些原因，这里得用角度制...(我们的规范没落了...)
+                if (motor_setting->angle_feedback_source == OTHER_FEED) {
+                    pid_measure = *motor_controller->other_angle_feedback_ptr;
+                    if (motor->motor_settings.angle_rad_format_flag == FORMAT_ENABLE)
+                        pid_measure = theta_format(pid_measure * RAD_2_DEGREE);
+                }
+                else
+                    pid_measure = theta_format(
+                        (measure->position - motor_controller->zero_point_offset) * RAD_2_DEGREE);
+
+                pid_err = -NearbyErrFormat((pid_ref - pid_measure), 180.0f);
+                pid_ref = PIDCalculate(&motor_controller->angle_PID, pid_err, 0.0f);
+                break;
+            default:
+                break;
+            }
         }
 
         // 计算速度环,(外层闭环为速度或位置)且(启用速度环)时会计算速度环

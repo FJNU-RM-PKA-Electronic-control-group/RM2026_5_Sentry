@@ -365,6 +365,7 @@ void DJIMotorControl() {
         else
             set = (int16_t)motor_controller->final_out;
         // ??????????????
+        set                                           = (abs(set) < 0.05) ? 0.0f : set;
         group                                         = motor->sender_group;
         num                                           = motor->message_num;
         sender_assignment[group].tx_buff[2 * num]     = (uint8_t)(set >> 8);     // ???��

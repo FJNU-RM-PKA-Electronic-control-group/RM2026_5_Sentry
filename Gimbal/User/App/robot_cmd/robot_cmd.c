@@ -223,7 +223,9 @@ static void RemoteControlSet(void) {
     }
     if (switch_is_down(rc_data[TEMP].rc.switch_right)) // ???????[??],????
     {
-        robot_state = ROBOT_STOP;
+        robot_state                 = ROBOT_STOP;
+        gimbal_cmd_send.gimbal_mode = GIMBAL_ZERO_FORCE;
+        chassis_cmd_send.chassis_mode = CHASSIS_ZERO_FORCE;
     }
     else {
         robot_state = ROBOT_READY;

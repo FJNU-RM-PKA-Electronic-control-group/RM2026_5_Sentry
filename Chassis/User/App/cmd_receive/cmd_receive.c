@@ -7,11 +7,11 @@
 
 static CANCommInstance *ins;
 chassis_data_rev *data_ptr;
-static Publisher_t *chassis_cmd_p;   // ╣вел©ьжфоШо╒╥╒╡╪уъ
-static Subscriber_t *chassis_feed_s; // ╣вел╥╢ю║пео╒╤╘тдуъ
-Chassis_Ctrl_Cmd_s chassis_send;     // ╥╒км╦Ь╣велс╕сц╣дпео╒,╟Эю╗©ьжфпео╒╨мUI╩ФжфоЮ╧ь
+static Publisher_t *chassis_cmd_p;   // О©╫О©╫О©╫л©О©╫О©╫О©╫О©╫О©╫о╒О©╫О©╫О©╫О©╫О©╫О©╫
+static Subscriber_t *chassis_feed_s; // О©╫О©╫О©╫л╥О©╫О©╫О©╫О©╫О©╫о╒О©╫О©╫О©╫О©╫О©╫О©╫
+Chassis_Ctrl_Cmd_s chassis_send;     // О©╫О©╫О©╫м╦О©╫О©╫О©╫О©╫О©╫с╕О©╫ц╣О©╫О©╫О©╫о╒,О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫о╒О©╫О©╫UIО©╫О©╫О©╫О©╫О©╫О©╫О©╫
 Chassis_Upload_Data_s
-    chassis_get_data; // ╢с╣велс╕сц╫сйу╣д╥╢ю║пео╒пео╒,╣вел╧╕бйг╧©зхха©сК╣велтк╤╞в╢л╛╣х
+    chassis_get_data; // О©╫с╣О©╫О©╫О©╫с╕О©╫ц╫О©╫О©╫у╣д╥О©╫О©╫О©╫О©╫О©╫о╒О©╫О©╫о╒,О©╫О©╫О©╫л╧О©╫О©╫О©╫г╧О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫к╤О©╫в╢л╛О©╫О©╫
 
 void CmdRevInit(void) {
     CANComm_Init_Config_s cconfig = {

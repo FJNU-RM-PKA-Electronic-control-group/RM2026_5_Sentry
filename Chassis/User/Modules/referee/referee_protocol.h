@@ -75,6 +75,7 @@ typedef enum
     ID_event_data           = 0x0101, // 场地事件数据
     ID_warning_data         = 0x0104, // 裁判警告数据
     ID_dart_launch_data     = 0x0105, // 飞镖发射相关数据
+    ID_Sentry_cmd           = 0x0120, // 哨兵自主决策命令码
     ID_game_robot_state     = 0x0201, // 机器人状态数据
     ID_power_heat_data      = 0x0202, // 实时功率热量数据
     ID_game_robot_pos       = 0x0203, // 机器人位置数据
@@ -86,6 +87,7 @@ typedef enum
     ID_Sentry_info          = 0x020D, // 哨兵信息
     ID_student_interactive  = 0x0301, // 机器人间交互数据
     ID_custom_robot_data    = 0x0302, // 自定义控制器与机器人交互数据
+    ID_referee_sever        = 0x8080  // 裁判系统服务器IP
 
 } CmdID_e;
 
@@ -109,7 +111,8 @@ typedef enum
     LEN_RFID_status         = 5,                        // 0x0209
     LEN_Sentry_info         = 6,                        // 0x020D
     LEN_receive_data        = 6 + Communicate_Data_LEN, // 0x0301 	here
-    LEN_custom_robot_data   = 30                        // 0x0302
+    LEN_custom_robot_data   = 30,                       // 0x0302
+    LEN_sentry_cmd          = 32                        // 0x0120
 
 } JudgeDataLength_e;
 
@@ -291,6 +294,7 @@ typedef enum
     UI_Operate_LEN_Del        = 2,
     UI_Operate_LEN_PerDraw    = 15,
     UI_Operate_LEN_DrawChar   = 15 + 30,
+    Sentry_Cmd_LEN            = 4,
 
     /* 自定义交互数据部分 */
     // Communicate_Data_LEN = 5,

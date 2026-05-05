@@ -20,14 +20,14 @@ imu_t *DM_IMU_data;
 float yaw1_imu_data;
 // static attitude_t *IMU_data_rad; // 云台IMU数据
 DMMotorInstance *pitch_motor;
-LKMotorInstance *yaw1_motor;
+DMMotorInstance *yaw1_motor;
 DJIMotorInstance *yaw2_motor;
 FeedForwardInstance *pitch_ff;
 FeedForwardInstance *yaw_ff;
 
 FeedForwardInstance DEBUG_pitch_ff;
 DMMotorInstance DEBUG_pitch_motor;
-LKMotorInstance DEBUG_yaw1_motor;
+DMMotorInstance DEBUG_yaw1_motor;
 DJIMotorInstance DEBUG_yaw2_motor;
 float DEBUG_dm_pitch, DEBUG_dm_yaw, DEBUG_dm_roll;
 float target_yaw[2], target_pitch;
@@ -110,14 +110,14 @@ void GimbalInit(void) {
         .can_init_config =
             {
                 .can_handle = &hcan2,
-                .tx_id      = 2,
-                .rx_id      = 2,
+                .tx_id      = 0x0A,
+                .rx_id      = 0x09,
             },
         .controller_param_init_config =
             {
                 .angle_PID =
                     {
-                        .Kp       = 8.0f, // 8
+                        .Kp       = 10.0f, // 8
                         .Ki       = 0.0f,
                         .Kd       = 0.7f,
                         .DeadBand = 0.0,
@@ -128,20 +128,21 @@ void GimbalInit(void) {
                         .CoefA             = 0.01,
                         .CoefB             = 0.1,
                         .IntegralLimit     = 50,
-                        .MaxOut            = 150.0F,
+                        .MaxOut            = 75.0F,
                         .Derivative_LPF_RC = 0.01f,
                     },
                 .speed_PID =
                     {
-                        .Kp = 40.0f, // 50
-                        .Ki = 0.0f,  // 200
-                        .Kd = 0.15f,
+                        .Kp = 0.1f, // 50
+                        .Ki = 0.0f, // 200
+                        .Kd = 0.001f,
                         .Improve =
                             (PID_Improvement_e)(PID_Trapezoid_Intergral | PID_Integral_Limit |
                                                 PID_Derivative_On_Measurement |
                                                 PID_DerivativeFilter),
-                        .IntegralLimit = 1000,
-                        .MaxOut        = 4000,
+                        .IntegralLimit = 1.0f,
+                        .MaxOut        = 9.0f,
+                        .Output_LPF_RC = 0.1,
                     },
                 .yaw2_motor = (void *)yaw2_motor,
                 // 还需要�?�加角速度额�?�反馈指�?,注意方向,ins_task.md�?有c板的bodyframe坐标系�?�明
@@ -153,7 +154,7 @@ void GimbalInit(void) {
         .controller_setting_init_config =
             {
                 .angle_feedback_source = OTHER_FEED,
-                .speed_feedback_source = OTHER_FEED,
+                .speed_feedback_source = MOTOR_FEED,
                 //.feedforward_flag      = SPEED_FEEDFORWARD,
                 .outer_loop_type    = ANGLE_LOOP,
                 .close_loop_type    = (Closeloop_Type_e)(ANGLE_LOOP | SPEED_LOOP),
@@ -161,9 +162,9 @@ void GimbalInit(void) {
                 .pid_mode           = MOTOR_PID_SINGLELOOP,
                 //.angle_rad_format_flag = FORMAT_ENABLE,
             },
-        .motor_type = LK9025,
+        .motor_type = DMJ4310,
     };
-    yaw1_motor = LKMotorInit(&yaw1_config);
+    yaw1_motor = DMMotorInit(&yaw1_config);
     // PITCH
     FeedForward_Init_Config_s pitch_ff_config = {
         .K1      = 30,
@@ -217,6 +218,7 @@ void GimbalInit(void) {
                 .close_loop_type       = (Closeloop_Type_e)(SPEED_LOOP | ANGLE_LOOP),
                 .motor_reverse_flag    = MOTOR_DIRECTION_REVERSE,
                 .feedback_reverse_flag = FEEDBACK_DIRECTION_REVERSE,
+                .pid_mode              = MOTOR_PID_MUTILOOP,
                 // .angle_rad_format_flag = FORMAT_ENABLE,
             },
         .motor_type = DMJ4310,
@@ -304,15 +306,15 @@ static void YawSetTarget(float recv_yaw, gimbal_mode_e mode) {
     }
     switch (pitch_mode) {
     case PITCH_UP:
-        target_pitch += 0.003f;
-        if (pitch_motor->measure.position > PITCH_HORIZON_ECD) {
+        target_pitch += 0.005f;
+        if (pitch_motor->measure.position > PITCH_MAX_ECD) {
             pitch_mode = PITCH_DOWN;
             // target_pitch = IMU_data_rad->Pitch;
         }
 
         break;
     case PITCH_DOWN:
-        target_pitch -= 0.003f;
+        target_pitch -= 0.005f;
         if (pitch_motor->measure.position < PITCH_MIN_ECD) {
             pitch_mode = PITCH_UP;
             // target_pitch = IMU_data_rad->Pitch;
@@ -366,7 +368,7 @@ void GimbalTask(void) {
     case GIMBAL_ZERO_FORCE:
         YawSetTarget(gimbal_cmd_recv.yaw, GIMBAL_ZERO_FORCE);
 
-        LKMotorStop(yaw1_motor);
+        DMMotorStop(yaw1_motor);
         DJIMotorStop(yaw2_motor);
         DMMotorStop(pitch_motor);
         break;
@@ -374,20 +376,20 @@ void GimbalTask(void) {
     case GIMBAL_GYRO_MODE: // 后续�?保留此模�?
         YawSetTarget(gimbal_cmd_recv.yaw, GIMBAL_GYRO_MODE);
 
-        LKMotorEnable(yaw1_motor);
+        DMMotorEnable(yaw1_motor);
         DJIMotorEnable(yaw2_motor);
         DMMotorEnable(pitch_motor);
-        LKMotorChangeFeed(yaw1_motor, ANGLE_LOOP, OTHER_FEED);
-        LKMotorChangeFeed(yaw1_motor, SPEED_LOOP, OTHER_FEED);
+        DMMotorChangeFeed(yaw1_motor, ANGLE_LOOP, OTHER_FEED);
+        DMMotorChangeFeed(yaw1_motor, SPEED_LOOP, OTHER_FEED);
         DJIMotorChangeFeed(yaw2_motor, SPEED_LOOP, OTHER_FEED);
         DJIMotorChangeFeed(yaw2_motor, ANGLE_LOOP, OTHER_FEED);
         DMMotorChangeFeed(pitch_motor, ANGLE_LOOP, OTHER_FEED);
         DMMotorChangeFeed(pitch_motor, SPEED_LOOP, OTHER_FEED);
 
         // DMMotorSetRef(yaw_motor, 0); // yaw和pitch会在robot_cmd�?处理好�?�圈和单�?
-        // LKMotorSetRef(yaw1_motor, 0);
+        // DMMotorSetRef(yaw1_motor, 0);
         DJIMotorSetRef(yaw2_motor, target_yaw[YAW2]);
-        LKMotorSetRef(yaw1_motor, target_yaw[YAW1]);
+        DMMotorSetRef(yaw1_motor, target_yaw[YAW1]);
         DMMotorSetRef(pitch_motor, gimbal_cmd_recv.pitch);
         // DMMotorSetRef(yaw_motor, gimbal_cmd_recv.yaw); //
         // yaw和pitch会在robot_cmd�?处理好�?�圈和单�? RMDMotorSetRef(pitch_motor,
@@ -398,17 +400,17 @@ void GimbalTask(void) {
     case GIMBAL_FREE_MODE:
         YawSetTarget(gimbal_cmd_recv.yaw, GIMBAL_FREE_MODE);
 
-        LKMotorEnable(yaw1_motor);
+        DMMotorEnable(yaw1_motor);
         DJIMotorEnable(yaw2_motor);
         DMMotorEnable(pitch_motor);
         DJIMotorChangeFeed(yaw2_motor, SPEED_LOOP, OTHER_FEED);
         DJIMotorChangeFeed(yaw2_motor, ANGLE_LOOP, OTHER_FEED);
-        LKMotorChangeFeed(yaw1_motor, ANGLE_LOOP, OTHER_FEED);
-        LKMotorChangeFeed(yaw1_motor, SPEED_LOOP, OTHER_FEED);
+        DMMotorChangeFeed(yaw1_motor, ANGLE_LOOP, OTHER_FEED);
+        DMMotorChangeFeed(yaw1_motor, SPEED_LOOP, OTHER_FEED);
         DMMotorChangeFeed(pitch_motor, ANGLE_LOOP, OTHER_FEED);
         DMMotorChangeFeed(pitch_motor, SPEED_LOOP, OTHER_FEED);
         DJIMotorSetRef(yaw2_motor, target_yaw[YAW2]);
-        LKMotorSetRef(yaw1_motor, target_yaw[YAW1]);
+        DMMotorSetRef(yaw1_motor, target_yaw[YAW1]);
         DMMotorSetRef(pitch_motor, target_pitch);
         // yaw和pitch会在robot_cmd�?处理好�?�圈和单�? RMDMotorSetRef(pitch_motor,
         // gimbal_cmd_recv.pitch);
@@ -416,36 +418,36 @@ void GimbalTask(void) {
     case GIMBAL_SCAN_MODE:
         YawSetTarget(gimbal_cmd_recv.yaw, GIMBAL_SCAN_MODE);
 
-        LKMotorEnable(yaw1_motor);
+        DMMotorEnable(yaw1_motor);
         DJIMotorEnable(yaw2_motor);
         DMMotorEnable(pitch_motor);
         DJIMotorChangeFeed(yaw2_motor, SPEED_LOOP, OTHER_FEED);
         DJIMotorChangeFeed(yaw2_motor, ANGLE_LOOP, OTHER_FEED);
-        LKMotorChangeFeed(yaw1_motor, ANGLE_LOOP, OTHER_FEED);
-        LKMotorChangeFeed(yaw1_motor, SPEED_LOOP, OTHER_FEED);
+        DMMotorChangeFeed(yaw1_motor, ANGLE_LOOP, OTHER_FEED);
+        DMMotorChangeFeed(yaw1_motor, SPEED_LOOP, OTHER_FEED);
         DMMotorChangeFeed(pitch_motor, ANGLE_LOOP, OTHER_FEED);
         DMMotorChangeFeed(pitch_motor, SPEED_LOOP, OTHER_FEED);
 
         DJIMotorSetRef(yaw2_motor, target_yaw[YAW2]);
-        LKMotorSetRef(yaw1_motor, target_yaw[YAW1]);
+        DMMotorSetRef(yaw1_motor, target_yaw[YAW1]);
         DMMotorSetRef(pitch_motor, target_pitch);
         break;
 
     case GIMBAL_VISION_MODE:
         YawSetTarget(gimbal_cmd_recv.yaw, GIMBAL_VISION_MODE);
 
-        LKMotorEnable(yaw1_motor);
+        DMMotorEnable(yaw1_motor);
         DJIMotorEnable(yaw2_motor);
         DMMotorEnable(pitch_motor);
         DJIMotorChangeFeed(yaw2_motor, SPEED_LOOP, OTHER_FEED);
         DJIMotorChangeFeed(yaw2_motor, ANGLE_LOOP, OTHER_FEED);
-        LKMotorChangeFeed(yaw1_motor, ANGLE_LOOP, OTHER_FEED);
-        LKMotorChangeFeed(yaw1_motor, SPEED_LOOP, OTHER_FEED);
+        DMMotorChangeFeed(yaw1_motor, ANGLE_LOOP, OTHER_FEED);
+        DMMotorChangeFeed(yaw1_motor, SPEED_LOOP, OTHER_FEED);
         DMMotorChangeFeed(pitch_motor, ANGLE_LOOP, OTHER_FEED);
         DMMotorChangeFeed(pitch_motor, SPEED_LOOP, OTHER_FEED);
 
         DJIMotorSetRef(yaw2_motor, target_yaw[YAW2]);
-        LKMotorSetRef(yaw1_motor, target_yaw[YAW1]);
+        DMMotorSetRef(yaw1_motor, target_yaw[YAW1]);
         DMMotorSetRef(pitch_motor, target_pitch);
         break;
 
@@ -453,15 +455,15 @@ void GimbalTask(void) {
         break;
     }
     // DJIMotorStop(yaw2_motor);
-    // LKMotorStop(yaw1_motor);
+    // DMMotorStop(yaw1_motor);
     // DEBUG_dm_pitch    = DM_IMU_data->pitch;
     // DEBUG_dm_yaw      = DM_IMU_data->yaw;
     // DEBUG_dm_roll     = DM_IMU_data->roll;
-    // DEBUG_yaw1_target = AngleFormatfp(NearbyErrFormat(LKMotorGetAngle(yaw1_motor), 180) / 2);
-    // DEBUG_yaw1_angle  = LKMotorGetAngle(yaw1_motor);
+    // DEBUG_yaw1_target = AngleFormatfp(NearbyErrFormat(DMMotorGetAngle(yaw1_motor), 180) / 2);
+    // DEBUG_yaw1_angle  = DMMotorGetAngle(yaw1_motor);
     // DEBUG_yaw2_angle  = theta_format(DJIMotorGetAngle(yaw2_motor));
 
-    // LKMotorSetRef(yaw_motor, 10.0F);
+    // DMMotorSetRef(yaw_motor, 10.0F);
 
     // 在合适的地方添加pitch重力补偿前�?�力�?
     // 根据IMU姿�?/pitch电机角度反�?��?�算出当前配重下的重力矩
@@ -470,7 +472,7 @@ void GimbalTask(void) {
     // 设置反�?�数�?,主�?�是imu和yaw的ecd
     // gimbal_feedback_data.gimbal_imu_data              = *IMU_data_rad;
     gimbal_feedback_data.yaw2_motor_single_round_angle = DJIMotorGetAngle(yaw2_motor);
-    gimbal_feedback_data.yaw1_motor_single_round_angle = LKMotorGetAngle(yaw1_motor);
+    gimbal_feedback_data.yaw1_motor_single_round_angle = DMMotorGetAngle(yaw1_motor) * RAD_2_DEGREE;
     gimbal_feedback_data.pitch_ecd_angle               = pitch_motor->measure.position;
     DEBUG_pitch_rad                                    = -(IMU_data_rad->Pitch);
     DEBUG_IMU_yaw                                      = IMU_data_rad->Yaw * RAD_2_DEGREE;

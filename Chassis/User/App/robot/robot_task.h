@@ -39,14 +39,13 @@ void StartUITASK(void const *argument);
 
 /**
  * @brief
- * ��ʼ������������,���г������е������������ʼ��?
+ * ��ʼ������������,���г������е������������ʼ��?
  *
  */
 void OSTaskInit(void) {
     osThreadDef(instask, StartINSTASK, osPriorityRealtime, 0, 1024);
-    insTaskHandle = osThreadCreate(
-        osThread(instask),
-        NULL); // ������������ȡ������,Ϊ��̬�������ýϸ����ȼ�,ȷ����1khz��Ƶ��ִ��
+    insTaskHandle = osThreadCreate(osThread(instask),
+                                   NULL); // ������������ȡ������,Ϊ��̬�������ýϸ����ȼ�,ȷ����1khz��Ƶ��ִ��
 
     osThreadDef(motortask, StartMOTORTASK, osPriorityNormal, 0, 256);
     motorTaskHandle = osThreadCreate(osThread(motortask), NULL);
@@ -81,7 +80,7 @@ __attribute__((noreturn)) void StartINSTASK(void const *argument) {
         //        if (ins_dt > 1)
         //            LOGERROR("[freeRTOS] INS Task is being DELAY! dt = [%f]", &ins_dt);
         ////        VisionSend(); //
-        /// ������ɺ����Ӿ�����?,���ǵ�ǰ��ʵ�ֲ�̫����,����������Ӳ��������Ҫ���¿��ǽṹ����֯
+        /// ������ɺ����Ӿ�����?,���ǵ�ǰ��ʵ�ֲ�̫����,����������Ӳ��������Ҫ���¿��ǽṹ����֯
         osDelay(1);
     }
 }
@@ -122,7 +121,7 @@ __attribute__((noreturn)) void StartROBOTTASK(void const *argument) {
     static float robot_dt;
     static float robot_start;
     //    LOGINFO("[freeRTOS] ROBOT core Task Start");
-    // 200Hz-500Hz,���ж���Ŀ���������ƽ�ⲽ���������?������1kHz
+    // 200Hz-500Hz,���ж���Ŀ���������ƽ�ⲽ���������?������1kHz
     for (;;) {
         robot_start = DWT_GetTimeline_ms();
         RobotTask();
@@ -134,16 +133,16 @@ __attribute__((noreturn)) void StartROBOTTASK(void const *argument) {
 }
 
 __attribute__((noreturn)) void StartUITASK(void const *argument) {
-    MyUIInit();
+    // MyUIInit();
     for (;;) {
-        // ÿ������ϵͳ����һ�����ݻ����һ��?,���UITask������refereeSend()
+        // ÿ������ϵͳ����һ�����ݻ����һ��?,���UITask������refereeSend()
         UITask();
         osDelay(
             1); // ��ʹû���κ�UI��Ҫˢ��,Ҳ����һ��,��ֹ����UITask���޷��л�
     }
 }
 
-// ȷ�����ú�����?ɾ��
+// ȷ�����ú�����?ɾ��
 //  __attribute__((noreturn)) void StartMOTORTASK(void const *argument)
 //  {
 
@@ -170,7 +169,7 @@ __attribute__((noreturn)) void StartUITASK(void const *argument) {
 // {
 
 //     //
-//     200Hz-500Hz,���ж���Ŀ���������ƽ�ⲽ���������?������1kHz
+//     200Hz-500Hz,���ж���Ŀ���������ƽ�ⲽ���������?������1kHz
 //     for (;;)
 //     {
 

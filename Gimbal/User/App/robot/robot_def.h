@@ -19,14 +19,14 @@
  */
 // 云台电机
 #define YAW1_ZEROPOINT_ECD                                                                         \
-    315.126343 // 云台大电机与云台指针同向时刻的电机编码器数值,如更换云台须仔细测量并调整
+    0.0748307705 // 云台大电机与云台指针同向时刻的电机编码器数值,如更换云台须仔细测量并调整
 #define YAW2_ZEROPOINT_ECD                                                                         \
-    281.731384 // 小yaw与大yaw电机指针同向时刻的电机编码器数值,如更换云台须仔细测量并调整
+    281.731384   // 小yaw与大yaw电机指针同向时刻的电机编码器数值,如更换云台须仔细测量并调整
 #define YAW_ECD_GREATER_THAN_4096 0        // ALIGN_ECD值是否大于4096,为1,否为0;用于纠正云台偏转角度
 
 #define PITCH_HORIZON_ECD      0.373961449 // 云台处于水平位置时的编码值,如更换云台须仔细测量并调整
-#define PITCH_MAX_ECD          0.9F
-#define PITCH_MIN_ECD          0.2f
+#define PITCH_MAX_ECD          -1.1F
+#define PITCH_MIN_ECD          -1.9f
 #define PITCH_MAX_ANGLE        -15674.30f // 云台竖直方向最大角度 (注意反向调整,调整时写入实际的角度)
 #define PITCH_MIN_ANGLE        -15746.30f // 云台竖直方向最小角度 (注意反向调整,调整时写入实际的角度)
 // 弹药相关

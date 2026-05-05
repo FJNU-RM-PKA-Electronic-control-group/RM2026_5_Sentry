@@ -386,7 +386,7 @@ void UIGraphRefresh(referee_id_t *_id, int cnt, ...)
 
 	for (uint8_t i = 0; i < cnt; i++) // 发送交互数据的数据帧，并计算CRC16校验值
 	{
-		graphData = va_arg(ap, Graph_Data_t); // 访问参数列表中的每个项,第二个参数是你要返回的参数的类型,在取值时需要将其强制转化为指定类型的变量
+		graphData = __va_arg(ap, Graph_Data_t); // 访问参数列表中的每个项,第二个参数是你要返回的参数的类型,在取值时需要将其强制转化为指定类型的变量
 		memcpy(buffer + (LEN_HEADER + LEN_CMDID + Interactive_Data_LEN_Head + UI_Operate_LEN_PerDraw * i), (uint8_t *)&graphData, UI_Operate_LEN_PerDraw);
 	}
 	Append_CRC16_Check_Sum(buffer, temp_datalength);
@@ -415,7 +415,6 @@ void UICharRefresh(referee_id_t *_id, String_Data_t string_Data)
 	UI_CharReFresh_data.datahead.sender_ID = _id->Robot_ID;
 
 	UI_CharReFresh_data.String_Data = string_Data;
-
 	UI_CharReFresh_data.frametail = Get_CRC16_Check_Sum((uint8_t *)&UI_CharReFresh_data, LEN_HEADER + LEN_CMDID + temp_datalength, 0xFFFF);
 
 	RefereeSend((uint8_t *)&UI_CharReFresh_data, LEN_HEADER + LEN_CMDID + temp_datalength + LEN_TAIL); // 发送

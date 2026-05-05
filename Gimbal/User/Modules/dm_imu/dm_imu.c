@@ -1,21 +1,21 @@
 #include "bsp_dwt.h"
 #include "dm_imu.h"
 #include "string.h"
-DMIMUInstance *DM_IMU; // Ö»ÓĞÒ»¸öÊµÀı
+DMIMUInstance *DM_IMU; // åªæœ‰ä¸€ä¸ªå®ä¾‹
 // imu_t imu;
 uint32_t tick_ms = 0;
 float debug111;
 
 /**
 ************************************************************************
-* @brief:      	float_to_uint: ¸¡µãÊı×ª»»ÎªÎŞ·ûºÅÕûÊıº¯Êı
-* @param[in]:   x_float:	´ı×ª»»µÄ¸¡µãÊı
-* @param[in]:   x_min:		·¶Î§×îĞ¡Öµ
-* @param[in]:   x_max:		·¶Î§×î´óÖµ
-* @param[in]:   bits: 		Ä¿±êÎŞ·ûºÅÕûÊıµÄÎ»Êı
-* @retval:     	ÎŞ·ûºÅÕûÊı½á¹û
-* @details:    	½«¸ø¶¨µÄ¸¡µãÊı x ÔÚÖ¸¶¨·¶Î§ [x_min, x_max]
-*ÄÚ½øĞĞÏßĞÔÓ³Éä£¬Ó³Éä½á¹ûÎªÒ»¸öÖ¸¶¨Î»ÊıµÄÎŞ·ûºÅÕûÊı
+* @brief:      	float_to_uint: æµ®ç‚¹æ•°è½¬æ¢ä¸ºæ— ç¬¦å·æ•´æ•°å‡½æ•°
+* @param[in]:   x_float:	å¾…è½¬æ¢çš„æµ®ç‚¹æ•°
+* @param[in]:   x_min:		èŒƒå›´æœ€å°å€¼
+* @param[in]:   x_max:		èŒƒå›´æœ€å¤§å€¼
+* @param[in]:   bits: 		ç›®æ ‡æ— ç¬¦å·æ•´æ•°çš„ä½æ•°
+* @retval:     	æ— ç¬¦å·æ•´æ•°ç»“æœ
+* @details:    	å°†ç»™å®šçš„æµ®ç‚¹æ•° x åœ¨æŒ‡å®šèŒƒå›´ [x_min, x_max]
+*å†…è¿›è¡Œçº¿æ€§æ˜ å°„ï¼Œæ˜ å°„ç»“æœä¸ºä¸€ä¸ªæŒ‡å®šä½æ•°çš„æ— ç¬¦å·æ•´æ•°
 ************************************************************************
 **/
 static int float_to_uint(float x_float, float x_min, float x_max, int bits) {
@@ -26,14 +26,14 @@ static int float_to_uint(float x_float, float x_min, float x_max, int bits) {
 }
 /**
 ************************************************************************
-* @brief:      	uint_to_float: ÎŞ·ûºÅÕûÊı×ª»»Îª¸¡µãÊıº¯Êı
-* @param[in]:   x_int: ´ı×ª»»µÄÎŞ·ûºÅÕûÊı
-* @param[in]:   x_min: ·¶Î§×îĞ¡Öµ
-* @param[in]:   x_max: ·¶Î§×î´óÖµ
-* @param[in]:   bits:  ÎŞ·ûºÅÕûÊıµÄÎ»Êı
-* @retval:     	¸¡µãÊı½á¹û
-* @details:    	½«¸ø¶¨µÄÎŞ·ûºÅÕûÊı x_int ÔÚÖ¸¶¨·¶Î§ [x_min, x_max]
-*ÄÚ½øĞĞÏßĞÔÓ³Éä£¬Ó³Éä½á¹ûÎªÒ»¸ö¸¡µãÊı
+* @brief:      	uint_to_float: æ— ç¬¦å·æ•´æ•°è½¬æ¢ä¸ºæµ®ç‚¹æ•°å‡½æ•°
+* @param[in]:   x_int: å¾…è½¬æ¢çš„æ— ç¬¦å·æ•´æ•°
+* @param[in]:   x_min: èŒƒå›´æœ€å°å€¼
+* @param[in]:   x_max: èŒƒå›´æœ€å¤§å€¼
+* @param[in]:   bits:  æ— ç¬¦å·æ•´æ•°çš„ä½æ•°
+* @retval:     	æµ®ç‚¹æ•°ç»“æœ
+* @details:    	å°†ç»™å®šçš„æ— ç¬¦å·æ•´æ•° x_int åœ¨æŒ‡å®šèŒƒå›´ [x_min, x_max]
+*å†…è¿›è¡Œçº¿æ€§æ˜ å°„ï¼Œæ˜ å°„ç»“æœä¸ºä¸€ä¸ªæµ®ç‚¹æ•°
 ************************************************************************
 **/
 static float uint_to_float(int x_int, float x_min, float x_max, int bits) {
@@ -43,14 +43,14 @@ static float uint_to_float(int x_int, float x_min, float x_max, int bits) {
     return ((float)x_int) * span / ((float)((1 << bits) - 1)) + offset;
 }
 
-/*******·¢ËÍ²¿·Ö********/
+/*******å‘é€éƒ¨åˆ†********/
 static void imu_send_cmd(uint8_t reg_id, uint8_t ac, uint32_t data) {
     uint8_t buf[8] = {0xCC, reg_id, ac, 0xDD, 0, 0, 0, 0};
 
-    // ¸´ÖÆÊı¾İµ½ÕıÈ·Î»ÖÃ
+    // å¤åˆ¶æ•°æ®åˆ°æ­£ç¡®ä½ç½®
     memcpy(buf + 4, &data, 4);
 
-    // ¸´ÖÆµ½CAN·¢ËÍ»º³åÇø
+    // å¤åˆ¶åˆ°CANå‘é€ç¼“å†²åŒº
     memcpy(DM_IMU->imu_can_instance->tx_buff, buf, 8);
 
     CANTransmit(DM_IMU->imu_can_instance, 1);
@@ -66,82 +66,82 @@ static void imu_send_cmd(uint8_t reg_id, uint8_t ac, uint32_t data) {
     //	CANTransmit(DM_IMU->imu_can_instance,1);
 }
 
-// Ğ´¼Ä´æÆ÷
+// å†™å¯„å­˜å™¨
 static void imu_write_reg(uint8_t reg_id, uint32_t data) { imu_send_cmd(reg_id, CMD_WRITE, data); }
 
-// ¶Á¼Ä´æÆ÷
+// è¯»å¯„å­˜å™¨
 static void imu_read_reg(uint8_t reg_id) { imu_send_cmd(reg_id, CMD_READ, 0); }
 
-// ÖØÆôIMU
+// é‡å¯IMU
 void imu_reboot() { imu_write_reg(REBOOT_IMU, 0); }
 
-// ¼ÓËÙ¶È¼ÆĞ£×¼
+// åŠ é€Ÿåº¦è®¡æ ¡å‡†
 void imu_accel_calibration() { imu_write_reg(ACCEL_CALI, 0); }
 
-// ÍÓÂİÒÇĞ£×¼
+// é™€èºä»ªæ ¡å‡†
 void imu_gyro_calibration() { imu_write_reg(GYRO_CALI, 0); }
 
-// ¸Ä±äÍ¨ĞÅ¶Ë¿Ú
+// æ”¹å˜é€šä¿¡ç«¯å£
 void imu_change_com_port(DMIMUInstance *dm_imu, imu_com_port_e port) {
     dm_imu->com_port = port;
     imu_write_reg(CHANGE_COM, (uint8_t)port);
     HAL_Delay(1);
 }
 
-// ÉèÖÃ³ÉÖ÷¶¯Ä£Ê½ÑÓÊ±
+// è®¾ç½®æˆä¸»åŠ¨æ¨¡å¼å»¶æ—¶
 void imu_set_active_mode_delay(uint32_t delay) {
     imu_write_reg(SET_DELAY, delay);
     HAL_Delay(1);
 }
 
-// ÉèÖÃ·¢ËÍÄ£Ê½,1:Ö÷¶¯Ä£Ê½,0:ÇëÇóÄ£Ê½
+// è®¾ç½®å‘é€æ¨¡å¼,1:ä¸»åŠ¨æ¨¡å¼,0:è¯·æ±‚æ¨¡å¼
 void imu_set_mode(DMIMUInstance *dm_imu, send_mode_e mode) {
     dm_imu->send_mode = mode;
     imu_write_reg(CHANGE_ACTIVE, (uint8_t)mode);
     HAL_Delay(1);
 }
-// //ÉèÖÃ³ÉÖ÷¶¯Ä£Ê½
+// //è®¾ç½®æˆä¸»åŠ¨æ¨¡å¼
 // void imu_change_to_active()
 // {
 // 	imu_write_reg(CHANGE_ACTIVE,1);
 // }
 
-// //ÉèÖÃ³ÉÇëÇóÄ£Ê½
+// //è®¾ç½®æˆè¯·æ±‚æ¨¡å¼
 // void imu_change_to_request()
 // {
 // 	imu_write_reg(CHANGE_ACTIVE,0);
 // }
 
-// ÉèÖÃ²¨ÌØÂÊ
+// è®¾ç½®æ³¢ç‰¹ç‡
 void imu_set_baud(DMIMUInstance *dm_imu, imu_baudrate_e baud) {
     dm_imu->baudrate = baud;
     imu_write_reg(SET_BAUD, (uint8_t)baud);
     HAL_Delay(1);
 }
 
-// ÉèÖÃCAN ID
+// è®¾ç½®CAN ID
 void imu_set_can_id(uint8_t can_id) { imu_write_reg(SET_CAN_ID, can_id); }
 
-// ÉèÖÃÖ÷Õ¾ID
+// è®¾ç½®ä¸»ç«™ID
 void imu_set_mst_id(uint8_t mst_id) { imu_write_reg(SET_MST_ID, mst_id); }
 
-// ±£´æ²ÎÊı
+// ä¿å­˜å‚æ•°
 void imu_save_parameters() {
     imu_write_reg(SAVE_PARAM, 0);
     HAL_Delay(1);
 }
 
-// »Ö¸´³ö³§ÉèÖÃ
+// æ¢å¤å‡ºå‚è®¾ç½®
 void imu_restore_settings() { imu_write_reg(RESTORE_SETTING, 0); }
 
-//*******¶ÁÈ¡Êı¾İ²¿·Ö********/
-// ÇëÇó¼ÓËÙ¶ÈÊı¾İ
+//*******è¯»å–æ•°æ®éƒ¨åˆ†********/
+// è¯·æ±‚åŠ é€Ÿåº¦æ•°æ®
 static void imu_request_accel() { imu_read_reg(ACCEL_DATA); }
-// ÇëÇóÍÓÂİÒÇÊı¾İ
+// è¯·æ±‚é™€èºä»ªæ•°æ®
 static void imu_request_gyro() { imu_read_reg(GYRO_DATA); }
-// ÇëÇóÅ·À­½ÇÊı¾İ
+// è¯·æ±‚æ¬§æ‹‰è§’æ•°æ®
 static void imu_request_euler() { imu_read_reg(EULER_DATA); }
-// ÇëÇóËÄÔªÊıÊı¾İ
+// è¯·æ±‚å››å…ƒæ•°æ•°æ®
 static void imu_request_quat() { imu_read_reg(QUAT_DATA); }
 
 // static void IMU_RequestData(CAN_HandleTypeDef* hcan,uint16_t can_id,uint8_t reg)
@@ -204,29 +204,29 @@ static void IMU_UpdateQuaternion(uint8_t *pData) {
 }
 
 static void IMU_UpdateData(CANInstance *instance) {
-    // ´ÓCANÊµÀıÖĞ»ñÈ¡½ÓÊÕµÄÔ­Ê¼Êı¾İ£¨CAN×ÜÏßÉÏÊÕµ½µÄ8×Ö½ÚÊı¾İ£©
+    // ä»CANå®ä¾‹ä¸­è·å–æ¥æ”¶çš„åŸå§‹æ•°æ®ï¼ˆCANæ€»çº¿ä¸Šæ”¶åˆ°çš„8å­—èŠ‚æ•°æ®ï¼‰
     uint8_t *pData = instance->rx_buff;
     debug111++;
 
-    // ÒÔÏÂÊÇÔ­½âÎöÂß¼­£¨¸ù¾İÊı¾İÀàĞÍ·Ö·¢£©
+    // ä»¥ä¸‹æ˜¯åŸè§£æé€»è¾‘ï¼ˆæ ¹æ®æ•°æ®ç±»å‹åˆ†å‘ï¼‰
     switch (pData[0]) {
-    case 1: // ¼ÓËÙ¶ÈÊı¾İ
+    case 1: // åŠ é€Ÿåº¦æ•°æ®
         IMU_UpdateAccel(pData);
         break;
-    case 2: // ÍÓÂİÒÇ½ÇËÙ¶ÈÊı¾İ
+    case 2: // é™€èºä»ªè§’é€Ÿåº¦æ•°æ®
         IMU_UpdateGyro(pData);
         break;
-    case 3: // Å·À­½ÇÊı¾İ
+    case 3: // æ¬§æ‹‰è§’æ•°æ®
         IMU_UpdateEuler(pData);
         break;
-    case 4: // ËÄÔªÊıÊı¾İ
+    case 4: // å››å…ƒæ•°æ•°æ®
         IMU_UpdateQuaternion(pData);
         break;
     }
 }
 
 static void DM_IMU_Can_Init(void) {
-    CAN_Init_Config_s imu_can_config; // ÅäÖÃ½á¹¹Ìå
+    CAN_Init_Config_s imu_can_config; // é…ç½®ç»“æ„ä½“
     imu_can_config.can_handle          = &hcan2;
     imu_can_config.tx_id               = 0x0B;
     imu_can_config.rx_id               = 0x0C;
@@ -234,29 +234,29 @@ static void DM_IMU_Can_Init(void) {
     imu_can_config.id                  = &DM_IMU;
     DM_IMU                             = (DMIMUInstance *)malloc(sizeof(DMIMUInstance));
     memset(DM_IMU, 0, sizeof(DMIMUInstance));
-    DM_IMU->imu_can_instance = CANRegister(&imu_can_config); // ×¢²á
+    DM_IMU->imu_can_instance = CANRegister(&imu_can_config); // æ³¨å†Œ
     // DM_IMU->imu_can_instance->txconf.IDE=CAN_ID_STD;
     // DM_IMU->imu_can_instance->txconf.RTR=CAN_RTR_DATA;
     // DM_IMU->imu_can_instance->txconf.StdId=0x01;
     CANSetDLC(DM_IMU->imu_can_instance, 8);
 }
 
-// ÍÓÂİÒÇ³õÊ¼»¯
+// é™€èºä»ªåˆå§‹åŒ–
 void DM_IMU_Init(DMIMU_Init_Config_s *config) {
     DM_IMU = (DMIMUInstance *)malloc(sizeof(DMIMUInstance));
     memset(DM_IMU, 0, sizeof(DMIMUInstance));
     config->can_init_config.can_module_callback = IMU_UpdateData;
     DM_IMU->imu_can_instance                    = CANRegister(&config->can_init_config);
-    DM_IMU->com_port                            = COM_CAN;          // ÓÃCAN¾ÍºÃÁË
-    DM_IMU->baudrate                            = config->baudrate; // Ôİ¶¨
+    DM_IMU->com_port                            = COM_CAN;          // ç”¨CANå°±å¥½äº†
+    DM_IMU->baudrate                            = config->baudrate; // æš‚å®š
     DM_IMU->send_mode                           = config->send_mode;
 
     //	DWT_Delay_ms(100);
     imu_set_mode(DM_IMU, DM_IMU->send_mode);
     imu_set_baud(DM_IMU, DM_IMU->baudrate);
     imu_change_com_port(DM_IMU, DM_IMU->com_port);
-    imu_set_active_mode_delay(15); // Ö÷¶¯Ä£Ê½ÏÂ5ms·¢ËÍÒ»´Î
-    // ÉÏµçÏÈĞ£×¼
+    imu_set_active_mode_delay(15); // ä¸»åŠ¨æ¨¡å¼ä¸‹5mså‘é€ä¸€æ¬¡
+    // ä¸Šç”µå…ˆæ ¡å‡†
     imu_accel_calibration();
     HAL_Delay(6000);
     imu_gyro_calibration();
