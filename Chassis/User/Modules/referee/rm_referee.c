@@ -81,6 +81,10 @@ static void JudgeReadData(uint8_t *buff) {
                 case ID_shoot_data: // 0x0207
                     memcpy(&referee_info.ShootData, (buff + DATA_Offset), LEN_shoot_data);
                     break;
+                case ID_permissible_rounds: // 0x0208
+                    memcpy(&referee_info.ProjectileAllowance, (buff + DATA_Offset),
+                           LEN_permissible_rounds);
+                    break;
                 case ID_RFID_status: // 0x0209
                     memcpy(&referee_info.RFIDStatus, (buff + DATA_Offset), LEN_RFID_status);
                     break;

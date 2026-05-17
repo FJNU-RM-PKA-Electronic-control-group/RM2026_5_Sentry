@@ -19,9 +19,9 @@
  */
 // 云台电机
 #define YAW1_ZEROPOINT_ECD                                                                         \
-    0.0748307705 // 云台大电机与云台指针同向时刻的电机编码器数值,如更换云台须仔细测量并调整
+    3.09355927 // 云台大电机与云台指针同向时刻的电机编码器数值,如更换云台须仔细测量并调整
 #define YAW2_ZEROPOINT_ECD                                                                         \
-    281.731384   // 小yaw与大yaw电机指针同向时刻的电机编码器数值,如更换云台须仔细测量并调整
+    281.731384 // 小yaw与大yaw电机指针同向时刻的电机编码器数值,如更换云台须仔细测量并调整
 #define YAW_ECD_GREATER_THAN_4096 0        // ALIGN_ECD值是否大于4096,为1,否为0;用于纠正云台偏转角度
 
 #define PITCH_HORIZON_ECD      0.373961449 // 云台处于水平位置时的编码值,如更换云台须仔细测量并调整
@@ -45,16 +45,16 @@
     19.0f               // 轮胎减速比,用于将电机转速转到轮胎转速,电机转速除以减速比得轮胎转速
 // YAW 2或3
 
-#define GYRO2GIMBAL_DIR_YAW   1      // 陀螺仪方向与云台的yaw的方向,1为同向,-1为反向
-#define GYRO2GIMBAL_DIR_PITCH 1      // 陀螺仪方向与云台的pitch的方向,1为同向,-1为反向
-#define GYRO2GIMBAL_DIR_ROLL  1      // 陀螺仪方向与云台的roll的方向,1为同向,-1为反向
+#define GYRO2GIMBAL_DIR_YAW   1   // 陀螺仪方向与云台的yaw的方向,1为同向,-1为反向
+#define GYRO2GIMBAL_DIR_PITCH 1   // 陀螺仪方向与云台的pitch的方向,1为同向,-1为反向
+#define GYRO2GIMBAL_DIR_ROLL  1   // 陀螺仪方向与云台的roll的方向,1为同向,-1为反向
 
-#define FLAG_DEFAULT        0        // 默认状态
-#define RFID_SUPPLY_ZONE    (1 << 0) // 第一位:基地补给区RFID
-#define RFID_SUPPLY_OUTPOST (1 << 1) // 第二位:前哨站RFID
-#define STATUS_COMBATING    (1 << 2) // 第三位:脱战状态 脱战:1 非脱战:0
-#define TIME_GT_2MIN        (1 << 3) // 第四位:剩余时间是否大于2min
-#define ENERMY_RED          (1 << 4) // 第五位:敌人颜色 红:1 蓝:0
+#define FLAG_DEFAULT     0        // 默认状态
+#define RFID_SUPPLY_ZONE (1 << 0) // 第一位:基地补给区RFID
+#define RFID_FORTRESS    (1 << 1) // 第二位:堡垒区RFID
+#define STATUS_COMBATING (1 << 2) // 第三位:脱战状态 脱战:1 非脱战:0
+// #define TIME_GT_2MIN     (1 << 3) // 第四位:剩余时间是否大于2min
+#define ENERMY_RED       (1 << 3) // 第五位:敌人颜色 红:1 蓝:0
 
 // 云台是否需要经过某定位处和归零,只能选一个配置生效,其他的自动关闭
 // #if (defined(ONE_BOARD) && defined(CHASSIS_BOARD)) || \
@@ -139,6 +139,13 @@ typedef enum
 
 typedef enum
 {
+    SPEEDMODE_ABSOLUTE,
+    SPEEDMODE_NORMAL,
+    // CHASSIS_MAXSPEED,
+} speed_mode_e;
+
+typedef enum
+{
     FRICTION_OFF = 0, // 摩擦轮关闭
     FRICTION_ON,      // 摩擦轮开启
 } friction_mode_e;
@@ -187,10 +194,10 @@ typedef enum
 
 typedef enum
 {
-    STATE_NOPE      = 0,
-    STATE_ATTACKING = 2,
-    STATE_DEFENDING = 3,
-    STATE_MOVING    = 1,
+    STATE_NULL      = 0,
+    STATE_ATTACKING = 1,
+    STATE_DEFENDING = 2,
+    STATE_MOVING    = 3,
 
 } Sentry_State_e;
 
@@ -205,14 +212,15 @@ typedef struct { // 底盘功率
  *
  */
 // cmd命令的底盘控制命令,给chassis模块
-typedef struct {
+typedef __packed struct {
     // 运动参数
     float vx;           // 前后方向速度
     float vy;           // 左右方向速度
     float wz;           // 旋转速度
     float offset_angle; // 陀螺和底盘位置的角度
-    chassis_mode_e chassis_mode;
-    int chassis_speed_buff;
+    uint8_t chassis_mode : 4;
+    uint8_t sentry_state : 4;
+
 } Chassis_Ctrl_Cmd_s;
 
 // cmd命令的云台控制命令,给gimbal模块
@@ -269,10 +277,11 @@ typedef struct {
     // RFID_Status_e rfid_status;     // RFID状态
     Game_Progress_e game_progress; // 比赛进程状态
     uint16_t current_HP;           // 当前血量
-    uint16_t ally_base_HP;
+    uint16_t bullet_rest;
     uint16_t ally_outpost_HP;
     uint8_t status_flag; // 状态标志位,可以用来表示一些特殊状态,比如是否打击到敌人,是否进入补给区等
     uint16_t shooter_heat;
+    uint16_t remain_time;
 
 } Chassis_Upload_Data_s;
 
@@ -289,6 +298,7 @@ typedef struct {
     float aim_yaw;
     shoot_mode_e fire_advice;
     Vision_State_e vision_state;
+    // Sentry_State_e sentry_state;
 } Vision_Upload_Data_s;
 
 typedef struct {

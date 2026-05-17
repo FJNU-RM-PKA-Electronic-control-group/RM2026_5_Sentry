@@ -6,16 +6,16 @@
 #include "string.h"
 
 CANCommInstance *ins;
-static Subscriber_t *cmd_send_sub; // ÔÆÌ¨·´À¡ÐÅÏ¢¶©ÔÄÕß
-static Publisher_t *cmd_send_pub;  // ÓÃÓÚ·¢²¼µ×ÅÌµÄÊý¾Ý
-Chassis_Ctrl_Cmd_s cmd_send_data;  // ´ÓÔÆÌ¨»ñÈ¡µÄ·´À¡ÐÅÏ¢
-chassis_data_rev data_send;
+static Subscriber_t *cmd_send_sub; // ï¿½ï¿½Ì¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+static Publisher_t *cmd_send_pub;  // ï¿½ï¿½ï¿½Ú·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ìµï¿½ï¿½ï¿½ï¿½ï¿½
+Chassis_Ctrl_Cmd_s cmd_send_data;  // ï¿½ï¿½ï¿½ï¿½Ì¨ï¿½ï¿½È¡ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
+Chassis_Ctrl_Cmd_s data_send;
 Chassis_Upload_Data_s *chassis_can_fetch_data;
 
 void CmdRevInit(void) {
     CANComm_Init_Config_s cconfig = {
         .can_config    = {.can_handle = &hcan2, .tx_id = 0x22, .rx_id = 0x33},
-        .send_data_len = sizeof(chassis_data_rev),
+        .send_data_len = sizeof(Chassis_Ctrl_Cmd_s),
         .recv_data_len = sizeof(Chassis_Upload_Data_s)};
     ins          = CANCommInit(&cconfig);
     cmd_send_sub = SubRegister("chassis_cmd", sizeof(Chassis_Ctrl_Cmd_s));
@@ -30,6 +30,7 @@ void CmdRevTask(void) {
     data_send.wz           = cmd_send_data.wz;
     data_send.offset_angle = cmd_send_data.offset_angle;
     data_send.chassis_mode = cmd_send_data.chassis_mode;
+    data_send.sentry_state = cmd_send_data.sentry_state;
 
     CANCommSend(ins, (uint8_t *)&data_send);
     PubPushMessage(cmd_send_pub, chassis_can_fetch_data);

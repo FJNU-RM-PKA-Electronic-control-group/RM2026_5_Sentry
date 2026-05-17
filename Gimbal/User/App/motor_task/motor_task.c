@@ -8,11 +8,11 @@
 
 void MotorControlTask(void) {
     static uint8_t cnt = 0; // �趨��ͬ���������Ƶ��
-    // FeedForwardControl();
+    FeedForwardControl();
     DJIMotorControl();
     if (cnt % 2 == 0) { // 500hz
         DMMotorControl();
-        LKMotorControl();
+        // LKMotorControl();
     }
     //	if(cnt%10==0) //100hz
 

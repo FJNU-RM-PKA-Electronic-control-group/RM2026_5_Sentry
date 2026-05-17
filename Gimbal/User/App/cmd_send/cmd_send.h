@@ -4,16 +4,16 @@
 #include "robot_def.h"
 #include "stdint.h"
 
-
 #pragma pack(1)
-typedef struct {
-    float vx;           // Ç°½ø·½ÏòËÙ¶È
-    float vy;           // ºáÒÆ·½ÏòËÙ¶È
-    float wz;           // Ðý×ªËÙ¶È
-    float offset_angle; // µ×ÅÌºÍÕý·½ÏòÎ»ÖÃµÄ¼Ð½Ç
-    chassis_mode_e chassis_mode;
+// typedef struct {
+//     float vx;           // Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ù¶ï¿½
+//     float vy;           // ï¿½ï¿½ï¿½Æ·ï¿½ï¿½ï¿½ï¿½Ù¶ï¿½
+//     float wz;           // ï¿½ï¿½×ªï¿½Ù¶ï¿½
+//     float offset_angle; // ï¿½ï¿½ï¿½Ìºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ÃµÄ¼Ð½ï¿½
+//     chassis_mode_e chassis_mode;
+//     Sentry_State_e sentry_state;
 
-} chassis_data_rev;
+// } chassis_data_rev;
 #pragma pack()
 
 void CmdRevInit(void);

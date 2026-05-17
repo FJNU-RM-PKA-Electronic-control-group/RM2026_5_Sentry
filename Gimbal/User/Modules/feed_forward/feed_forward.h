@@ -1,55 +1,50 @@
 #ifndef __FEED_FORWARD_H
 #define __FEED_FORWARD_H
 
-#include "stdint.h"
-#include "string.h"
-#include "stdlib.h"
 #include "bsp_dwt.h"
+#include "stdint.h"
+#include "stdlib.h"
+#include "string.h"
 
-#define FF_CNT 2
+#define FF_CNT 3
 
-typedef struct
-{
-	float K1;
-	float K2;
-	float max_out;
-	float RC;
-	uint32_t DWT_CNT;
-	float dt;
-	
-	float *set_ptr;
-	float set;
-	float previous_set;
-	float pre_previous_set;
+typedef struct {
+    float
+        format_value; // ï¿½ï¿½Ñ­ï¿½ï¿½ï¿½Þ·ï¿½ï¿½Ä·ï¿½Î§ï¿½ï¿½0ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½=180ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½Þ·ï¿½ï¿½ï¿½-180ï¿½ï¿½180
+    float K1;
+    float K2;
+    float max_out;
+    float RC;
+    uint32_t DWT_CNT;
+    float dt;
 
-	float temp_out;
-	float last_out;
-	float final_out;
+    float *set_ptr;
+    float set;
+    float previous_set;
+    float pre_previous_set;
+
+    float temp_out;  // Î´ï¿½Ë²ï¿½ï¿½ï¿½out
+    float last_out;
+    float final_out; // ï¿½ï¿½ï¿½ï¿½ï¿½Ë²ï¿½ï¿½ï¿½out
+    float output;
 } FeedForwardInstance;
 
-typedef struct
-{
-	float K1;
-	float K2;
-	float max_out;
-	float RC;
-	float *set_ptr;
+typedef struct {
+    float
+        format_value; // ï¿½ï¿½Ñ­ï¿½ï¿½ï¿½Þ·ï¿½ï¿½Ä·ï¿½Î§ï¿½ï¿½0ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½=180ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½Þ·ï¿½ï¿½ï¿½-180ï¿½ï¿½180
+    float K1;
+    float K2;
+    float max_out;
+    float RC;
+    float *set_ptr;
 } FeedForward_Init_Config_s;
 
 /**
- * @brief ³õÊ¼»¯Ç°À¡ÊµÀý
- * @param config  	Ç°À¡ÅäÖÃÖ¸Õë
- * @return float  	Ç°À¡ÊµÀýÖ¸Õë
+ * @brief ï¿½ï¿½Ê¼ï¿½ï¿½Ç°ï¿½ï¿½Êµï¿½ï¿½
+ * @param config  	Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½
+ * @return float  	Ç°ï¿½ï¿½Êµï¿½ï¿½Ö¸ï¿½ï¿½
  */
 FeedForwardInstance *FeedForwardInit(FeedForward_Init_Config_s *config);
-
-/**
- * @brief ¼ÆËãÇ°À¡Êä³ö
- * @param FF	  Ç°À¡ÊµÀýÖ¸Õë
- * @param set     Éè¶¨Öµ
- * @return float  PID¼ÆËãÊä³ö
- */
-float FeedForwardCacl(FeedForwardInstance *FF);
 
 void FeedForwardSetRef(FeedForwardInstance *FF, float *ref);
 

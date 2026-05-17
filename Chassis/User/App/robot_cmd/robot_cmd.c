@@ -87,7 +87,8 @@ static Publisher_t *chassis_cmd_pub;   // 底盘控制信息发布器
 static Publisher_t *chassis_feed_pub;
 static Subscriber_t *chassis_feed_sub; // 底盘反馈信息订阅器
 static Publisher_t *referee_info_pub;
-Chassis_Ctrl_Cmd_s chassis_cmd_send;   // 发送给底盘应用的控制信息,储存底层信息和UI信息
+static Subscriber_t *chassis_cmd_sub;
+Chassis_Ctrl_Cmd_s chassis_cmd_send; // 发送给底盘应用的控制信息,储存底层信息和UI信息
 Chassis_Upload_Data_s
     chassis_fetch_data; // 从底盘应用获取的反馈信息,信息,底盘电流,冷却液温度,摩擦轮转速等
 Referee_Ctrl_Cmd_s referee_chassis_send;
@@ -268,13 +269,14 @@ void RobotCmdInit(void) {
     robotarm_cmd_pub  = PubRegister("robotarm_cmd", sizeof(Robotarm_Ctrl_Cmd_s));
     robotarm_feed_sub = SubRegister("robotarm_feed", sizeof(Robotarm_Upload_Data_s));
     chassis_cmd_pub   = PubRegister("chassis_cmd", sizeof(Chassis_Ctrl_Cmd_s));
+    chassis_cmd_sub   = SubRegister("chassis_cmd", sizeof(Chassis_Ctrl_Cmd_s));
     chassis_feed_sub  = SubRegister("chassis_feed", sizeof(Chassis_Upload_Data_s));
     referee_info_pub  = PubRegister("referee_info", sizeof(Referee_Ctrl_Cmd_s));
 
     chassis_feed_pub           = PubRegister("chassis_feed", sizeof(Chassis_Upload_Data_s));
     robotarm_cmd_send.imu_data = ins_data;
     Vision_message             = USB_RxBufferRegister();
-    referee_info               = RefereeTaskInit(&huart8);
+    referee_info               = RefereeTaskInit(&huart6);
     // robotarm_cmd_send.customdate = customdate;
 
     //	gimbal_cmd_send.pitch = 0;		���ò���������
@@ -290,23 +292,23 @@ void RefereeDataTransmit(void) {
     chassis_fetch_data.current_HP      = referee_info->GameRobotState.current_HP;
     chassis_fetch_data.game_progress   = (Game_Progress_e)referee_info->GameState.game_progress;
     chassis_fetch_data.shooter_heat    = referee_info->PowerHeatData.shooter_17mm_barrel_heat;
-    chassis_fetch_data.ally_base_HP    = referee_info->GameRobotHP.ally_base_HP;
+    chassis_fetch_data.bullet_rest =
+        referee_info->ProjectileAllowance.remaining_permissible_17mm_bullet;
     chassis_fetch_data.ally_outpost_HP = referee_info->GameRobotHP.ally_outpost_HP;
+    chassis_fetch_data.remain_time     = referee_info->GameState.stage_remain_time;
     uint8_t communicate_flags          = FLAG_DEFAULT;
-    if ((referee_info->RFIDStatus.rfid_status >> 18) & 0x01) {
-        communicate_flags |= RFID_SUPPLY_OUTPOST;
+    if ((referee_info->RFIDStatus.rfid_status >> 17) & 0x01) {
+        communicate_flags |= RFID_FORTRESS;
     }
-    if (((referee_info->RFIDStatus.rfid_status >> 20) & 0x01) &&
+    if (((referee_info->RFIDStatus.rfid_status >> 20) & 0x01) ||
         ((referee_info->RFIDStatus.rfid_status >> 19) & 0x01)) {
         communicate_flags |= RFID_SUPPLY_ZONE;
     }
-    if (referee_info->GameState.stage_remain_time >= 120) {
-        communicate_flags |= TIME_GT_2MIN;
-    }
-    if ((referee_info->SentryInfo.sentry_info_2) & 0x01) {
+    if (!((referee_info->SentryInfo.sentry_info_2) & 0x01)) {
         communicate_flags |= STATUS_COMBATING;
     }
     chassis_fetch_data.status_flag = communicate_flags;
+    SentrySetState(chassis_cmd_send.sentry_state);
 
     // 以下是联盟赛协议
     //  if ((referee_info->RFIDStatus.rfid_status >> 19) & 0x01) {
@@ -329,7 +331,7 @@ void RobotCMDTask(void) {
     // ������Ӧ�û�ȡ�ش�����
     SubGetMessage(chassis_feed_sub, &chassis_fetch_data);
     SubGetMessage(robotarm_feed_sub, &robotarm_fetch_data);
-
+    SubGetMessage(chassis_cmd_sub, &chassis_cmd_send);
     // ����gimbal�ķ���ֵ������̨�͵���������ļн�,����Ҫ����,ͨ��static˽�б������
     // ���޸ģ����������У׼����������
     CalcOffsetAngle();

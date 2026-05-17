@@ -56,8 +56,8 @@ void OSTaskInit(void) {
     osThreadDef(robottask, StartROBOTTASK, osPriorityNormal, 0, 1024);
     robotTaskHandle = osThreadCreate(osThread(robottask), NULL);
 
-    //     osThreadDef(uitask, StartUITASK, osPriorityNormal, 0, 512);
-    //     uiTaskHandle = osThreadCreate(osThread(uitask), NULL);
+    osThreadDef(uitask, StartUITASK, osPriorityNormal, 0, 512);
+    uiTaskHandle = osThreadCreate(osThread(uitask), NULL);
 }
 
 /**
@@ -133,12 +133,11 @@ __attribute__((noreturn)) void StartROBOTTASK(void const *argument) {
 }
 
 __attribute__((noreturn)) void StartUITASK(void const *argument) {
-    // MyUIInit();
+    SentryCMDInit();
     for (;;) {
         // ÿ������ϵͳ����һ�����ݻ����һ��?,���UITask������refereeSend()
-        UITask();
-        osDelay(
-            1); // ��ʹû���κ�UI��Ҫˢ��,Ҳ����һ��,��ֹ����UITask���޷��л�
+        SentryCMDTask();
+        osDelay(5);
     }
 }
 

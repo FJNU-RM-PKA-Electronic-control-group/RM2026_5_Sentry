@@ -104,7 +104,7 @@ void ChassisInit(void) {
             {
                 .speed_PID =
                     {
-                        .Kp            = 4.5,  // 4.5
+                        .Kp            = 6.5,  // 4.5
                         .Ki            = 0,    // 0
                         .Kd            = 0.01, // 0
                         .IntegralLimit = 3000,
@@ -408,7 +408,7 @@ void ChassisInit(void) {
 
     // 发布订阅初始化,如果为双板,则需要can comm来传递消息
     chassis_sub         = SubRegister("chassis_cmd", sizeof(Chassis_Ctrl_Cmd_s));
-    referee_chassis_sub = SubRegister("referee_chassis", sizeof(Referee_Ctrl_Cmd_s));
+    referee_chassis_sub = SubRegister("referee_info", sizeof(Referee_Ctrl_Cmd_s));
     chassis_pub         = PubRegister("chassis_feed", sizeof(Chassis_Upload_Data_s));
 }
 
@@ -550,7 +550,7 @@ static void LimitChassisOutput(void) {
     // 功率限制待添加
     // referee_data->PowerHeatData.chassis_power;
     // referee_data->PowerHeatData.chassis_power_buffer;
-    ChassisMaxPowerSet(power_ctrl, 100.0f);
+    ChassisMaxPowerSet(power_ctrl, referee_chassis_recv.power_limit);
     // 完成功率限制后进行电机参考输入设定
     DJIMotorSetRef(speed_motor[LF], vt[LF]);
     DJIMotorSetRef(speed_motor[RF], vt[RF]);

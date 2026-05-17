@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<JScopeProject>
+    <FileVersion major="1" minor="1" />
+    <Project>
+        <Configuration>
+            <JLink>
+                <Options Connection="1" IsRTTSession="0" IsRTTWithTimeStamp="0" IsRTTPlus="0" SamplingPeriod="100" SerialNo="0" JTAG_IRPre="0" JTAG_DRPre="0" IP="" TargetDevice="STM32F407IG" TargetInterface="SWD" InterfaceSpeed="4000" />
+            </JLink>
+            <ElfFile Name="D:\HalProject\RM2026_5_Sentry\Gimbal\MDK-ARM\Hero\Hero.axf" />
+            <Scope>
+                <Options TimeResolutionUs="1000000" />
+            </Scope>
+            <Trigger>
+                <Options Level="0" Symbol="Measure" On="0" Auto="0" Rise="0" Fall="0" />
+            </Trigger>
+        </Configuration>
+        <Windows>
+            <Graph Show="1" />
+            <Watch Show="1" />
+        </Windows>
+        <SelectedSymbols>
+            <Symbol>
+                <Options Name="Measure" Address="0x20009964" Type="float" TypeID="1" Size="4" GraphColorRed="255" GraphColorGreen="0" GraphColorBlue="0" YMinSampled="-0.356447" YMaxSampled="0.336268" YAvgSampled="0.00209133" Offset="4" ShowInGraph="1" YOffset="0" IsAutoConfig="0" YResolution="1" MaxValue="-2147483648" File="d:\HalProject\RM2026_5_Sentry\Gimbal\MDK-ARM/../User/Modules/algorithm/controller.h" DrawStyle="0" NameWithParents=".DEBUG_pitch_motor.motor_controller.angle_PID.Measure" />
+            </Symbol>
+            <Symbol>
+                <Options Name="Ref" Address="0x20009994" Type="float" TypeID="1" Size="4" GraphColorRed="0" GraphColorGreen="0" GraphColorBlue="255" YMinSampled="-0.341513" YMaxSampled="0.0627499" YAvgSampled="-0.00817234" Offset="8" ShowInGraph="1" YOffset="0" IsAutoConfig="0" YResolution="1" MaxValue="-2147483648" File="d:\HalProject\RM2026_5_Sentry\Gimbal\MDK-ARM/../User/Modules/algorithm/controller.h" DrawStyle="0" NameWithParents=".DEBUG_pitch_motor.motor_controller.angle_PID.Ref" />
+            </Symbol>
+            <Symbol>
+                <Options Name="DEBUG_IMU_yaw" Address="0x2000070C" Type="float" TypeID="1" Size="4" GraphColorRed="0" GraphColorGreen="255" GraphColorBlue="0" YMinSampled="-2.00006" YMaxSampled="26.2209" YAvgSampled="9.47422" Offset="12" ShowInGraph="1" YOffset="0" IsAutoConfig="0" YResolution="50" MaxValue="-2147483648" File="d:\HalProject\RM2026_5_Sentry\Gimbal\MDK-ARM/..\User\App\gimbal\gimbal.c" DrawStyle="0" NameWithParents=".DEBUG_IMU_yaw" />
+            </Symbol>
+            <Symbol>
+                <Options Name="yaw" Address="0x20009D7C" Type="float" TypeID="1" Size="4" GraphColorRed="255" GraphColorGreen="255" GraphColorBlue="0" YMinSampled="-0.994687" YMaxSampled="26.138" YAvgSampled="10.433" Offset="16" ShowInGraph="1" YOffset="0" IsAutoConfig="0" YResolution="50" MaxValue="-2147483648" File="d:\HalProject\RM2026_5_Sentry\Gimbal\MDK-ARM/../User/App/robot/robot_def.h" DrawStyle="0" NameWithParents=".gimbal_cmd_recv.yaw" />
+            </Symbol>
+        </SelectedSymbols>
+    </Project>
+</JScopeProject>

@@ -41,14 +41,14 @@
 #define SQRT2 1.4142135623730950488016887242097
 #define SIN45 SQRT2 / 2
 
-#define FLAG_DEFAULT        0        // 默认状态
-#define RFID_SUPPLY_ZONE    (1 << 0) // 第一位:基地补给区RFID
-#define RFID_SUPPLY_OUTPOST (1 << 1) // 第二位:前哨站RFID
-#define STATUS_COMBATING    (1 << 2) // 第三位:脱战状态 脱战:1 非脱战:0
-#define TIME_GT_2MIN        (1 << 3) // 第四位:剩余时间是否大于2min
-#define ENERMY_RED          (1 << 4) // 第五位:敌人颜色 红:1 蓝:0
+#define FLAG_DEFAULT     0        // 默认状态
+#define RFID_SUPPLY_ZONE (1 << 0) // 第一位:基地补给区RFID
+#define RFID_FORTRESS    (1 << 1) // 第二位:堡垒区RFID
+#define STATUS_COMBATING (1 << 2) // 第三位:脱战状态 脱战:1 非脱战:0
+// #define TIME_GT_2MIN     (1 << 3) // 第四位:剩余时间是否大于2min
+#define ENERMY_RED       (1 << 3) // 第五位:敌人颜色 红:1 蓝:0
 
-#pragma pack(1)                      // 压缩结构体,取消字节对齐,下面的数据都可能被传输
+#pragma pack(1)                   // 压缩结构体,取消字节对齐,下面的数据都可能被传输
 
 /* -------------------------基本控制模式和数据类型定义-------------------------*/
 /**
@@ -125,7 +125,7 @@ typedef enum
 
 typedef enum
 {
-    STATE_NOPE      = 0,
+    STATE_NULL      = 0,
     STATE_ATTACKING = 1,
     STATE_DEFENDING = 2,
     STATE_MOVING    = 3,
@@ -150,15 +150,13 @@ typedef struct {
  */
 // cmd发布的底盘控制数据,由chassis订阅
 typedef __packed struct {
-    // 控制部分
-    float vx;           // 前进方向速度, mm/s
-    float vy;           // 横移方向速度, mm/s
-    float wz;           // 旋转速度, rad/s
-    float offset_angle; // 底盘和正方向位置的夹角
-    chassis_mode_e chassis_mode;
-    int chassis_speed_buff;
-    // UI部分
-    //  ...
+    // 运动参数
+    float vx;           // 前后方向速度
+    float vy;           // 左右方向速度
+    float wz;           // 旋转速度
+    float offset_angle; // 陀螺和底盘位置的角度
+    uint8_t chassis_mode : 4;
+    uint8_t sentry_state : 4;
 
 } Chassis_Ctrl_Cmd_s;
 
@@ -199,10 +197,11 @@ typedef struct {
     // RFID_Status_e rfid_status;     // RFID状态
     Game_Progress_e game_progress; // 比赛进程状态
     uint16_t current_HP;           // 当前血量
-    uint16_t ally_base_HP;
+    uint16_t bullet_rest;
     uint16_t ally_outpost_HP;
     uint8_t status_flag; // 状态标志位,可以用来表示一些特殊状态,比如是否打击到敌人,是否进入补给区等
     uint16_t shooter_heat;
+    uint16_t remain_time;
 
 } Chassis_Upload_Data_s;
 

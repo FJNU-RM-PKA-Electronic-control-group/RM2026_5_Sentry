@@ -37,25 +37,22 @@ typedef __packed struct {
 } xPC_Data;
 
 typedef __packed struct {
-    uint8_t header;
-    // �Ӿ�
-    uint8_t mode;
-    float roll;
-    float pitch;
-    float yaw;
-    // ����
-    float offset;
-    uint16_t game_progress;
-    bool rfid_supply_zone;
-    uint16_t current_HP;
-    uint16_t ally_base_HP;
-    uint16_t ally_outpost_HP;
-    bool is_combating;
-    bool rfid_supply_outpost;
-    bool time_gt_2min;
-    // uint8_t NC[1]; // ռλ��
-    uint8_t check_bit;
-    uint8_t tail_byte;
+    uint8_t header;           // 0      帧头 0xFF
+    uint8_t mode;             // 1      瞄准颜色
+    float roll;               // 2-5    roll
+    float pitch;              // 6-10   pitch
+    float yaw;                // 10-13  yaw
+    float offset;             // 14-17  大yaw正方向与IMU上电时的夹角
+    uint16_t game_progress;   // 18-19  比赛阶段
+    uint16_t current_HP;      // 20-21  当前血量
+    uint16_t bullet_rest;     // 22-23  剩余发弹量
+    bool is_combating;        // 24     脱战状态，脱战置1
+    bool rfid_fortress;       // 25     堡垒RFID
+    bool rfid_supply;         // 26     基地补给区RFID
+    uint16_t ally_outpost_HP; // 27-28  己方前哨站血量
+    uint8_t NC[1];            // 29     保留位
+    uint8_t check_bit;        // 30     校验位，置0
+    uint8_t tail_byte;        // 31     帧尾 0x0D
 
 } TxPC_Data;
 

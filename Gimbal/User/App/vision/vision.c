@@ -41,23 +41,25 @@ void vision_sendmessage(aim_mod_e mode, float roll, float pitch, float yaw) {
     uint16_t current_HP    = chassis_recv.current_HP;
     uint16_t game_progress = (uint16_t)chassis_recv.game_progress;
     uint8_t status_flag    = chassis_recv.status_flag;
+    uint16_t bullet_rest   = chassis_recv.bullet_rest;
 
-    Data_Tx.header              = COM6_PACKAGE_HEADER;
-    Data_Tx.mode                = (uint8_t)mode;
-    Data_Tx.roll                = roll;
-    Data_Tx.pitch               = pitch;
-    Data_Tx.yaw                 = yaw;
-    Data_Tx.offset              = yaw_offset;
-    Data_Tx.game_progress       = game_progress;
-    Data_Tx.rfid_supply_zone    = status_flag & RFID_SUPPLY_ZONE;
-    Data_Tx.current_HP          = current_HP;
-    Data_Tx.ally_base_HP        = chassis_recv.ally_base_HP;
-    Data_Tx.ally_outpost_HP     = chassis_recv.ally_outpost_HP;
-    Data_Tx.is_combating        = status_flag & STATUS_COMBATING;
-    Data_Tx.rfid_supply_outpost = status_flag & RFID_SUPPLY_OUTPOST;
-    Data_Tx.time_gt_2min        = status_flag & TIME_GT_2MIN;
-    Data_Tx.check_bit           = 0; // 校验位
-    Data_Tx.tail_byte           = COM6_PACKAGE_TAIL_BYTE;
+    Data_Tx.header = COM6_PACKAGE_HEADER;
+    Data_Tx.mode   = (uint8_t)mode;
+
+    Data_Tx.roll            = roll;
+    Data_Tx.pitch           = pitch;
+    Data_Tx.yaw             = yaw;
+    Data_Tx.offset          = yaw_offset;
+    Data_Tx.game_progress   = game_progress;
+    Data_Tx.current_HP      = current_HP;
+    Data_Tx.bullet_rest     = bullet_rest;
+    Data_Tx.is_combating    = status_flag & STATUS_COMBATING;
+    Data_Tx.rfid_fortress   = status_flag & RFID_FORTRESS;
+    Data_Tx.rfid_supply     = status_flag & RFID_SUPPLY_ZONE;
+    Data_Tx.ally_outpost_HP = chassis_recv.ally_outpost_HP;
+
+    Data_Tx.check_bit = 0; // 校验位
+    Data_Tx.tail_byte = COM6_PACKAGE_TAIL_BYTE;
 
     // message[0] = COM6_PACKAGE_HEADER;
     // message[1] = mode;
@@ -113,7 +115,11 @@ void VisionTask(float roll, float pitch, float yaw) {
     guidence_feedback_data.vx      = -1000 * Data_PC.linear_y;
     guidence_feedback_data.vy      = 1000 * Data_PC.linear_x;
     guidence_feedback_data.wz      = Data_PC.angular_z;
-    guidence_feedback_data.state   = Data_PC.state;
+    if (Data_PC.state == STATE_NULL)
+        guidence_feedback_data.state = STATE_MOVING;
+    else
+        guidence_feedback_data.state = Data_PC.state;
+
     if (Data_PC.fire_advice == 1)
         vision_feedback_data.fire_advice = SHOOT_ON;
     else

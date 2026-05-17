@@ -5,13 +5,13 @@
 #include "stdint.h"
 
 #pragma pack(1)
-typedef __packed struct {
-    float vx;           // 前进方向速度
-    float vy;           // 横移方向速度
-    float wz;           // 旋转速度
-    float offset_angle; // 底盘和正方向位置的夹角
-    chassis_mode_e chassis_mode;
-} chassis_data_rev;
+// typedef __packed struct {
+//     float vx;           // 前锟斤拷锟斤拷锟斤拷锟劫讹拷
+//     float vy;           // 锟斤拷锟狡凤拷锟斤拷锟劫讹拷
+//     float wz;           // 锟斤拷转锟劫讹拷
+//     float offset_angle; // 锟斤拷锟教猴拷锟斤拷锟斤拷锟斤拷位锟矫的夹斤拷
+//     chassis_mode_e chassis_mode;
+// } chassis_data_rev;
 
 #pragma pack()
 

@@ -23,7 +23,8 @@ DMMotorInstance *pitch_motor;
 DMMotorInstance *yaw1_motor;
 DJIMotorInstance *yaw2_motor;
 FeedForwardInstance *pitch_ff;
-FeedForwardInstance *yaw_ff;
+FeedForwardInstance *yaw_current_ff;
+FeedForwardInstance *yaw_speed_ff;
 
 FeedForwardInstance DEBUG_pitch_ff;
 DMMotorInstance DEBUG_pitch_motor;
@@ -46,13 +47,21 @@ void GimbalInit(void) {
     IMU_data_rad = GetInsData(); // IMU先初始化,获取姿态数�?指针赋给yaw电机的其他数�?来源
     DM_IMU_data  = GetIMUData();
     // YAW
-    FeedForward_Init_Config_s yaw_ff_config = {
-        .K1      = -0,
-        .K2      = 0,
-        .RC      = 0.05,
-        .max_out = 1000,
+    FeedForward_Init_Config_s yaw_speed_ff_config = {
+        .format_value = PI,
+        .K1           = 0.0139062498f,  // 0.01
+        .K2           = 0.0f,
+        .RC           = 7.00000019e-05, // 4.99999987e-05
+        .max_out      = 5.0f,
     };
-    yaw_ff                          = FeedForwardInit(&yaw_ff_config);
+    yaw_speed_ff                                    = FeedForwardInit(&yaw_speed_ff_config);
+    FeedForward_Init_Config_s yaw_current_ff_config = {
+        .K1      = -7500.0f,        // 0
+        .K2      = 0.0f,
+        .RC      = 2.14999964e-07f, // 4.99999987e-05
+        .max_out = 3000.0f,
+    };
+    yaw_current_ff                  = FeedForwardInit(&yaw_current_ff_config);
     Motor_Init_Config_s yaw2_config = {
         .can_init_config =
             {
@@ -62,44 +71,46 @@ void GimbalInit(void) {
             },
         .controller_param_init_config =
             {
-                .angle_PID = {.Kp = 40.0f,
-                              .Ki = 25.0f,
-                              .Kd = 0.0f,
+                .angle_PID = {.Kp = 0.7f,
+                              .Ki = 0.0f,
+                              .Kd = 0.003f,
                               .Improve =
                                   (PID_Improvement_e)(PID_Trapezoid_Intergral | PID_Integral_Limit |
                                                       PID_Derivative_On_Measurement |
                                                       PID_DerivativeFilter),
-                              .CoefA             = 0.01,
-                              .CoefB             = 0.1,
-                              .MaxOut            = 150.0f,
+                              .CoefA             = 0.01f,
+                              .CoefB             = 0.1f,
+                              .MaxOut            = 10.0f,
                               .IntegralLimit     = 33.0f,
                               .Derivative_LPF_RC = 0.1f},
                 .speed_PID =
                     {
-                        .Kp = 150.0f, //
-                        .Ki = 10.0f,  //
-                        .Kd = 150.0f,
+                        .Kp = 10000.0f, //
+                        .Ki = 25000.0f, //
+                        .Kd = 0.0f,
                         .Improve =
                             (PID_Improvement_e)(PID_Trapezoid_Intergral | PID_Integral_Limit |
                                                 PID_Derivative_On_Measurement |
                                                 PID_DerivativeFilter),
-                        .IntegralLimit     = 3000,
-                        .MaxOut            = 15000,
+                        .IntegralLimit     = 15000.0f,
+                        .MaxOut            = 22000.0f,
                         .Derivative_LPF_RC = 0.05f,
                     },
                 .other_angle_feedback_ptr = &IMU_data_rad->Yaw,
                 .other_speed_feedback_ptr = &IMU_data_rad->Gyro[2],
+                .speed_feedforward_ptr    = &yaw_speed_ff->final_out,
+                .current_feedforward_ptr  = &yaw_current_ff->final_out,
                 .angle_zero_point_offset  = YAW2_ZEROPOINT_ECD,
             },
         .controller_setting_init_config =
             {
                 .angle_feedback_source = OTHER_FEED,
                 .speed_feedback_source = OTHER_FEED,
-                //.feedforward_flag      = SPEED_FEEDFORWARD,
-                .outer_loop_type       = ANGLE_LOOP,
-                .close_loop_type       = (Closeloop_Type_e)(ANGLE_LOOP | SPEED_LOOP),
-                .motor_reverse_flag    = MOTOR_DIRECTION_NORMAL,
-                .pid_mode              = MOTOR_PID_SINGLELOOP,
+                .feedforward_flag   = (Feedfoward_Type_e)(SPEED_FEEDFORWARD | CURRENT_FEEDFORWARD),
+                .outer_loop_type    = ANGLE_LOOP,
+                .close_loop_type    = (Closeloop_Type_e)(ANGLE_LOOP | SPEED_LOOP),
+                .motor_reverse_flag = MOTOR_DIRECTION_NORMAL,
+                .pid_mode           = MOTOR_PID_SINGLELOOP,
                 .angle_rad_format_flag = FORMAT_ENABLE,
             },
         .motor_type = GM6020,
@@ -120,14 +131,14 @@ void GimbalInit(void) {
                         .Kp       = 10.0f, // 8
                         .Ki       = 0.0f,
                         .Kd       = 0.7f,
-                        .DeadBand = 0.0,
+                        .DeadBand = 0.0f,
                         .Improve =
                             (PID_Improvement_e)(PID_Trapezoid_Intergral | PID_Integral_Limit |
                                                 PID_Derivative_On_Measurement |
                                                 PID_DerivativeFilter | PID_ChangingIntegrationRate),
-                        .CoefA             = 0.01,
-                        .CoefB             = 0.1,
-                        .IntegralLimit     = 50,
+                        .CoefA             = 0.01f,
+                        .CoefB             = 0.1f,
+                        .IntegralLimit     = 50.0f,
                         .MaxOut            = 75.0F,
                         .Derivative_LPF_RC = 0.01f,
                     },
@@ -142,13 +153,12 @@ void GimbalInit(void) {
                                                 PID_DerivativeFilter),
                         .IntegralLimit = 1.0f,
                         .MaxOut        = 9.0f,
-                        .Output_LPF_RC = 0.1,
+                        .Output_LPF_RC = 0.1f,
                     },
                 .yaw2_motor = (void *)yaw2_motor,
                 // 还需要�?�加角速度额�?�反馈指�?,注意方向,ins_task.md�?有c板的bodyframe坐标系�?�明
                 .other_angle_feedback_ptr = &DM_IMU_data->yaw,
                 .other_speed_feedback_ptr = &DM_IMU_data->gyro[2],
-                .speed_feedforward_ptr    = &yaw_ff->final_out,
                 .angle_zero_point_offset  = YAW1_ZEROPOINT_ECD,
             },
         .controller_setting_init_config =
@@ -167,10 +177,10 @@ void GimbalInit(void) {
     yaw1_motor = DMMotorInit(&yaw1_config);
     // PITCH
     FeedForward_Init_Config_s pitch_ff_config = {
-        .K1      = 30,
-        .K2      = 0,
-        .RC      = 0.05,
-        .max_out = 400,
+        .K1      = -0.775f,
+        .K2      = 0.0f,
+        .RC      = 7.00000019e-05f,
+        .max_out = 1.0f,
     };
     pitch_ff                         = FeedForwardInit(&pitch_ff_config);
     Motor_Init_Config_s pitch_config = {
@@ -179,30 +189,30 @@ void GimbalInit(void) {
             {
                 .angle_PID =
                     {
-                        .Kp = 10.5f,  // 20
-                        .Ki = 1.0,    // 17
-                        .Kd = 0.005f, // 2
+                        .Kp = 30.0f,  // 20
+                        .Ki = 20.0f,  // 17
+                        .Kd = 0.001f, // 2
                         .Improve =
                             (PID_Improvement_e)(PID_Trapezoid_Intergral | PID_Integral_Limit |
                                                 PID_Derivative_On_Measurement |
                                                 PID_ChangingIntegrationRate),
-                        .CoefA             = 0.01,
-                        .CoefB             = 0.1,
-                        .IntegralLimit     = 50,
-                        .MaxOut            = 400,
-                        .Derivative_LPF_RC = 0.01,
+                        .CoefA             = 0.01f,
+                        .CoefB             = 0.1f,
+                        .IntegralLimit     = 4.0f,
+                        .MaxOut            = 5.0f,
+                        .Derivative_LPF_RC = 0.01f,
                     },
                 .speed_PID =
                     {
-                        .Kp = 1.2f,  // 150
+                        .Kp = 1.4f,  // 150
                         .Ki = 10.0f, // 30
-                        .Kd = 0.007, // 3
+                        .Kd = 0.01f, // 3
                         .Improve =
                             (PID_Improvement_e)(PID_Trapezoid_Intergral | PID_Integral_Limit |
                                                 PID_Derivative_On_Measurement | PID_OutputFilter),
-                        .Output_LPF_RC = 0.008,
-                        .IntegralLimit = 0.15,
-                        .MaxOut        = 3,
+                        .Output_LPF_RC = 0.008f,
+                        .IntegralLimit = 1.0f,
+                        .MaxOut        = 18.0f,
                     },
                 .other_angle_feedback_ptr = &IMU_data_rad->Pitch,
                 // 还需要�?�加角速度额�?�反馈指�?,注意方向,ins_task.md�?有c板的bodyframe坐标系�?�明
@@ -228,7 +238,8 @@ void GimbalInit(void) {
     // 电机对total_angle�?�?,上电时为�?,会保持静�?,收到遥控器数�?再动
 
     FeedForwardSetRef(pitch_ff, &pitch_motor->motor_controller.pid_ref);
-    // FeedForwardSetRef(yaw_ff, &yaw_motor->motor_controller.pid_ref);
+    FeedForwardSetRef(yaw_speed_ff, &yaw2_motor->motor_controller.pid_ref);
+    FeedForwardSetRef(yaw_current_ff, &yaw2_motor->motor_controller.speed_PID.Ref);
 
     gimbal_pub = PubRegister("gimbal_feed", sizeof(Gimbal_Upload_Data_s));
     gimbal_sub = SubRegister("gimbal_cmd", sizeof(Gimbal_Ctrl_Cmd_s));

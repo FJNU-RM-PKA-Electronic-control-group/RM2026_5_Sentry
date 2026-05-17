@@ -50,6 +50,7 @@ typedef struct {
     uint8_t changed_flag;
     uint8_t bullet_reqed_flag;
     uint8_t supply_reqed_flag;
+    Sentry_State_e target_state;
 } Local_Cmd_t; // 哨兵自主决策命令小包
 
 typedef struct {

@@ -32,11 +32,11 @@ void RobotInit(void) {
 }
 
 void RobotTask(void) {
-    static uint8_t cnt = 0; // 设定不同任务频率(控制负载)
+    static uint8_t cnt = 0; // 锟借定锟斤拷同锟斤拷锟斤拷频锟斤拷(锟斤拷锟狡革拷锟斤拷)
     RobotCMDTask();
     GimbalTask();
     ShootTask();
-    if (cnt % 5 == 0) {
+    if (cnt % 10 == 0) {
         CmdRevTask();
         cnt = 0;
     }

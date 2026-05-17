@@ -6,7 +6,7 @@
 #include "motor_def.h"
 #include <stdint.h>
 
-#define DM_MOTOR_CNT 1
+#define DM_MOTOR_CNT 2
 
 #define DM_P_MIN (-3.1415926f)
 #define DM_P_MAX 3.1415926f

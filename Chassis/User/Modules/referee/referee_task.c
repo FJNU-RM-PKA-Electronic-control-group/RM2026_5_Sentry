@@ -51,11 +51,8 @@ referee_info_t *RefereeTaskInit(UART_HandleTypeDef *referee_usart_handle) {
     return referee_recv_info;
 }
 
-void UITask() {
-    //    RobotModeTest(Interactive_data); //
-    //    测试用函数，实现模式自动变化,用于检查该任务和裁判系统是否连接正常
-    // if (referee_recv_info->GameState.game_progress == 3) // 五秒倒计时时重新刷新ui
-    // MyUIRefresh(referee_recv_info, Interactive_data);
+void SentryCMDTask() {
+    SentryUpdateCheck(); // 哨兵命令更新检查，更新target_cmd
 }
 
 static Graph_Data_t UI_shoot_line[10]; // 射击准线
@@ -348,6 +345,8 @@ void SentryCMDInit() {
     while (referee_recv_info->init_flag == 0)
         ; // 等待裁判系统初始化完成
     memset(&target_cmd, 0, sizeof(Local_Cmd_t));
+    DeterminRobotID();
+    target_cmd.target_state = STATE_MOVING;
 }
 
 Sentry_State_e SentryGetState() {
@@ -359,15 +358,11 @@ Sentry_State_e SentryGetState() {
 void SentryRevive(bool confirm) {
     target_cmd.sentry_cmd.revive_confirm = confirm;
     target_cmd.changed_flag              = 1.0f;
-    if (referee_recv_info->GameRobotState.current_HP == 0)
-        target_cmd.deadflag = 1;
 }
 
 void SentrybuyRevive(bool confirm) {
     target_cmd.sentry_cmd.buy_revive_confirm = confirm;
     target_cmd.changed_flag                  = 1.0f;
-    if (referee_recv_info->GameRobotState.current_HP == 0)
-        target_cmd.deadflag = 1;
 }
 
 void SentrySetState(Sentry_State_e state) {
@@ -375,6 +370,7 @@ void SentrySetState(Sentry_State_e state) {
         target_cmd.sentry_cmd.sentry_state = (uint32_t)state;
         target_cmd.changed_flag            = 1;
     }
+    target_cmd.target_state = state;
 }
 
 void SentryBuyBullet(uint8_t count) {
@@ -392,7 +388,29 @@ void SentryRemoteSupply() {
     }
 }
 
-void SentryUpdateCheck() {}
+void SentryUpdateCheck() {
+    if ((referee_recv_info->SentryInfo.sentry_info >> 19) & 0x01) {
+        target_cmd.deadflag = 1;
+        SentryRevive(1);
+    }
+    else if (((referee_recv_info->SentryInfo.sentry_info >> 19) & 0x01) &&
+             target_cmd.deadflag == 1) {
+        target_cmd.deadflag = 0;
+        SentryRevive(0); // 取消复活请求状态
+    }
+    if (SentryGetState() != target_cmd.target_state) {
+        target_cmd.changed_flag = 1;
+    }
+
+    if ((target_cmd.bullet_reqed_flag == 1) || (target_cmd.supply_reqed_flag == 1) ||
+        (target_cmd.deadflag == 1) || (target_cmd.changed_flag == 1)) {
+        SentryRefreshCommand(target_cmd.sentry_cmd);
+        target_cmd.bullet_reqed_flag = 0;
+        target_cmd.supply_reqed_flag = 0;
+        target_cmd.deadflag          = 0;
+        target_cmd.changed_flag      = 0;
+    }
+}
 
 void SentryRefreshCommand(Sentry_Cmd_t sentry_cmd) {
 
@@ -420,5 +438,6 @@ void SentryRefreshCommand(Sentry_Cmd_t sentry_cmd) {
                 LEN_HEADER + LEN_CMDID + temp_datalength + LEN_TAIL); // 发送
 
     UI_Seq++;                                                         // 包序号+1
-    osDelay(50);
+
+    osDelay(40);
 }

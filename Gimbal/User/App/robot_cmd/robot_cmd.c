@@ -7,6 +7,7 @@
 // module
 #include "INS_task.h"
 #include "dji_motor.h"
+#include "dm_imu.h"
 #include "fliter.h"
 #include "message_center.h"
 #include "remote_control.h"
@@ -29,6 +30,7 @@
 
 RC_ctrl_t *rc_data; // ?????????,??????????
 attitude_t *ins_data;
+imu_t *DM_ins_data;
 cali_data_t *calibrate_data;
 
 static Publisher_t *chassis_cmd_pub;        // ????????????????
@@ -53,9 +55,11 @@ Guidence_Upload_Data_s guidence_fetch_data; // ????
 
 static Robot_Status_e robot_state;          // ?????????��????
 static Robot_Status_e last_robot_state;     // ?????????��????
-LPFliterInstance yaw_offset_fliter;         // ??????????
-LPFliterInstance vx_fliter;                 // ?????????????
-LPFliterInstance vy_fliter;                 // ?????????????
+static LPFliterInstance yaw_offset_fliter;  // ??????????
+static LPFliterInstance vx_fliter;          // ?????????????
+static LPFliterInstance vy_fliter;          // ?????????????
+speed_mode_e speed_mode = SPEEDMODE_NORMAL;
+float speed_offset_angle;
 Sentry_State_e sentry_state = STATE_MOVING;
 
 static void CalcOffsetAngle() {
@@ -108,7 +112,7 @@ void StateControlSet() {
 
         break;
     case STATE_ATTACKING:
-        chassis_cmd_send.chassis_mode = CHASSIS_ROTATE;
+        chassis_cmd_send.chassis_mode = (uint8_t)CHASSIS_ROTATE;
         shoot_cmd_send.friction_mode  = FRICTION_ON;
         if (vision_fetch_data.fire_advice == SHOOT_ON) {
             shoot_cmd_send.shoot_mode = SHOOT_ON;
@@ -132,13 +136,13 @@ void StateControlSet() {
         chassis_cmd_send.wz = 20;
         break;
     case STATE_DEFENDING:
-        chassis_cmd_send.chassis_mode = CHASSIS_ROTATE;
+        chassis_cmd_send.chassis_mode = (uint8_t)CHASSIS_ROTATE;
         shoot_cmd_send.shoot_mode     = SHOOT_STOP;
         shoot_cmd_send.friction_mode  = FRICTION_ON;
         chassis_cmd_send.vx *= 0.3;
         chassis_cmd_send.vy *= 0.3;
         chassis_cmd_send.wz = 100;
-    case STATE_NOPE:
+    case STATE_NULL:
     default:
         break;
     }
@@ -177,11 +181,11 @@ void VisionControlSet(void) {
     //     chassis_cmd_send.wz = 0;
     // }
 
-    chassis_cmd_send.chassis_mode = CHASSIS_ROTATE;
+    chassis_cmd_send.chassis_mode = (uint8_t)CHASSIS_ROTATE;
     shoot_cmd_send.friction_mode  = FRICTION_ON;
 
     if (vision_fetch_data.vision_state == NO_TARGET) {
-        gimbal_cmd_send.gimbal_mode = GIMBAL_SCAN_MODE;
+        // gimbal_cmd_send.gimbal_mode = GIMBAL_SCAN_MODE;
         return;
     }
     else {
@@ -193,14 +197,14 @@ void VisionControlSet(void) {
 
     // #ifdef USE_VISION_FIRE_CONTROL
     shoot_cmd_send.friction_mode = FRICTION_ON;
-    if (vision_fetch_data.fire_advice == SHOOT_ON) {
-        shoot_cmd_send.shoot_mode = SHOOT_ON;
-        shoot_cmd_send.load_mode  = LOAD_BURSTFIRE;
-    }
-    // if (vision_fetch_data.fire_advice != SHOOT_ON) {
-    //     // shoot_cmd_send.shoot_mode = SHOOT_ON;
-    //     shoot_cmd_send.load_mode  = LOAD_STOP;
+    // if (vision_fetch_data.fire_advice == SHOOT_ON) {
+    //     shoot_cmd_send.shoot_mode = SHOOT_ON;
+    //     shoot_cmd_send.load_mode  = LOAD_BURSTFIRE;
     // }
+    if (vision_fetch_data.fire_advice != SHOOT_ON) {
+        shoot_cmd_send.shoot_mode = SHOOT_ON;
+        shoot_cmd_send.load_mode  = LOAD_STOP;
+    }
     // #endif
 }
 
@@ -209,23 +213,32 @@ static void RemoteControlSet(void) {
     last_robot_state                      = robot_state;
     if (switch_is_up(rc_data[TEMP].rc.switch_right)) // ???????[??],??????????
     {
-        chassis_cmd_send.chassis_mode = CHASSIS_FOLLOW_GIMBAL_YAW;
+        chassis_cmd_send.chassis_mode = (uint8_t)CHASSIS_FOLLOW_GIMBAL_YAW;
         gimbal_cmd_send.gimbal_mode   = GIMBAL_GYRO_MODE;
         if (switch_is_up(rc_data[TEMP].rc.switch_left)) {
-            chassis_cmd_send.chassis_mode = CHASSIS_ROTATE;
-            chassis_cmd_send.wz           = 30;
+            chassis_cmd_send.chassis_mode = (uint8_t)CHASSIS_ROTATE;
+            chassis_cmd_send.wz           = 50;
         }
     }
     else if (switch_is_mid(rc_data[TEMP].rc.switch_right)) // ???????[??],????????????,???????????
     {
-        chassis_cmd_send.chassis_mode = CHASSIS_NO_FOLLOW;
+        chassis_cmd_send.chassis_mode = (uint8_t)CHASSIS_NO_FOLLOW;
         gimbal_cmd_send.gimbal_mode   = GIMBAL_FREE_MODE;
+        if (switch_is_up(rc_data[TEMP].rc.switch_left)) {
+            speed_mode                  = SPEEDMODE_ABSOLUTE;
+            gimbal_cmd_send.gimbal_mode = GIMBAL_SCAN_MODE;
+            if (last_gimbal_mode != gimbal_cmd_send.gimbal_mode)
+                speed_offset_angle = DM_ins_data->yaw;
+        }
+        else {
+            speed_mode = SPEEDMODE_NORMAL;
+        }
     }
     if (switch_is_down(rc_data[TEMP].rc.switch_right)) // ???????[??],????
     {
-        robot_state                 = ROBOT_STOP;
-        gimbal_cmd_send.gimbal_mode = GIMBAL_ZERO_FORCE;
-        chassis_cmd_send.chassis_mode = CHASSIS_ZERO_FORCE;
+        robot_state                   = ROBOT_STOP;
+        gimbal_cmd_send.gimbal_mode   = GIMBAL_ZERO_FORCE;
+        chassis_cmd_send.chassis_mode = (uint8_t)CHASSIS_ZERO_FORCE;
     }
     else {
         robot_state = ROBOT_READY;
@@ -241,20 +254,34 @@ static void RemoteControlSet(void) {
     gimbal_cmd_send.pitch += PitchLimit(0.00001f * (float)rc_data[TEMP].rc.rocker_l1);
     gimbal_cmd_send.yaw =
         theta_format(gimbal_cmd_send.yaw - 0.001f * (float)rc_data[TEMP].rc.rocker_l_);
+    float raw_vx = 20.0f * (float)rc_data[TEMP].rc.rocker_r_; // _??????
+    float raw_vy = 20.0f * (float)rc_data[TEMP].rc.rocker_r1; // 1???????
     // ???????,????��???��????(????????????��??),??????????
-    chassis_cmd_send.vx = 20.0f * (float)rc_data[TEMP].rc.rocker_r_; // _??????
-    chassis_cmd_send.vy = 20.0f * (float)rc_data[TEMP].rc.rocker_r1; // 1???????
+    // chassis_cmd_send.vx = 20.0f * (float)rc_data[TEMP].rc.rocker_r_; // _??????
+    // chassis_cmd_send.vy = 20.0f * (float)rc_data[TEMP].rc.rocker_r1; // 1???????
+    float sin_theta, cos_theta;
+    if (speed_mode == SPEEDMODE_ABSOLUTE) {
+        cos_theta = cosf(theta_format(speed_offset_angle - DM_ins_data->yaw) * DEGREE_2_RAD);
+        sin_theta = sinf(theta_format(speed_offset_angle - DM_ins_data->yaw) * DEGREE_2_RAD);
+        chassis_cmd_send.vx = raw_vx * cos_theta - raw_vy * sin_theta;
+        chassis_cmd_send.vy = raw_vx * sin_theta + raw_vy * cos_theta;
+    }
+    else if (speed_mode == SPEEDMODE_NORMAL) {
+        chassis_cmd_send.vx = raw_vx;
+        chassis_cmd_send.vy = raw_vy;
+    }
     if (last_gimbal_mode != gimbal_cmd_send.gimbal_mode) {
         switch (gimbal_cmd_send.gimbal_mode) {
         case GIMBAL_FREE_MODE:
             gimbal_cmd_send.yaw   = ins_data->Yaw * RAD_2_DEGREE;
             gimbal_cmd_send.pitch = ins_data->Pitch;
-
             break;
         case GIMBAL_GYRO_MODE:
             gimbal_cmd_send.yaw   = ins_data->Yaw * RAD_2_DEGREE;
             gimbal_cmd_send.pitch = ins_data->Pitch;
-
+        case GIMBAL_SCAN_MODE:
+            gimbal_cmd_send.yaw   = ins_data->Yaw * RAD_2_DEGREE;
+            gimbal_cmd_send.pitch = ins_data->Pitch;
         default:
             break;
         }
@@ -346,20 +373,20 @@ static void MouseKeySet(void) {
     case 1:
         robot_state                   = ROBOT_READY;
         gimbal_cmd_send.gimbal_mode   = GIMBAL_FREE_MODE;
-        chassis_cmd_send.chassis_mode = CHASSIS_NO_FOLLOW;
+        chassis_cmd_send.chassis_mode = (uint8_t)CHASSIS_NO_FOLLOW;
         shoot_cmd_send.shoot_mode     = SHOOT_ON;
         break;
     default:
         robot_state                   = ROBOT_READY;
         gimbal_cmd_send.gimbal_mode   = GIMBAL_GYRO_MODE;
-        chassis_cmd_send.chassis_mode = CHASSIS_FOLLOW_GIMBAL_YAW;
+        chassis_cmd_send.chassis_mode = (uint8_t)CHASSIS_FOLLOW_GIMBAL_YAW;
         shoot_cmd_send.shoot_mode     = SHOOT_ON;
         break;
     }
     switch (rc_data[TEMP].key[KEY_PRESS].ctrl) // ctrl��????
     {
     case 1:
-        chassis_cmd_send.chassis_mode = CHASSIS_ROTATE;
+        chassis_cmd_send.chassis_mode = (uint8_t)CHASSIS_ROTATE;
         break;
 
     default:
@@ -369,7 +396,7 @@ static void MouseKeySet(void) {
     switch (rc_data[TEMP].key[KEY_PRESS].shift) // ?????? ??shift?????????? ???????????
     {
     case 1:
-        //        chassis_cmd_send.chassis_mode = CHASSIS_MAXSPEED;
+        //        chassis_cmd_send.chassis_mode = (uint8_t)CHASSIS_MAXSPEED;
         break;
 
     default:
@@ -418,7 +445,7 @@ static void EmergencyHandler(void) {
     if (robot_state == ROBOT_STOP) // ?????????????��??????????��?
     {
         gimbal_cmd_send.gimbal_mode   = GIMBAL_ZERO_FORCE;
-        chassis_cmd_send.chassis_mode = CHASSIS_ZERO_FORCE;
+        chassis_cmd_send.chassis_mode = (uint8_t)CHASSIS_ZERO_FORCE;
         shoot_cmd_send.shoot_mode     = SHOOT_OFF;
         shoot_cmd_send.friction_mode  = FRICTION_OFF;
         shoot_cmd_send.load_mode      = LOAD_STOP;
@@ -449,7 +476,7 @@ void RobotCmdInit(void) {
     Low_Pass_Fliter_Init_Config_s lp_fliter = {
         .RC = 0.0f,
     };
-
+    DM_ins_data = GetIMUData();
     LowPassFliterInit(&yaw_offset_fliter, &lp_fliter);
     lp_fliter.RC = 0.08;
     LowPassFliterInit(&vx_fliter, &lp_fliter);
@@ -482,7 +509,7 @@ void RobotCMDTask(void) {
     // if (robot_state != ROBOT_STOP) {
     //     StateControlSet();
     // }
-    // ???????????????,?????????????????????
+    // ???????????????,?????????????2????????
 
     // ???????,??????,???????
     shoot_cmd_send.rest_heat      = chassis_fetch_data.shooter_heat;
@@ -490,8 +517,10 @@ void RobotCMDTask(void) {
         (FliterInstance *)&yaw_offset_fliter, gimbal_fetch_data.yaw1_motor_single_round_angle));
     chassis_cmd_send.vx = FliterCalcutale((FliterInstance *)&vx_fliter, chassis_cmd_send.vx);
     chassis_cmd_send.vy = FliterCalcutale((FliterInstance *)&vy_fliter, chassis_cmd_send.vy);
-    chassis_cmd_send.vx = (fabs(chassis_cmd_send.vx) < 0.01f) ? 0 : chassis_cmd_send.vx;
-    chassis_cmd_send.vy = (fabs(chassis_cmd_send.vy) < 0.01f) ? 0 : chassis_cmd_send.vy;
+
+    chassis_cmd_send.vx           = (fabs(chassis_cmd_send.vx) < 0.01f) ? 0 : chassis_cmd_send.vx;
+    chassis_cmd_send.vy           = (fabs(chassis_cmd_send.vy) < 0.01f) ? 0 : chassis_cmd_send.vy;
+    chassis_cmd_send.sentry_state = (uint8_t)guidence_fetch_data.state;
     // ?????????????????????remotecontrolsetmode??mousekeysetmode?????????
 
     PubPushMessage(chassis_cmd_pub, (void *)&chassis_cmd_send);
