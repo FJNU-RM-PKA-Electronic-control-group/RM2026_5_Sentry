@@ -75,10 +75,11 @@ static void JudgeReadData(uint8_t *buff) {
                 case ID_buff_musk: // 0x0204
                     memcpy(&referee_info.BuffMusk, (buff + DATA_Offset), LEN_buff_musk);
                     break;
-                case ID_robot_hurt: // 0x0206
+                case ID_robot_hurt:             // 0x0206
                     memcpy(&referee_info.RobotHurt, (buff + DATA_Offset), LEN_robot_hurt);
+                    referee_info.hurt_flag = 1; // 收到伤害数据,设置伤害标志位
                     break;
-                case ID_shoot_data: // 0x0207
+                case ID_shoot_data:             // 0x0207
                     memcpy(&referee_info.ShootData, (buff + DATA_Offset), LEN_shoot_data);
                     break;
                 case ID_permissible_rounds: // 0x0208

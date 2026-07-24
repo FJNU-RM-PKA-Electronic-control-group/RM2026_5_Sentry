@@ -52,9 +52,9 @@
 #define FLAG_DEFAULT     0        // 默认状态
 #define RFID_SUPPLY_ZONE (1 << 0) // 第一位:基地补给区RFID
 #define RFID_FORTRESS    (1 << 1) // 第二位:堡垒区RFID
-#define STATUS_COMBATING (1 << 2) // 第三位:脱战状态 脱战:1 非脱战:0
-// #define TIME_GT_2MIN     (1 << 3) // 第四位:剩余时间是否大于2min
-#define ENERMY_RED       (1 << 3) // 第五位:敌人颜色 红:1 蓝:0
+#define STATUS_COMBATING (1 << 2) // 第三位:脱战状态 脱战:0 非脱战:1
+#define ENERMY_RED       (1 << 3) // 第四位:敌人颜色 红:1 蓝:0
+#define GET_HURT         (1 << 4) // 第五位:是否受到伤害
 
 // 云台是否需要经过某定位处和归零,只能选一个配置生效,其他的自动关闭
 // #if (defined(ONE_BOARD) && defined(CHASSIS_BOARD)) || \

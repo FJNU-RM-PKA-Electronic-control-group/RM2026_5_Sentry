@@ -17,5 +17,18 @@
         "custom_drv.h": "c",
         "crc_ref.h": "c"
     },
-    "cmake.sourceDirectory": "D:/robotmaster/engineer_code/2025 工程机器人 25.4.11湖大移植新版/Drivers/CMSIS/DSP/Source/QuaternionMathFunctions"
+    "cmake.sourceDirectory": "D:/robotmaster/engineer_code/2025 工程机器人 25.4.11湖大移植新版/Drivers/CMSIS/DSP/Source/QuaternionMathFunctions",
+    "cmake.cmakePath": "cube-cmake",
+    "cmake.configureArgs": [
+        "-DCMAKE_COMMAND=cube-cmake"
+    ],
+    "cmake.preferredGenerators": [
+        "Ninja"
+    ],
+    "stm32cube-ide-clangd.path": "cube",
+    "stm32cube-ide-clangd.arguments": [
+        "starm-clangd",
+        "--query-driver=${env:CUBE_BUNDLE_PATH}/gnu-tools-for-stm32/14.3.1+st.2/bin/arm-none-eabi-gcc*",
+        "--query-driver=${env:CUBE_BUNDLE_PATH}/gnu-tools-for-stm32/14.3.1+st.2/bin/arm-none-eabi-g++*"
+    ]
 }

@@ -11,7 +11,7 @@
                 <Options TimeResolutionUs="1000000" />
             </Scope>
             <Trigger>
-                <Options Level="0" Symbol="Measure" On="0" Auto="0" Rise="0" Fall="0" />
+                <Options Level="0" Symbol="fire_advice" On="0" Auto="0" Rise="0" Fall="0" />
             </Trigger>
         </Configuration>
         <Windows>
@@ -20,16 +20,13 @@
         </Windows>
         <SelectedSymbols>
             <Symbol>
-                <Options Name="Measure" Address="0x20009964" Type="float" TypeID="1" Size="4" GraphColorRed="255" GraphColorGreen="0" GraphColorBlue="0" YMinSampled="-0.356447" YMaxSampled="0.336268" YAvgSampled="0.00209133" Offset="4" ShowInGraph="1" YOffset="0" IsAutoConfig="0" YResolution="1" MaxValue="-2147483648" File="d:\HalProject\RM2026_5_Sentry\Gimbal\MDK-ARM/../User/Modules/algorithm/controller.h" DrawStyle="0" NameWithParents=".DEBUG_pitch_motor.motor_controller.angle_PID.Measure" />
+                <Options Name="fire_advice" Address="0x2000A3DC" Type="enum shoot_mode_e" TypeID="6" Size="1" GraphColorRed="255" GraphColorGreen="38" GraphColorBlue="0" YMinSampled="1" YMaxSampled="2" YAvgSampled="1.83387" Offset="4" ShowInGraph="1" YOffset="0" IsAutoConfig="0" YResolution="1" MaxValue="255" File="D:\HalProject\RM2026_5_Sentry\Gimbal\MDK-ARM/../User/App/robot/robot_def.h" DrawStyle="0" NameWithParents=".vision_feedback_data.fire_advice" />
             </Symbol>
             <Symbol>
-                <Options Name="Ref" Address="0x20009994" Type="float" TypeID="1" Size="4" GraphColorRed="0" GraphColorGreen="0" GraphColorBlue="255" YMinSampled="-0.341513" YMaxSampled="0.0627499" YAvgSampled="-0.00817234" Offset="8" ShowInGraph="1" YOffset="0" IsAutoConfig="0" YResolution="1" MaxValue="-2147483648" File="d:\HalProject\RM2026_5_Sentry\Gimbal\MDK-ARM/../User/Modules/algorithm/controller.h" DrawStyle="0" NameWithParents=".DEBUG_pitch_motor.motor_controller.angle_PID.Ref" />
+                <Options Name="DEBUG_IMU_yaw" Address="0x20000704" Type="float" TypeID="1" Size="4" GraphColorRed="255" GraphColorGreen="0" GraphColorBlue="0" YMinSampled="-118.084" YMaxSampled="2.48694" YAvgSampled="-65.4038" Offset="5" ShowInGraph="1" YOffset="0" IsAutoConfig="0" YResolution="3" MaxValue="-2147483648" File="d:\HalProject\RM2026_5_Sentry\Gimbal\MDK-ARM/..\User\App\gimbal\gimbal.c" DrawStyle="0" NameWithParents=".DEBUG_IMU_yaw" />
             </Symbol>
             <Symbol>
-                <Options Name="DEBUG_IMU_yaw" Address="0x2000070C" Type="float" TypeID="1" Size="4" GraphColorRed="0" GraphColorGreen="255" GraphColorBlue="0" YMinSampled="-2.00006" YMaxSampled="26.2209" YAvgSampled="9.47422" Offset="12" ShowInGraph="1" YOffset="0" IsAutoConfig="0" YResolution="50" MaxValue="-2147483648" File="d:\HalProject\RM2026_5_Sentry\Gimbal\MDK-ARM/..\User\App\gimbal\gimbal.c" DrawStyle="0" NameWithParents=".DEBUG_IMU_yaw" />
-            </Symbol>
-            <Symbol>
-                <Options Name="yaw" Address="0x20009D7C" Type="float" TypeID="1" Size="4" GraphColorRed="255" GraphColorGreen="255" GraphColorBlue="0" YMinSampled="-0.994687" YMaxSampled="26.138" YAvgSampled="10.433" Offset="16" ShowInGraph="1" YOffset="0" IsAutoConfig="0" YResolution="50" MaxValue="-2147483648" File="d:\HalProject\RM2026_5_Sentry\Gimbal\MDK-ARM/../User/App/robot/robot_def.h" DrawStyle="0" NameWithParents=".gimbal_cmd_recv.yaw" />
+                <Options Name="yaw" Address="0x20009D6C" Type="float" TypeID="1" Size="4" GraphColorRed="0" GraphColorGreen="243" GraphColorBlue="255" YMinSampled="-27.3181" YMaxSampled="19.9901" YAvgSampled="-2.71676" Offset="9" ShowInGraph="1" YOffset="0" IsAutoConfig="0" YResolution="3" MaxValue="-2147483648" File="d:\HalProject\RM2026_5_Sentry\Gimbal\MDK-ARM/../User/App/robot/robot_def.h" DrawStyle="0" NameWithParents=".gimbal_cmd_recv.yaw" />
             </Symbol>
         </SelectedSymbols>
     </Project>

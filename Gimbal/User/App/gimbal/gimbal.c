@@ -48,7 +48,7 @@ void GimbalInit(void) {
     DM_IMU_data  = GetIMUData();
     // YAW
     FeedForward_Init_Config_s yaw_speed_ff_config = {
-        .format_value = PI,
+        .format_value = 180.0f,
         .K1           = 0.0139062498f,  // 0.01
         .K2           = 0.0f,
         .RC           = 7.00000019e-05, // 4.99999987e-05
@@ -128,32 +128,32 @@ void GimbalInit(void) {
             {
                 .angle_PID =
                     {
-                        .Kp       = 10.0f, // 8
-                        .Ki       = 0.0f,
-                        .Kd       = 0.7f,
-                        .DeadBand = 0.0f,
+                        .Kp       = 0.5f, // 8
+                        .Ki       = 5000.0f,
+                        .Kd       = 0.005f,
+                        .DeadBand = 0.1f,
                         .Improve =
                             (PID_Improvement_e)(PID_Trapezoid_Intergral | PID_Integral_Limit |
                                                 PID_Derivative_On_Measurement |
                                                 PID_DerivativeFilter | PID_ChangingIntegrationRate),
                         .CoefA             = 0.01f,
                         .CoefB             = 0.1f,
-                        .IntegralLimit     = 50.0f,
-                        .MaxOut            = 75.0F,
-                        .Derivative_LPF_RC = 0.01f,
+                        .IntegralLimit     = 0.001f,
+                        .MaxOut            = 20.0F,
+                        .Derivative_LPF_RC = 0.0f,
                     },
                 .speed_PID =
                     {
-                        .Kp = 0.1f, // 50
-                        .Ki = 0.0f, // 200
-                        .Kd = 0.001f,
+                        .Kp = 3.5f,   // 50
+                        .Ki = 180.0f, // 200
+                        .Kd = 0.0f,
                         .Improve =
                             (PID_Improvement_e)(PID_Trapezoid_Intergral | PID_Integral_Limit |
                                                 PID_Derivative_On_Measurement |
                                                 PID_DerivativeFilter),
-                        .IntegralLimit = 1.0f,
-                        .MaxOut        = 9.0f,
-                        .Output_LPF_RC = 0.1f,
+                        .IntegralLimit = 0.1f,
+                        .MaxOut        = 18.0f,
+                        .Output_LPF_RC = 0.0f,
                     },
                 .yaw2_motor = (void *)yaw2_motor,
                 // 还需要�?�加角速度额�?�反馈指�?,注意方向,ins_task.md�?有c板的bodyframe坐标系�?�明
@@ -177,7 +177,7 @@ void GimbalInit(void) {
     yaw1_motor = DMMotorInit(&yaw1_config);
     // PITCH
     FeedForward_Init_Config_s pitch_ff_config = {
-        .K1      = -0.775f,
+        .K1      = -0.421875f,
         .K2      = 0.0f,
         .RC      = 7.00000019e-05f,
         .max_out = 1.0f,
@@ -274,13 +274,14 @@ static void YawSetTarget(float recv_yaw, gimbal_mode_e mode) {
             }
             break;
         case YAW1_TURNLEFT:
-            target_yaw[YAW1] = DM_IMU_data->yaw + float_constrain(yaw2_ecd_err - 48.5f, 0.0f, 2.0f);
+            target_yaw[YAW1] =
+                DM_IMU_data->yaw + (4 * float_constrain(yaw2_ecd_err - 48.5f, 0.0f, 2.0f));
             if (yaw2_ecd_err < 48)
                 yaw1_mode = YAW1_NOMOVE;
             break;
         case YAW1_TURNRIGHT:
             target_yaw[YAW1] =
-                DM_IMU_data->yaw + float_constrain(yaw2_ecd_err + 48.5f, -2.0f, 0.0f);
+                DM_IMU_data->yaw + (4 * float_constrain(yaw2_ecd_err + 48.5f, -2.0f, 0.0f));
             if (yaw2_ecd_err > -48)
                 yaw1_mode = YAW1_NOMOVE;
             break;
@@ -294,7 +295,7 @@ static void YawSetTarget(float recv_yaw, gimbal_mode_e mode) {
         target_yaw[YAW1] += 0.25f; // �?Yaw云台慢速扫�?
         switch (yaw2_mode) {
         case YAW2_TURNLEFT:
-            target_yaw[YAW2] += 0.50f;
+            target_yaw[YAW2] += 0.30f;
             if (yaw2_ecd_err > 50) {
                 yaw2_mode        = YAW2_TURNRIGHT;
                 target_yaw[YAW2] = IMU_data_rad->Yaw * RAD_2_DEGREE;
@@ -317,16 +318,16 @@ static void YawSetTarget(float recv_yaw, gimbal_mode_e mode) {
     }
     switch (pitch_mode) {
     case PITCH_UP:
-        target_pitch += 0.005f;
-        if (pitch_motor->measure.position > PITCH_MAX_ECD) {
+        target_pitch += 0.003f;
+        if (pitch_motor->measure.position > (PITCH_MAX_ECD - 0.15f)) {
             pitch_mode = PITCH_DOWN;
             // target_pitch = IMU_data_rad->Pitch;
         }
 
         break;
     case PITCH_DOWN:
-        target_pitch -= 0.005f;
-        if (pitch_motor->measure.position < PITCH_MIN_ECD) {
+        target_pitch -= 0.003f;
+        if (pitch_motor->measure.position < (PITCH_MIN_ECD)) {
             pitch_mode = PITCH_UP;
             // target_pitch = IMU_data_rad->Pitch;
         }

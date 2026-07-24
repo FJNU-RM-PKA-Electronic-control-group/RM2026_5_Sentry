@@ -98,7 +98,7 @@ static Subscriber_t *robotarm_feed_sub;     // 机臂反馈信息订阅器
 Robotarm_Ctrl_Cmd_s robotarm_cmd_send;      // 发送给机臂的控制信息
 Robotarm_Upload_Data_s robotarm_fetch_data; // 从机臂获取的反馈信息
 USB_Rx_t *Vision_message;                   // 视觉处理器读取的消息
-
+bool defencing_flag;                        // 防守状态标志位
 float abslute_vx, abslute_vy;
 
 // static Subscriber_t *vision_feed_sub;         // 从视觉获取信息订阅器
@@ -282,6 +282,24 @@ void RobotCmdInit(void) {
     //	gimbal_cmd_send.pitch = 0;		���ò���������
     robot_state = ROBOT_READY;
 }
+
+bool HurtCheck(void) {
+    static float last_hurt_time;
+    if ((referee_info->RobotHurt.hurt_type == 0) && (referee_info->hurt_flag == 1)) {
+        referee_info->hurt_flag = 0; // 处理完伤害数据,重置伤害标志位
+        last_hurt_time          = DWT_GetTimeline_s();
+        defencing_flag          = true;
+    }
+    if (((DWT_GetTimeline_s() - last_hurt_time) < 1000.0f) && (defencing_flag == true)) {
+        defencing_flag = true;
+        return true;
+    }
+    else {
+        defencing_flag = false;
+        return false;
+    }
+}
+
 /**
  * @brief �������ݸ���̨��RMUL��
  *
@@ -307,6 +325,10 @@ void RefereeDataTransmit(void) {
     if (!((referee_info->SentryInfo.sentry_info_2) & 0x01)) {
         communicate_flags |= STATUS_COMBATING;
     }
+    if (HurtCheck()) {
+        communicate_flags |= GET_HURT;
+    }
+
     chassis_fetch_data.status_flag = communicate_flags;
     SentrySetState(chassis_cmd_send.sentry_state);
 

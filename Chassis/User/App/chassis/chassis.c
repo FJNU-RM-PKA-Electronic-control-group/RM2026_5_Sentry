@@ -550,7 +550,7 @@ static void LimitChassisOutput(void) {
     // 功率限制待添加
     // referee_data->PowerHeatData.chassis_power;
     // referee_data->PowerHeatData.chassis_power_buffer;
-    ChassisMaxPowerSet(power_ctrl, referee_chassis_recv.power_limit);
+    ChassisMaxPowerSet(power_ctrl,100.0f);//referee_chassis_recv.power_limit);
     // 完成功率限制后进行电机参考输入设定
     DJIMotorSetRef(speed_motor[LF], vt[LF]);
     DJIMotorSetRef(speed_motor[RF], vt[RF]);

@@ -40,6 +40,7 @@ typedef struct {
     Communicate_ReceiveData_t ReceiveData;
 
     uint8_t init_flag;
+    uint8_t hurt_flag;
 
 } referee_info_t;
 

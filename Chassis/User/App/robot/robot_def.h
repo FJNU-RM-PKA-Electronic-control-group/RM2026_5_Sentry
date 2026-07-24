@@ -45,8 +45,8 @@
 #define RFID_SUPPLY_ZONE (1 << 0) // 第一位:基地补给区RFID
 #define RFID_FORTRESS    (1 << 1) // 第二位:堡垒区RFID
 #define STATUS_COMBATING (1 << 2) // 第三位:脱战状态 脱战:1 非脱战:0
-// #define TIME_GT_2MIN     (1 << 3) // 第四位:剩余时间是否大于2min
-#define ENERMY_RED       (1 << 3) // 第五位:敌人颜色 红:1 蓝:0
+#define ENERMY_RED       (1 << 3) // 第四位:敌人颜色 红:1 蓝:0
+#define GET_HURT         (1 << 4) // 第五位:是否受到伤害
 
 #pragma pack(1)                   // 压缩结构体,取消字节对齐,下面的数据都可能被传输
 
@@ -131,6 +131,13 @@ typedef enum
     STATE_MOVING    = 3,
 
 } Sentry_State_e;
+
+// 受伤判断枚举
+typedef enum
+{
+    DEFEND_DEFENDING = 1,
+    DEFEND_NORMAL    = 0,
+} defence_e;
 
 // 校准变量
 typedef struct {

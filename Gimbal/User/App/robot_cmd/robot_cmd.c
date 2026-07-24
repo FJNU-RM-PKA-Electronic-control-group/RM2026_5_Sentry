@@ -161,22 +161,35 @@ void VisionControlSet(void) {
     //     StateSwitch();
     // }
     if (vision_fetch_data.vision_state == NO_TARGET) {
-        // gimbal_cmd_send.gimbal_mode = GIMBAL_SCAN_MODE;
+        gimbal_cmd_send.gimbal_mode = GIMBAL_SCAN_MODE;
     }
     else {
         // gimbal_cmd_send.gimbal_modse = GIMBAL_VISION_MODE;
         gimbal_cmd_send.pitch = vision_fetch_data.aim_pitch; // 0.027;
         gimbal_cmd_send.yaw   = vision_fetch_data.aim_yaw;
     }
-    // if ((chassis_fetch_data.game_progress != GAME_IN_PROGRESS) &&
-    //     (chassis_fetch_data.game_progress != GAME_CALCULATING_RESULTS)) {
-    //     chassis_cmd_send.wz = 0; // guidence_fetch_data.wz;
-    //     return;
-    // }
+    if ((chassis_fetch_data.game_progress != GAME_IN_PROGRESS) &&
+        (chassis_fetch_data.game_progress != GAME_CALCULATING_RESULTS)) {
+        chassis_cmd_send.wz = 0; // guidence_fetch_data.wz;
+        return;
+    }
 
     chassis_cmd_send.vx = guidence_fetch_data.vx;
     chassis_cmd_send.vy = guidence_fetch_data.vy;
-    chassis_cmd_send.wz = 0; // guidence_fetch_data.wz;
+    if (chassis_fetch_data.game_progress == GAME_IN_PROGRESS) {
+        if (chassis_fetch_data.status_flag & GET_HURT) {
+            if ((guidence_fetch_data.vx == 0) && (guidence_fetch_data.vy == 0)) {
+                chassis_cmd_send.wz = 80.0f;
+            }
+            else {
+                chassis_cmd_send.wz = 40.0f;
+            }
+        }
+        else {
+            chassis_cmd_send.wz = 0.0f;
+        }
+    }
+    // guidence_fetch_data.wz;
     // if (chassis_fetch_data.rfid_status == RFID_CENTER_GAIN) {
     //     chassis_cmd_send.wz = 0;
     // }
@@ -185,7 +198,7 @@ void VisionControlSet(void) {
     shoot_cmd_send.friction_mode  = FRICTION_ON;
 
     if (vision_fetch_data.vision_state == NO_TARGET) {
-        // gimbal_cmd_send.gimbal_mode = GIMBAL_SCAN_MODE;
+        gimbal_cmd_send.gimbal_mode = GIMBAL_SCAN_MODE;
         return;
     }
     else {
@@ -197,14 +210,14 @@ void VisionControlSet(void) {
 
     // #ifdef USE_VISION_FIRE_CONTROL
     shoot_cmd_send.friction_mode = FRICTION_ON;
-    // if (vision_fetch_data.fire_advice == SHOOT_ON) {
-    //     shoot_cmd_send.shoot_mode = SHOOT_ON;
-    //     shoot_cmd_send.load_mode  = LOAD_BURSTFIRE;
-    // }
-    if (vision_fetch_data.fire_advice != SHOOT_ON) {
+    if (vision_fetch_data.fire_advice == SHOOT_ON) {
         shoot_cmd_send.shoot_mode = SHOOT_ON;
-        shoot_cmd_send.load_mode  = LOAD_STOP;
+        shoot_cmd_send.load_mode  = LOAD_BURSTFIRE;
     }
+    // if (vision_fetch_data.fire_advice != SHOOT_ON) {
+    //     shoot_cmd_send.shoot_mode = SHOOT_ON;
+    //     shoot_cmd_send.load_mode  = LOAD_STOP;
+    // }
     // #endif
 }
 
@@ -225,10 +238,12 @@ static void RemoteControlSet(void) {
         chassis_cmd_send.chassis_mode = (uint8_t)CHASSIS_NO_FOLLOW;
         gimbal_cmd_send.gimbal_mode   = GIMBAL_FREE_MODE;
         if (switch_is_up(rc_data[TEMP].rc.switch_left)) {
-            speed_mode                  = SPEEDMODE_ABSOLUTE;
-            gimbal_cmd_send.gimbal_mode = GIMBAL_SCAN_MODE;
-            if (last_gimbal_mode != gimbal_cmd_send.gimbal_mode)
-                speed_offset_angle = DM_ins_data->yaw;
+            // speed_mode                  = SPEEDMODE_ABSOLUTE;
+            // gimbal_cmd_send.gimbal_mode = GIMBAL_SCAN_MODE;
+            // if (last_gimbal_mode != gimbal_cmd_send.gimbal_mode)
+            //     speed_offset_angle = DM_ins_data->yaw;
+            chassis_cmd_send.chassis_mode = (uint8_t)CHASSIS_ROTATE;
+            chassis_cmd_send.wz           = -50;
         }
         else {
             speed_mode = SPEEDMODE_NORMAL;
