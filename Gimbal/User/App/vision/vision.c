@@ -109,7 +109,7 @@ void VisionInit(void) {
 }
 
 void VisionTask(float roll, float pitch, float yaw) {
-    vision_sendmessage(AIM_RED, roll, pitch, yaw);
+    vision_sendmessage(AIM_BLUE, roll, pitch, yaw);
     vision_feedback_data.aim_pitch = DegToRad(Data_PC.pitch);
     vision_feedback_data.aim_yaw   = Data_PC.yaw;
     guidence_feedback_data.vx      = -1000 * Data_PC.linear_y;
