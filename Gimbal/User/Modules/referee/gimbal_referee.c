@@ -1,85 +1,77 @@
+#include "bsp_usart.h"
+#include "crc_ref.h"
+#include "daemon.h"
 #include "gimbal_referee.h"
 #include "string.h"
-#include "crc_ref.h"
-#include "bsp_usart.h"
-#include "daemon.h"
-
-#define GIMBAL_RX_BUFFER_SIZE 255u // ²ÃÅĞÏµÍ³½ÓÊÕ»º³åÇø´óĞ¡
-
-USARTInstance *gimbal_referee_usart_instance; // ²ÃÅĞÏµÍ³´®¿ÚÊµÀı
-static DaemonInstance *gimbal_referee_daemon;		  // ²ÃÅĞÏµÍ³ÊØ»¤½ø³Ì
-static gimbal_referee_info_t gimbal_referee_info;            // ½ÓÊÕµ½µÄ²ÃÅĞÏµÍ³Êı¾İ
 
 
-static void JudgeReadData(uint8_t *buff)
-{
-	uint16_t judge_length; // Í³¼ÆÒ»Ö¡Êı¾İ³¤¶È
-	if (buff == NULL)	   // ¿ÕÊı¾İ°ü£¬Ôò²»×÷ÈÎºÎ´¦Àí
-		return;
+#define GIMBAL_RX_BUFFER_SIZE 255u                // è£åˆ¤ç³»ç»Ÿæ¥æ”¶ç¼“å†²åŒºå¤§å°
 
-	// Ğ´ÈëÖ¡Í·Êı¾İ(5-byte),ÓÃÓÚÅĞ¶ÏÊÇ·ñ¿ªÊ¼´æ´¢²ÃÅĞÊı¾İ
-	memcpy(&gimbal_referee_info.FrameHeader, buff, LEN_HEADER);
+USARTInstance *gimbal_referee_usart_instance;     // è£åˆ¤ç³»ç»Ÿä¸²å£å®ä¾‹
+static DaemonInstance *gimbal_referee_daemon;     // è£åˆ¤ç³»ç»Ÿå®ˆæŠ¤è¿›ç¨‹
+static gimbal_referee_info_t gimbal_referee_info; // æ¥æ”¶åˆ°çš„è£åˆ¤ç³»ç»Ÿæ•°æ®
 
-	// ÅĞ¶ÏÖ¡Í·Êı¾İ(0)ÊÇ·ñÎª0xA5
-	if (buff[SOF] == REFEREE_SOF)
-	{
-		// Ö¡Í·CRC8Ğ£Ñé
-		if (Verify_CRC8_Check_Sum(buff, LEN_HEADER) == TRUE)
-		{
-			// Í³¼ÆÒ»Ö¡Êı¾İ³¤¶È(byte),ÓÃÓÚCR16Ğ£Ñé
-			judge_length = buff[DATA_LENGTH] + LEN_HEADER + LEN_CMDID + LEN_TAIL;
-			// Ö¡Î²CRC16Ğ£Ñé
-			if (Verify_CRC16_Check_Sum(buff, judge_length) == TRUE)
-			{
-				// 2¸ö8Î»Æ´³É16Î»int
-				gimbal_referee_info.CmdID = (buff[6] << 8 | buff[5]);
-				// ½âÎöÊı¾İÃüÁîÂë,½«Êı¾İ¿½±´µ½ÏàÓ¦½á¹¹ÌåÖĞ(×¢Òâ¿½±´Êı¾İµÄ³¤¶È)
-				// µÚ8¸ö×Ö½Ú¿ªÊ¼²ÅÊÇÊı¾İ data=7
-				switch (gimbal_referee_info.CmdID)
-				{
-				case ID_remote_data:
-					memcpy(&gimbal_referee_info.remote_data, (buff + DATA_Offset), LEN_remote_data);
+static void JudgeReadData(uint8_t *buff) {
+    uint16_t judge_length; // ç»Ÿè®¡ä¸€å¸§æ•°æ®é•¿åº¦
+    if (buff == NULL)      // ç©ºæ•°æ®åŒ…ï¼Œåˆ™ä¸ä½œä»»ä½•å¤„ç†
+        return;
 
-				}
-			}
-		}
-		// Ê×µØÖ·¼ÓÖ¡³¤¶È,Ö¸ÏòCRC16ÏÂÒ»×Ö½Ú,ÓÃÀ´ÅĞ¶ÏÊÇ·ñÎª0xA5,´Ó¶øÅĞ¶ÏÒ»¸öÊı¾İ°üÊÇ·ñÓĞ¶àÖ¡Êı¾İ
-		if (*(buff + sizeof(xFrameHeader) + LEN_CMDID + gimbal_referee_info.FrameHeader.DataLength + LEN_TAIL) == 0xA5)
-		{ // Èç¹ûÒ»¸öÊı¾İ°ü³öÏÖÁË¶àÖ¡Êı¾İ,ÔòÔÙ´Îµ÷ÓÃ½âÎöº¯Êı,Ö±µ½ËùÓĞÊı¾İ°ü½âÎöÍê±Ï
-			JudgeReadData(buff + sizeof(xFrameHeader) + LEN_CMDID + gimbal_referee_info.FrameHeader.DataLength + LEN_TAIL);
-		}
-	}
+    // å†™å…¥å¸§å¤´æ•°æ®(5-byte),ç”¨äºåˆ¤æ–­æ˜¯å¦å¼€å§‹å­˜å‚¨è£åˆ¤æ•°æ®
+    memcpy(&gimbal_referee_info.FrameHeader, buff, LEN_HEADER);
+
+    // åˆ¤æ–­å¸§å¤´æ•°æ®(0)æ˜¯å¦ä¸º0xA5
+    if (buff[SOF] == REFEREE_SOF) {
+        // å¸§å¤´CRC8æ ¡éªŒ
+        if (Verify_CRC8_Check_Sum(buff, LEN_HEADER) == TRUE) {
+            // ç»Ÿè®¡ä¸€å¸§æ•°æ®é•¿åº¦(byte),ç”¨äºCR16æ ¡éªŒ
+            judge_length = buff[DATA_LENGTH] + LEN_HEADER + LEN_CMDID + LEN_TAIL;
+            // å¸§å°¾CRC16æ ¡éªŒ
+            if (Verify_CRC16_Check_Sum(buff, judge_length) == TRUE) {
+                // 2ä¸ª8ä½æ‹¼æˆ16ä½int
+                gimbal_referee_info.CmdID = (buff[6] << 8 | buff[5]);
+                // è§£ææ•°æ®å‘½ä»¤ç ,å°†æ•°æ®æ‹·è´åˆ°ç›¸åº”ç»“æ„ä½“ä¸­(æ³¨æ„æ‹·è´æ•°æ®çš„é•¿åº¦)
+                // ç¬¬8ä¸ªå­—èŠ‚å¼€å§‹æ‰æ˜¯æ•°æ® data=7
+                switch (gimbal_referee_info.CmdID) {
+                case ID_remote_data:
+                    memcpy(&gimbal_referee_info.remote_data, (buff + DATA_Offset), LEN_remote_data);
+                }
+            }
+        }
+        // é¦–åœ°å€åŠ å¸§é•¿åº¦,æŒ‡å‘CRC16ä¸‹ä¸€å­—èŠ‚,ç”¨æ¥åˆ¤æ–­æ˜¯å¦ä¸º0xA5,ä»è€Œåˆ¤æ–­ä¸€ä¸ªæ•°æ®åŒ…æ˜¯å¦æœ‰å¤šå¸§æ•°æ®
+        if (*(buff + sizeof(xFrameHeader) + LEN_CMDID + gimbal_referee_info.FrameHeader.DataLength +
+              LEN_TAIL) ==
+            0xA5) { // å¦‚æœä¸€ä¸ªæ•°æ®åŒ…å‡ºç°äº†å¤šå¸§æ•°æ®,åˆ™å†æ¬¡è°ƒç”¨è§£æå‡½æ•°,ç›´åˆ°æ‰€æœ‰æ•°æ®åŒ…è§£æå®Œæ¯•
+            JudgeReadData(buff + sizeof(xFrameHeader) + LEN_CMDID +
+                          gimbal_referee_info.FrameHeader.DataLength + LEN_TAIL);
+        }
+    }
 }
 
-static void GimbalRefereeRxCallback(void)
-{
-	DaemonReload(gimbal_referee_daemon);
-	gimbal_referee_info.remote_data.online_state = 1;
-	JudgeReadData(gimbal_referee_usart_instance->recv_buff);
+static void GimbalRefereeRxCallback(void) {
+    DaemonReload(gimbal_referee_daemon);
+    gimbal_referee_info.remote_data.online_state = 1;
+    JudgeReadData(gimbal_referee_usart_instance->recv_buff);
 }
 
-// ²ÃÅĞÏµÍ³¶ªÊ§»Øµ÷º¯Êı,ÖØĞÂ³õÊ¼»¯²ÃÅĞÏµÍ³´®¿Ú
-static void RefereeLostCallback(void *arg)
-{
-	USARTServiceInit(gimbal_referee_usart_instance);
-	gimbal_referee_info.remote_data.online_state = 0;
+// è£åˆ¤ç³»ç»Ÿä¸¢å¤±å›è°ƒå‡½æ•°,é‡æ–°åˆå§‹åŒ–è£åˆ¤ç³»ç»Ÿä¸²å£
+static void RefereeLostCallback(void *arg) {
+    USARTServiceInit(gimbal_referee_usart_instance);
+    gimbal_referee_info.remote_data.online_state = 0;
 }
 
-gimbal_referee_info_t *GimbalRefereeInit(UART_HandleTypeDef *referee_usart_handle)
-{
-	USART_Init_Config_s conf;
-	conf.module_callback = GimbalRefereeRxCallback;
-	conf.usart_handle = referee_usart_handle;
-	conf.recv_buff_size = GIMBAL_RX_BUFFER_SIZE; // mx 255(u8)
-	gimbal_referee_usart_instance = USARTRegister(&conf);
+gimbal_referee_info_t *GimbalRefereeInit(UART_HandleTypeDef *referee_usart_handle) {
+    USART_Init_Config_s conf;
+    conf.module_callback          = GimbalRefereeRxCallback;
+    conf.usart_handle             = referee_usart_handle;
+    conf.recv_buff_size           = GIMBAL_RX_BUFFER_SIZE; // mx 255(u8)
+    gimbal_referee_usart_instance = USARTRegister(&conf);
 
-	Daemon_Init_Config_s daemon_conf = {
-		.callback = RefereeLostCallback,
-		.owner_id = gimbal_referee_usart_instance,
-		.reload_count = 30, // 0.3sÃ»ÓĞÊÕµ½Êı¾İ,ÔòÈÏÎª¶ªÊ§,ÖØÆô´®¿Ú½ÓÊÕ
-	};
-	gimbal_referee_daemon = DaemonRegister(&daemon_conf);
+    Daemon_Init_Config_s daemon_conf = {
+        .callback     = RefereeLostCallback,
+        .owner_id     = gimbal_referee_usart_instance,
+        .reload_count = 30, // 0.3sæ²¡æœ‰æ”¶åˆ°æ•°æ®,åˆ™è®¤ä¸ºä¸¢å¤±,é‡å¯ä¸²å£æ¥æ”¶
+    };
+    gimbal_referee_daemon = DaemonRegister(&daemon_conf);
 
-	return &gimbal_referee_info;
+    return &gimbal_referee_info;
 }
-

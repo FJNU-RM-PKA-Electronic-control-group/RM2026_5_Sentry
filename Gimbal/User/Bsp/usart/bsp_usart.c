@@ -1,37 +1,37 @@
-#include "bsp_usart.h"
 #include "bsp_log.h"
+#include "bsp_usart.h"
 #include "stdlib.h"
 #include "string.h"
 
 /* usart service instance, modules' info would be recoreded here using USARTRegister() */
-/* usart·şÎñÊµÀı,ËùÓĞ×¢²áÁËusartµÄÄ£¿éĞÅÏ¢»á±»±£´æÔÚÕâÀï */
+/* usartæœåŠ¡å®ä¾‹,æ‰€æœ‰æ³¨å†Œäº†usartçš„æ¨¡å—ä¿¡æ¯ä¼šè¢«ä¿å­˜åœ¨è¿™é‡Œ */
 static uint8_t idx;
 static USARTInstance *usart_instance[DEVICE_USART_MAX_CNT] = {NULL};
 
 /**
- * @brief Æô¶¯´®¿Ú·şÎñ,»áÔÚÃ¿¸öÊµÀı×¢²áÖ®ºó×Ô¶¯ÆôÓÃ½ÓÊÕ,µ±Ç°ÊµÏÖÎªDMA½ÓÊÕ,ºóĞø¿ÉÄÜÌí¼ÓITºÍBLOCKING½ÓÊÕ
+ * @brief
+ * å¯åŠ¨ä¸²å£æœåŠ¡,ä¼šåœ¨æ¯ä¸ªå®ä¾‹æ³¨å†Œä¹‹åè‡ªåŠ¨å¯ç”¨æ¥æ”¶,å½“å‰å®ç°ä¸ºDMAæ¥æ”¶,åç»­å¯èƒ½æ·»åŠ ITå’ŒBLOCKINGæ¥æ”¶
  *
- * @todo ´®¿Ú·şÎñ»áÔÚÃ¿¸öÊµÀı×¢²áÖ®ºó×Ô¶¯ÆôÓÃ½ÓÊÕ,µ±Ç°ÊµÏÖÎªDMA½ÓÊÕ,ºóĞø¿ÉÄÜÌí¼ÓITºÍBLOCKING½ÓÊÕ
- *       ¿ÉÄÜ»¹Òª½«´Ëº¯ÊıĞŞ¸ÄÎªextern,Ê¹µÃmodule¿ÉÒÔ¿ØÖÆ´®¿ÚµÄÆôÍ£
+ * @todo ä¸²å£æœåŠ¡ä¼šåœ¨æ¯ä¸ªå®ä¾‹æ³¨å†Œä¹‹åè‡ªåŠ¨å¯ç”¨æ¥æ”¶,å½“å‰å®ç°ä¸ºDMAæ¥æ”¶,åç»­å¯èƒ½æ·»åŠ ITå’ŒBLOCKINGæ¥æ”¶
+ *       å¯èƒ½è¿˜è¦å°†æ­¤å‡½æ•°ä¿®æ”¹ä¸ºextern,ä½¿å¾—moduleå¯ä»¥æ§åˆ¶ä¸²å£çš„å¯åœ
  *
- * @param _instance instance owned by module,Ä£¿éÓµÓĞµÄ´®¿ÚÊµÀı
+ * @param _instance instance owned by module,æ¨¡å—æ‹¥æœ‰çš„ä¸²å£å®ä¾‹
  */
-void USARTServiceInit(USARTInstance *_instance)
-{
-    HAL_UARTEx_ReceiveToIdle_DMA(_instance->usart_handle, _instance->recv_buff, _instance->recv_buff_size);
-    // ¹Ø±Õdma half transferÖĞ¶Ï·ÀÖ¹Á½´Î½øÈëHAL_UARTEx_RxEventCallback()
-    // ÕâÊÇHAL¿âµÄÒ»¸öÉè¼ÆÊ§Îó,·¢ÉúDMA´«ÊäÍê³É/°ëÍê³ÉÒÔ¼°´®¿ÚIDLEÖĞ¶Ï¶¼»á´¥·¢HAL_UARTEx_RxEventCallback()
-    // ÎÒÃÇÖ»Ï£Íû´¦ÀíµÚÒ»ÖÖºÍµÚÈıÖÖÇé¿ö,Òò´ËÖ±½Ó¹Ø±ÕDMA°ë´«ÊäÖĞ¶Ï
+void USARTServiceInit(USARTInstance *_instance) {
+    HAL_UARTEx_ReceiveToIdle_DMA(_instance->usart_handle, _instance->recv_buff,
+                                 _instance->recv_buff_size);
+    // å…³é—­dma half transferä¸­æ–­é˜²æ­¢ä¸¤æ¬¡è¿›å…¥HAL_UARTEx_RxEventCallback()
+    // è¿™æ˜¯HALåº“çš„ä¸€ä¸ªè®¾è®¡å¤±è¯¯,å‘ç”ŸDMAä¼ è¾“å®Œæˆ/åŠå®Œæˆä»¥åŠä¸²å£IDLEä¸­æ–­éƒ½ä¼šè§¦å‘HAL_UARTEx_RxEventCallback()
+    // æˆ‘ä»¬åªå¸Œæœ›å¤„ç†ç¬¬ä¸€ç§å’Œç¬¬ä¸‰ç§æƒ…å†µ,å› æ­¤ç›´æ¥å…³é—­DMAåŠä¼ è¾“ä¸­æ–­
     __HAL_DMA_DISABLE_IT(_instance->usart_handle->hdmarx, DMA_IT_HT);
 }
 
-USARTInstance *USARTRegister(USART_Init_Config_s *init_config)
-{
-    if (idx >= DEVICE_USART_MAX_CNT) // ³¬¹ı×î´óÊµÀıÊı
+USARTInstance *USARTRegister(USART_Init_Config_s *init_config) {
+    if (idx >= DEVICE_USART_MAX_CNT) // è¶…è¿‡æœ€å¤§å®ä¾‹æ•°
         while (1)
             LOGERROR("[bsp_usart] USART exceed max instance count!");
 
-    for (uint8_t i = 0; i < idx; i++) // ¼ì²éÊÇ·ñÒÑ¾­×¢²á¹ı
+    for (uint8_t i = 0; i < idx; i++) // æ£€æŸ¥æ˜¯å¦å·²ç»æ³¨å†Œè¿‡
         if (usart_instance[i]->usart_handle == init_config->usart_handle)
             while (1)
                 LOGERROR("[bsp_usart] USART instance already registered!");
@@ -39,8 +39,8 @@ USARTInstance *USARTRegister(USART_Init_Config_s *init_config)
     USARTInstance *instance = (USARTInstance *)malloc(sizeof(USARTInstance));
     memset(instance, 0, sizeof(USARTInstance));
 
-    instance->usart_handle = init_config->usart_handle;
-    instance->recv_buff_size = init_config->recv_buff_size;
+    instance->usart_handle    = init_config->usart_handle;
+    instance->recv_buff_size  = init_config->recv_buff_size;
     instance->module_callback = init_config->module_callback;
 
     usart_instance[idx++] = instance;
@@ -48,11 +48,10 @@ USARTInstance *USARTRegister(USART_Init_Config_s *init_config)
     return instance;
 }
 
-/* @todo µ±Ç°½ö½øĞĞÁËĞÎÊ½ÉÏµÄ·â×°,ºóĞøÒª½øÒ»²½¿¼ÂÇÊÇ·ñ½«moduleµÄĞĞÎªÓëbspÍêÈ«·ÖÀë */
-void USARTSend(USARTInstance *_instance, uint8_t *send_buf, uint16_t send_size, USART_TRANSFER_MODE mode)
-{
-    switch (mode)
-    {
+/* @todo å½“å‰ä»…è¿›è¡Œäº†å½¢å¼ä¸Šçš„å°è£…,åç»­è¦è¿›ä¸€æ­¥è€ƒè™‘æ˜¯å¦å°†moduleçš„è¡Œä¸ºä¸bspå®Œå…¨åˆ†ç¦» */
+void USARTSend(USARTInstance *_instance, uint8_t *send_buf, uint16_t send_size,
+               USART_TRANSFER_MODE mode) {
+    switch (mode) {
     case USART_TRANSFER_BLOCKING:
         HAL_UART_Transmit(_instance->usart_handle, send_buf, send_size, 100);
         break;
@@ -63,14 +62,15 @@ void USARTSend(USARTInstance *_instance, uint8_t *send_buf, uint16_t send_size, 
         HAL_UART_Transmit_DMA(_instance->usart_handle, send_buf, send_size);
         break;
     default:
-        LOGERROR("[bsp_usart] USART illegal send mode!"); // illegal mode! check your code context! ¼ì²é¶¨ÒåinstanceµÄ´úÂëÉÏÏÂÎÄ,¿ÉÄÜ³öÏÖÖ¸ÕëÔ½½ç
+        LOGERROR(
+            "[bsp_usart] USART illegal send mode!"); // illegal mode! check your code context!
+                                                     // æ£€æŸ¥å®šä¹‰instanceçš„ä»£ç ä¸Šä¸‹æ–‡,å¯èƒ½å‡ºç°æŒ‡é’ˆè¶Šç•Œ
         break;
     }
 }
 
-/* ´®¿Ú·¢ËÍÊ±,gstate»á±»ÉèÎªBUSY_TX */
-uint8_t USARTIsReady(USARTInstance *_instance)
-{
+/* ä¸²å£å‘é€æ—¶,gstateä¼šè¢«è®¾ä¸ºBUSY_TX */
+uint8_t USARTIsReady(USARTInstance *_instance) {
     if (_instance->usart_handle->gState | HAL_UART_STATE_BUSY_TX)
         return 0;
     else
@@ -78,28 +78,29 @@ uint8_t USARTIsReady(USARTInstance *_instance)
 }
 
 /**
- * @brief Ã¿´Îdma/idleÖĞ¶Ï·¢ÉúÊ±£¬¶¼»áµ÷ÓÃ´Ëº¯Êı.¶ÔÓÚÃ¿¸öuartÊµÀı»áµ÷ÓÃ¶ÔÓ¦µÄ»Øµ÷½øĞĞ½øÒ»²½µÄ´¦Àí
- *        ÀıÈç:ÊÓ¾õĞ­Òé½âÎö/Ò£¿ØÆ÷½âÎö/²ÃÅĞÏµÍ³½âÎö
+ * @brief æ¯æ¬¡dma/idleä¸­æ–­å‘ç”Ÿæ—¶ï¼Œéƒ½ä¼šè°ƒç”¨æ­¤å‡½æ•°.å¯¹äºæ¯ä¸ªuartå®ä¾‹ä¼šè°ƒç”¨å¯¹åº”çš„å›è°ƒè¿›è¡Œè¿›ä¸€æ­¥çš„å¤„ç†
+ *        ä¾‹å¦‚:è§†è§‰åè®®è§£æ/é¥æ§å™¨è§£æ/è£åˆ¤ç³»ç»Ÿè§£æ
  *
- * @note  Í¨¹ı__HAL_DMA_DISABLE_IT(huart->hdmarx,DMA_IT_HT)¹Ø±Õdma half transferÖĞ¶Ï·ÀÖ¹Á½´Î½øÈëHAL_UARTEx_RxEventCallback()
- *        ÕâÊÇHAL¿âµÄÒ»¸öÉè¼ÆÊ§Îó,·¢ÉúDMA´«ÊäÍê³É/°ëÍê³ÉÒÔ¼°´®¿ÚIDLEÖĞ¶Ï¶¼»á´¥·¢HAL_UARTEx_RxEventCallback()
- *        ÎÒÃÇÖ»Ï£Íû´¦Àí£¬Òò´ËÖ±½Ó¹Ø±ÕDMA°ë´«ÊäÖĞ¶ÏµÚÒ»ÖÖºÍµÚÈıÖÖÇé¿ö
+ * @note  é€šè¿‡__HAL_DMA_DISABLE_IT(huart->hdmarx,DMA_IT_HT)å…³é—­dma half
+ * transferä¸­æ–­é˜²æ­¢ä¸¤æ¬¡è¿›å…¥HAL_UARTEx_RxEventCallback()
+ *        è¿™æ˜¯HALåº“çš„ä¸€ä¸ªè®¾è®¡å¤±è¯¯,å‘ç”ŸDMAä¼ è¾“å®Œæˆ/åŠå®Œæˆä»¥åŠä¸²å£IDLEä¸­æ–­éƒ½ä¼šè§¦å‘HAL_UARTEx_RxEventCallback()
+ *        æˆ‘ä»¬åªå¸Œæœ›å¤„ç†ï¼Œå› æ­¤ç›´æ¥å…³é—­DMAåŠä¼ è¾“ä¸­æ–­ç¬¬ä¸€ç§å’Œç¬¬ä¸‰ç§æƒ…å†µ
  *
- * @param huart ·¢ÉúÖĞ¶ÏµÄ´®¿Ú
- * @param Size ´Ë´Î½ÓÊÕµ½µÄ×ÜÊı¾ÓÁ¿,ÔİÊ±Ã»ÓÃ
+ * @param huart å‘ç”Ÿä¸­æ–­çš„ä¸²å£
+ * @param Size æ­¤æ¬¡æ¥æ”¶åˆ°çš„æ€»æ•°å±…é‡,æš‚æ—¶æ²¡ç”¨
  */
-void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
-{
-    for (uint8_t i = 0; i < idx; ++i)
-    { // find the instance which is being handled
-        if (huart == usart_instance[i]->usart_handle)
-        { // call the callback function if it is not NULL
-            if (usart_instance[i]->module_callback != NULL)
-            {
+void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size) {
+    for (uint8_t i = 0; i < idx; ++i) {        // find the instance which is being handled
+        if (huart ==
+            usart_instance[i]->usart_handle) { // call the callback function if it is not NULL
+            if (usart_instance[i]->module_callback != NULL) {
                 usart_instance[i]->module_callback();
-                memset(usart_instance[i]->recv_buff, 0, Size); // ½ÓÊÕ½áÊøºóÇå¿Õbuffer,¶ÔÓÚ±ä³¤Êı¾İÊÇ±ØÒªµÄ
+                memset(usart_instance[i]->recv_buff, 0,
+                       Size); // æ¥æ”¶ç»“æŸåæ¸…ç©ºbuffer,å¯¹äºå˜é•¿æ•°æ®æ˜¯å¿…è¦çš„
             }
-            HAL_UARTEx_ReceiveToIdle_DMA(usart_instance[i]->usart_handle, usart_instance[i]->recv_buff, usart_instance[i]->recv_buff_size);
+            HAL_UARTEx_ReceiveToIdle_DMA(usart_instance[i]->usart_handle,
+                                         usart_instance[i]->recv_buff,
+                                         usart_instance[i]->recv_buff_size);
             __HAL_DMA_DISABLE_IT(usart_instance[i]->usart_handle->hdmarx, DMA_IT_HT);
             return; // break the loop
         }
@@ -107,19 +108,18 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 }
 
 /**
- * @brief µ±´®¿Ú·¢ËÍ/½ÓÊÕ³öÏÖ´íÎóÊ±,»áµ÷ÓÃ´Ëº¯Êı,´ËÊ±Õâ¸öº¯ÊıÒª×öµÄ¾ÍÊÇÖØĞÂÆô¶¯½ÓÊÕ
+ * @brief å½“ä¸²å£å‘é€/æ¥æ”¶å‡ºç°é”™è¯¯æ—¶,ä¼šè°ƒç”¨æ­¤å‡½æ•°,æ­¤æ—¶è¿™ä¸ªå‡½æ•°è¦åšçš„å°±æ˜¯é‡æ–°å¯åŠ¨æ¥æ”¶
  *
- * @note  ×î³£¼ûµÄ´íÎó:ÆæÅ¼Ğ£Ñé/Òç³ö/Ö¡´íÎó
+ * @note  æœ€å¸¸è§çš„é”™è¯¯:å¥‡å¶æ ¡éªŒ/æº¢å‡º/å¸§é”™è¯¯
  *
- * @param huart ·¢Éú´íÎóµÄ´®¿Ú
+ * @param huart å‘ç”Ÿé”™è¯¯çš„ä¸²å£
  */
-void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
-{
-    for (uint8_t i = 0; i < idx; ++i)
-    {
-        if (huart == usart_instance[i]->usart_handle)
-        {
-            HAL_UARTEx_ReceiveToIdle_DMA(usart_instance[i]->usart_handle, usart_instance[i]->recv_buff, usart_instance[i]->recv_buff_size);
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
+    for (uint8_t i = 0; i < idx; ++i) {
+        if (huart == usart_instance[i]->usart_handle) {
+            HAL_UARTEx_ReceiveToIdle_DMA(usart_instance[i]->usart_handle,
+                                         usart_instance[i]->recv_buff,
+                                         usart_instance[i]->recv_buff_size);
             __HAL_DMA_DISABLE_IT(usart_instance[i]->usart_handle->hdmarx, DMA_IT_HT);
             LOGWARNING("[bsp_usart] USART error callback triggered, instance idx [%d]", i);
             return;
