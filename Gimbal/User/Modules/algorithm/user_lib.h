@@ -11,18 +11,18 @@
 #endif
 #endif
 typedef __packed struct {
-    fp32 input;        // ÊäÈëÊı¾İ
-    fp32 out;          // Êä³öÊı¾İ
-    fp32 min_value;    // ÏŞ·ù×îĞ¡Öµ
-    fp32 max_value;    // ÏŞ·ù×î´óÖµ
-    fp32 frame_period; // Ê±¼ä¼ä¸ô
+    fp32 input;        // è¾“å…¥æ•°æ®
+    fp32 out;          // è¾“å‡ºæ•°æ®
+    fp32 min_value;    // é™å¹…æœ€å°å€¼
+    fp32 max_value;    // é™å¹…æœ€å¤§å€¼
+    fp32 frame_period; // æ—¶é—´é—´éš”
 } ramp_function_source_t;
 
 typedef __packed struct {
-    fp32 input;        // ÊäÈëÊı¾İ
-    fp32 out;          // ÂË²¨Êä³öµÄÊı¾İ
-    fp32 num[1];       // ÂË²¨²ÎÊı
-    fp32 frame_period; // ÂË²¨µÄÊ±¼ä¼ä¸ô µ¥Î» s
+    fp32 input;        // è¾“å…¥æ•°æ®
+    fp32 out;          // æ»¤æ³¢è¾“å‡ºçš„æ•°æ®
+    fp32 num[1];       // æ»¤æ³¢å‚æ•°
+    fp32 frame_period; // æ»¤æ³¢çš„æ—¶é—´é—´éš” å•ä½ s
 } first_order_filter_type_t;
 typedef __packed struct {
     uint16_t Order;
@@ -40,58 +40,58 @@ typedef __packed struct {
 } Ordinary_Least_Squares_t;
 // typedef struct
 //{
-//     float x;  // ¹À¼ÆµÄ×´Ì¬
-//     float P;  // ¹À¼ÆµÄÎó²îĞ­·½²î
-//     float Q;  // ÏµÍ³ÔëÉùĞ­·½²î
-//     float R;  // ²âÁ¿ÔëÉùĞ­·½²î
-// } KalmanFilter;// ¿¨¶ûÂüÂË²¨½á¹¹Ìå
+//     float x;  // ä¼°è®¡çš„çŠ¶æ€
+//     float P;  // ä¼°è®¡çš„è¯¯å·®åæ–¹å·®
+//     float Q;  // ç³»ç»Ÿå™ªå£°åæ–¹å·®
+//     float R;  // æµ‹é‡å™ªå£°åæ–¹å·®
+// } KalmanFilter;// å¡å°”æ›¼æ»¤æ³¢ç»“æ„ä½“
 
-// ¿ìËÙ¿ª·½
+// å¿«é€Ÿå¼€æ–¹
 extern fp32 invSqrt(fp32 num);
 
-// Ğ±²¨º¯Êı³õÊ¼»¯
+// æ–œæ³¢å‡½æ•°åˆå§‹åŒ–
 void ramp_init(ramp_function_source_t *ramp_source_type, fp32 frame_period, fp32 max, fp32 min);
 
-// Ğ±²¨º¯Êı¼ÆËã
+// æ–œæ³¢å‡½æ•°è®¡ç®—
 void ramp_calc(ramp_function_source_t *ramp_source_type, fp32 input);
-// Ò»½×ÂË²¨³õÊ¼»¯
+// ä¸€é˜¶æ»¤æ³¢åˆå§‹åŒ–
 extern void first_order_filter_init(first_order_filter_type_t *first_order_filter_type,
                                     fp32 frame_period, const fp32 num[1]);
-// Ò»½×ÂË²¨¼ÆËã
+// ä¸€é˜¶æ»¤æ³¢è®¡ç®—
 void first_order_filter_cali(first_order_filter_type_t *first_order_filter_type, fp32 input);
-// ¿¨¶ûÂüÂË²¨³õÊ¼»¯
+// å¡å°”æ›¼æ»¤æ³¢åˆå§‹åŒ–
 // void Kalman_Filter_Init(KalmanFilter *kf, float initial_x, float initial_P, float initial_Q,
 // float initial_R);
-////¿¨¶ûÂüÂË²¨¼ÆËã
+////å¡å°”æ›¼æ»¤æ³¢è®¡ç®—
 // void Kalman_Filter_Calc(KalmanFilter *kf, float measurement);
-// ¾ø¶ÔÏŞÖÆ
+// ç»å¯¹é™åˆ¶
 extern void abs_limit(fp32 *num, fp32 Limit);
-// ÅĞ¶Ï·ûºÅÎ»
+// åˆ¤æ–­ç¬¦å·ä½
 extern fp32 sign(fp32 value);
-// ¸¡µãËÀÇø
+// æµ®ç‚¹æ­»åŒº
 extern fp32 fp32_deadline(fp32 Value, fp32 minValue, fp32 maxValue);
-// int26ËÀÇø
+// int26æ­»åŒº
 extern int16_t int16_deadline(int16_t Value, int16_t minValue, int16_t maxValue);
-// ÏŞ·ùº¯Êı
+// é™å¹…å‡½æ•°
 extern fp32 fp32_constrain(fp32 Value, fp32 minValue, fp32 maxValue);
-// ÏŞ·ùº¯Êı
+// é™å¹…å‡½æ•°
 extern int16_t int16_constrain(int16_t Value, int16_t minValue, int16_t maxValue);
-// Ñ­»·ÏŞ·ùº¯Êı
+// å¾ªç¯é™å¹…å‡½æ•°
 extern fp32 loop_fp32_constrain(fp32 Input, fp32 minValue, fp32 maxValue);
 /**
- * @brief Ñ­»·ÏŞ·ù»¡¶È°æ
+ * @brief å¾ªç¯é™å¹…å¼§åº¦ç‰ˆ
  *
- * @param rad ÊäÈë»¡¶È
- * @return float ¸ñÊ½»¯Îª-Pi~Pi
+ * @param rad è¾“å…¥å¼§åº¦
+ * @return float æ ¼å¼åŒ–ä¸º-Pi~Pi
  */
 float RadFormat(float rad);
-// ½Ç¶È ¡ãÏŞ·ù 180 ~ -180
+// è§’åº¦ Â°é™å¹… 180 ~ -180
 extern fp32 theta_format(fp32 Ang);
-// ×îĞ¡¶ş³Ë·¨ÇóÎ¢·Ö
+// æœ€å°äºŒä¹˜æ³•æ±‚å¾®åˆ†
 float OLS_Derivative(Ordinary_Least_Squares_t *OLS, float deltax, float y);
-// ×îĞ¡¶ş³Ë·¨³õÊ¼»¯
+// æœ€å°äºŒä¹˜æ³•åˆå§‹åŒ–
 void OLS_Init(Ordinary_Least_Squares_t *OLS, uint16_t order);
-// ÏŞ·ùº¯Êı
+// é™å¹…å‡½æ•°
 float float_constrain(float Value, float minValue, float maxValue);
 
 int float_rounding(float raw);
@@ -101,26 +101,26 @@ float RadToDeg(float rad);
 float DegToRad(float deg);
 
 /**
- * @brief Err±Õ»·
+ * @brief Erré—­ç¯
  *
- * @param pid_err ÊäÈëÖµ
- * @param max_err Err×î´óÖµ
- * @return float  ÏŞ·ùºóÊä³ö
+ * @param pid_err è¾“å…¥å€¼
+ * @param max_err Erræœ€å¤§å€¼
+ * @return float  é™å¹…åè¾“å‡º
  */
 float NearbyErrFormat(float pid_err, float max_err);
 
 /**
- * @brief Ñ­»·ÏŞ·ù»¡¶ÈÕıÊı°æ
+ * @brief å¾ªç¯é™å¹…å¼§åº¦æ­£æ•°ç‰ˆ
  *
- * @param rad ÊäÈë»¡¶È
- * @return float ¸ñÊ½»¯Îª0~2Pi
+ * @param rad è¾“å…¥å¼§åº¦
+ * @return float æ ¼å¼åŒ–ä¸º0~2Pi
  */
 float RadPositiveFormat(float rad);
 /**
- * @brief Ñ­»·ÏŞ·ù½Ç¶ÈÕıÊı°æ
+ * @brief å¾ªç¯é™å¹…è§’åº¦æ­£æ•°ç‰ˆ
  *
- * @param rad ÊäÈë»¡¶È
- * @return float ¸ñÊ½»¯Îª0~360
+ * @param rad è¾“å…¥å¼§åº¦
+ * @return float æ ¼å¼åŒ–ä¸º0~360
  */
 float AngleFormatfp(float dgree);
 

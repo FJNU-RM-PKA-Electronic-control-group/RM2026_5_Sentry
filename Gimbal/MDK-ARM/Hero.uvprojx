@@ -3375,6 +3375,16 @@
               <FileType>1</FileType>
               <FilePath>..\User\Modules\dm_imu\dm_imu.c</FilePath>
             </File>
+            <File>
+              <FileName>dt7.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\Modules\remote\dt7.c</FilePath>
+            </File>
+            <File>
+              <FileName>t12d.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\Modules\remote\t12d.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
