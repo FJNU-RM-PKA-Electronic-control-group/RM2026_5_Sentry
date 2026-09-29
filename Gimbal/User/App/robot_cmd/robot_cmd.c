@@ -340,7 +340,7 @@ static void RemoteControlSet(void) {
     else if (speed_mode == SPEEDMODE_NORMAL) {
         chassis_cmd_send.vx = raw_vx;
         chassis_cmd_send.vy = raw_vy;
-    }
+	}
 	if(gimbal_cmd_send.gimbal_mode ==GIMBAL_VISION_MODE )
 	{
 						
@@ -349,14 +349,17 @@ static void RemoteControlSet(void) {
 				chassis_cmd_send.wz = guidence_fetch_data.wz;
 	}
 			
-		
-		if(rc_data[TEMP].rc.vr_a <=166)
+		static shoot_mode_e last_shoot_mode =SHOOT_OFF;
+		if(rc_data[TEMP].rc.vr_c <=166)
 		{
-			shoot_cmd_send.shoot_mode =SHOOT_OFF ;
+			if(last_shoot_mode !=SHOOT_OFF )
+			{
+				shoot_cmd_send.shoot_mode =SHOOT_STOP ;
+			}
 			shoot_cmd_send.friction_mode =FRICTION_OFF ;
 			shoot_cmd_send.load_mode =LOAD_STOP;
 		}
-		else if(rc_data[TEMP].rc.vr_a >166&&rc_data[TEMP].rc.vr_a <1166)
+		else if(rc_data[TEMP].rc.vr_c >166&&rc_data[TEMP].rc.vr_a <1166)
 		{
 			shoot_cmd_send.shoot_mode =SHOOT_ON ;
 			shoot_cmd_send.friction_mode =FRICTION_ON ;
@@ -366,11 +369,11 @@ static void RemoteControlSet(void) {
 		{
 			shoot_cmd_send.shoot_mode =SHOOT_ON ;
 			shoot_cmd_send.friction_mode =FRICTION_ON ;
-			if(rc_data[TEMP].rc.vr_b <=166)
+			if(rc_data[TEMP].rc.vr_d <=166)
 			{
 				shoot_cmd_send.load_mode =LOAD_1_BULLET ;
 			}
-			else if(rc_data[TEMP].rc.vr_b >=1166)
+			else if(rc_data[TEMP].rc.vr_d >=1166)
 			{
 				shoot_cmd_send.load_mode =LOAD_BURSTFIRE ;
 			}
@@ -379,6 +382,7 @@ static void RemoteControlSet(void) {
 				shoot_cmd_send.load_mode =LOAD_STOP ;
 			}
 		}
+		last_shoot_mode = shoot_cmd_send.shoot_mode ;
 	}
 	
 	else 
