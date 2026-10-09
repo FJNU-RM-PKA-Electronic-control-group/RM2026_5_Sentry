@@ -14,9 +14,7 @@
 
 // 遥控器数据
 RC_ctrl_t rc_ctrl[2]; //[0]:当前数据TEMP,[1]:上一次的数据LAST.用于按键持续按下和切换的判断
-uint16_t ch[16];//wbus协议通道数据
-
-
+uint16_t ch[16];      // wbus协议通道数据
 
 gimbal_referee_info_t *rc_referee_recv;
 static uint8_t rc_init_flag = 0; // 遥控器初始化标志位
@@ -102,32 +100,35 @@ static void RCLostCallback(void *id) {
         USARTServiceInit(rc_usart_instance); // 尝试重新启动接收
         rc_ctrl->rc_state = 0;
         LOGWARNING("[rc] remote control lost");
-//    }
-}
+        //    }
+    }
 
-RC_ctrl_t *RemoteControlInit(UART_HandleTypeDef *rc_usart_handle, RC_Type_e type) {
-    USART_Init_Config_s conf;
-    conf.module_callback = RemoteControlRxCallback;
-    conf.usart_handle    = rc_usart_handle;
-    rc_type              = type;
-    conf.recv_buff_size  = T12D_CONTROL_FRAME_SIZE;
-    //(rc_type == RCTYPE_T12D) ? T12D_CONTROL_FRAME_SIZE : DT7_CONTROL_FRAME_SIZE;
-    rc_usart_instance = USARTRegister(&conf);
+    RC_ctrl_t *RemoteControlInit(UART_HandleTypeDef * rc_usart_handle, RC_Type_e type) {
+        USART_Init_Config_s conf;
+        conf.module_callback = RemoteControlRxCallback;
+        conf.usart_handle    = rc_usart_handle;
+        rc_type              = type;
+        conf.recv_buff_size  = T12D_CONTROL_FRAME_SIZE;
+        //(rc_type == RCTYPE_T12D) ? T12D_CONTROL_FRAME_SIZE : DT7_CONTROL_FRAME_SIZE;
+        rc_usart_instance = USARTRegister(&conf);
 
-    // 进行守护进程的注册,用于定时检查遥控器是否正常工作
-    Daemon_Init_Config_s daemon_conf = {
-        .reload_count = 10,   // 100ms未收到数据视为离线,遥控器的接收频率实际上是1000/14Hz(大约70Hz)
-        .callback     = RCLostCallback,
-        .owner_id     = NULL, // 只有1个遥控器,不需要owner_id
-    };
-    rc_daemon_instance = DaemonRegister(&daemon_conf);
-    rc_referee_recv    = GimbalRefereeTaskInit(&huart1);
-    rc_init_flag       = 1;
-    return rc_ctrl;
-}
+        // 进行守护进程的注册,用于定时检查遥控器是否正常工作
+        Daemon_Init_Config_s daemon_conf = {
+            .reload_count =
+                10,           // 100ms未收到数据视为离线,遥控器的接收频率实际上是1000/14Hz(大约70Hz)
+            .callback = RCLostCallback,
+            .owner_id = NULL, // 只有1个遥控器,不需要owner_id
+        };
+        rc_daemon_instance = DaemonRegister(&daemon_conf);
+        rc_referee_recv    = GimbalRefereeTaskInit(&huart1);
+        rc_init_flag       = 1;
+        return rc_ctrl;
+    }
 
-uint8_t RemoteControlIsOnline() {
-    if (rc_init_flag)
-        return DaemonIsOnline(rc_daemon_instance);
-    return 0;
-}
+    RC_Type_e GetRCType(void) { return rc_type; }
+
+    uint8_t RemoteControlIsOnline() {
+        if (rc_init_flag)
+            return DaemonIsOnline(rc_daemon_instance);
+        return 0;
+    }

@@ -147,67 +147,65 @@ typedef struct {
         Sw_Mode_e sw_d;
 
     } rc;
-
+    Key_t key[3];        // 改为位域后的键盘索引,空间减少8倍,速度增加16~倍
     uint8_t key_count[3][16];
     RC_Type_e recv_type; // 为之后自适应计划留的标志位
     uint8_t rc_state;
 } RC_ctrl_t;
 
-
-
 //------------------------- dbus协议----------------------------------------
 ///* ----------------------- PC Key Definition-------------------------------- */
 //// 对应key[x][0~16],获取对应的键;例如通过key[KEY_PRESS][Key_W]获取W键是否按下,后续改为位域后删除
-//#define Key_W     0
-//#define Key_S     1
-//#define Key_D     2
-//#define Key_A     3
-//#define Key_Shift 4
-//#define Key_Ctrl  5
-//#define Key_Q     6
-//#define Key_E     7
-//#define Key_R     8
-//#define Key_F     9
-//#define Key_G     10
-//#define Key_Z     11
-//#define Key_X     12
-//#define Key_C     13
-//#define Key_V     14
-//#define Key_B     15
+// #define Key_W     0
+// #define Key_S     1
+// #define Key_D     2
+// #define Key_A     3
+// #define Key_Shift 4
+// #define Key_Ctrl  5
+// #define Key_Q     6
+// #define Key_E     7
+// #define Key_R     8
+// #define Key_F     9
+// #define Key_G     10
+// #define Key_Z     11
+// #define Key_X     12
+// #define Key_C     13
+// #define Key_V     14
+// #define Key_B     15
 
 ///* ----------------------- Data Struct ------------------------------------- */
 //// 待测试的位域结构体,可以极大提升解析速度
-//typedef union {
-//    struct // 用于访问键盘状态
-//    {
-//        uint16_t w : 1;
-//        uint16_t s : 1;
-//        uint16_t a : 1;
-//        uint16_t d : 1;
-//        uint16_t shift : 1;
-//        uint16_t ctrl : 1;
-//        uint16_t q : 1;
-//        uint16_t e : 1;
-//        uint16_t r : 1;
-//        uint16_t f : 1;
-//        uint16_t g : 1;
-//        uint16_t z : 1;
-//        uint16_t x : 1;
-//        uint16_t c : 1;
-//        uint16_t v : 1;
-//        uint16_t b : 1;
-//    };
-//    uint16_t keys; // 用于memcpy而不需要进行强制类型转换
-//} Key_t;
+// typedef union {
+//     struct // 用于访问键盘状态
+//     {
+//         uint16_t w : 1;
+//         uint16_t s : 1;
+//         uint16_t a : 1;
+//         uint16_t d : 1;
+//         uint16_t shift : 1;
+//         uint16_t ctrl : 1;
+//         uint16_t q : 1;
+//         uint16_t e : 1;
+//         uint16_t r : 1;
+//         uint16_t f : 1;
+//         uint16_t g : 1;
+//         uint16_t z : 1;
+//         uint16_t x : 1;
+//         uint16_t c : 1;
+//         uint16_t v : 1;
+//         uint16_t b : 1;
+//     };
+//     uint16_t keys; // 用于memcpy而不需要进行强制类型转换
+// } Key_t;
 
 //// @todo 当前结构体嵌套过深,需要进行优化
-//typedef struct {
-//    struct {
-//        int16_t rocker_l_;    // 左水平
-//        int16_t rocker_l1;    // 左竖直
-//        int16_t rocker_r_;    // 右水平
-//        int16_t rocker_r1;    // 右竖直
-//        int16_t dial;         // 侧边拨轮
+// typedef struct {
+//     struct {
+//         int16_t rocker_l_;    // 左水平
+//         int16_t rocker_l1;    // 左竖直
+//         int16_t rocker_r_;    // 右水平
+//         int16_t rocker_r1;    // 右竖直
+//         int16_t dial;         // 侧边拨轮
 
 //        uint8_t switch_left;  // 左侧开关
 //        uint8_t switch_right; // 右侧开关
@@ -225,8 +223,6 @@ typedef struct {
 //    uint8_t key_count[3][16];
 //    uint8_t rc_state;
 //} RC_ctrl_t;
-
-
 
 /* ------------------------- Internal Data ----------------------------------- */
 
@@ -272,5 +268,6 @@ __STATIC_INLINE int16_t RCScaleUnipolar(uint16_t raw, uint16_t lo, uint16_t span
     uint32_t v = (uint32_t)(raw - lo) * (uint32_t)RC_SCALED / span;
     return (int16_t)(v > (uint32_t)RC_SCALED ? RC_SCALED : v);
 }
+RC_Type_e GetRCType(void);
 
 #endif
