@@ -75,8 +75,8 @@ void RCDecodeT12D(const uint8_t *sbus_buf, RC_ctrl_t *rc_ptr) {
     ch[5]  = (((sbus_buf[7] >> 7) | (sbus_buf[8] << 1) | (sbus_buf[9] << 9)) & 0x07ff);
     ch[6]  = (((sbus_buf[9] >> 2) | (sbus_buf[10] << 6)) & 0x07ff);
     ch[7]  = (((sbus_buf[10] >> 5) | (sbus_buf[11] << 3)) & 0x07ff);
-    ch[8]  = (((sbus_buf[12] >> 0) | (sbus_buf[13] << 8)) & 0x07ff);
-    ch[9]  = (((sbus_buf[13] >> 3) | (sbus_buf[14] << 5)) & 0x07ff);
+    ch[8]  = (((sbus_buf[13] >> 3) | (sbus_buf[14] << 5)) & 0x07ff);
+    ch[9]  = (((sbus_buf[12] >> 0) | (sbus_buf[13] << 8)) & 0x07ff);
     ch[10] = (((sbus_buf[14] >> 6) | (sbus_buf[15] << 2) | (sbus_buf[16] << 10)) & 0x07ff);
     ch[11] = (((sbus_buf[16] >> 1) | (sbus_buf[17] << 7)) & 0x07ff);
     ch[12] = (((sbus_buf[17] >> 4) | (sbus_buf[18] << 4)) & 0x07ff);
