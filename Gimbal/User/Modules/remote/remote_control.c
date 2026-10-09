@@ -14,6 +14,10 @@
 
 // 遥控器数据
 RC_ctrl_t rc_ctrl[2]; //[0]:当前数据TEMP,[1]:上一次的数据LAST.用于按键持续按下和切换的判断
+uint16_t ch[16];//wbus协议通道数据
+
+
+
 gimbal_referee_info_t *rc_referee_recv;
 static uint8_t rc_init_flag = 0; // 遥控器初始化标志位
 static RC_Type_e rc_type;
@@ -98,7 +102,7 @@ static void RCLostCallback(void *id) {
         USARTServiceInit(rc_usart_instance); // 尝试重新启动接收
         rc_ctrl->rc_state = 0;
         LOGWARNING("[rc] remote control lost");
-    }
+//    }
 }
 
 RC_ctrl_t *RemoteControlInit(UART_HandleTypeDef *rc_usart_handle, RC_Type_e type) {

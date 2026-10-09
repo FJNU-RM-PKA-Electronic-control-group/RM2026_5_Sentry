@@ -160,14 +160,18 @@ void VisionControlSet(void) {
     //     guidence_fetch_data.vy != chassis_cmd_send.vy && chassis_cmd_send.vy == 0) {
     //     StateSwitch();
     // }
-    if (vision_fetch_data.vision_state == NO_TARGET) {
-        gimbal_cmd_send.gimbal_mode = GIMBAL_SCAN_MODE;
+	
+	if (vision_fetch_data.vision_state == NO_TARGET) {
+         gimbal_cmd_send.gimbal_mode = GIMBAL_SCAN_MODE;
+		 speed_mode =SPEEDMODE_ABSOLUTE ;
     }
     else {
-        // gimbal_cmd_send.gimbal_modse = GIMBAL_VISION_MODE;
+        gimbal_cmd_send.gimbal_mode = GIMBAL_VISION_MODE;
+		speed_mode =SPEEDMODE_NORMAL;
         gimbal_cmd_send.pitch = vision_fetch_data.aim_pitch; // 0.027;
         gimbal_cmd_send.yaw   = vision_fetch_data.aim_yaw;
     }
+	
 
     // if ((chassis_fetch_data.game_progress != GAME_IN_PROGRESS) &&
     //     (chassis_fetch_data.game_progress != GAME_CALCULATING_RESULTS)) {
@@ -177,170 +181,220 @@ void VisionControlSet(void) {
 
     chassis_cmd_send.vx = guidence_fetch_data.vx;
     chassis_cmd_send.vy = guidence_fetch_data.vy;
-
-    // if (chassis_fetch_data.game_progress == GAME_IN_PROGRESS) {
-    //     if (chassis_fetch_data.status_flag & GET_HURT) {
-    //         if ((guidence_fetch_data.vx == 0) && (guidence_fetch_data.vy == 0)) {
-    //             chassis_cmd_send.wz = 80.0f;
-    //         }
-    //         else {
-    //             chassis_cmd_send.wz = 40.0f;
-    //         }
-    //     }
-    //     else {
-    //         chassis_cmd_send.wz = 0.0f;
-    //     }
-    // }
-
-    // guidence_fetch_data.wz;
+    //chassis_cmd_send.wz = 0;
+	chassis_cmd_send.wz = guidence_fetch_data.wz;
+	
     // if (chassis_fetch_data.rfid_status == RFID_CENTER_GAIN) {
     //     chassis_cmd_send.wz = 0;
     // }
 
     chassis_cmd_send.chassis_mode = (uint8_t)CHASSIS_ROTATE;
-    chassis_cmd_send.wz           = 0.0f;
     shoot_cmd_send.friction_mode  = FRICTION_ON;
-
-    if (vision_fetch_data.vision_state == NO_TARGET) {
-        gimbal_cmd_send.gimbal_mode = GIMBAL_SCAN_MODE;
-        return;
-    }
-    else {
-        // gimbal_cmd_send.gimbal_modse = GIMBAL_VISION_MODE;
-        gimbal_cmd_send.pitch = vision_fetch_data.aim_pitch; // 0.027;
-        gimbal_cmd_send.yaw   = vision_fetch_data.aim_yaw;
-    }
     // shoot_cmd_send.shoot_mode = SHOOT_ON;
 
     // #ifdef USE_VISION_FIRE_CONTROL
-    // //自动模式下的发弹逻辑
-    // shoot_cmd_send.friction_mode = FRICTION_ON;
-    // if (vision_fetch_data.fire_advice == SHOOT_ON) {
-    //     shoot_cmd_send.shoot_mode = SHOOT_ON;
-    //     shoot_cmd_send.load_mode  = LOAD_BURSTFIRE;
-    // }
-    // 手动模式下的发弹逻辑
-    if (vision_fetch_data.fire_advice != SHOOT_ON) {
-        shoot_cmd_send.shoot_mode = SHOOT_ON;
-        shoot_cmd_send.load_mode  = LOAD_STOP;
-    }
+	
+    shoot_cmd_send.friction_mode = FRICTION_ON;	
+     if (vision_fetch_data.fire_advice == SHOOT_ON) {
+         shoot_cmd_send.shoot_mode = SHOOT_ON;
+         shoot_cmd_send.load_mode  = LOAD_BURSTFIRE;
+     }
+    //if (vision_fetch_data.fire_advice != SHOOT_ON) {
+    //    shoot_cmd_send.shoot_mode = SHOOT_ON;
+    //    shoot_cmd_send.load_mode  = LOAD_STOP;
+    //}
     // #endif
 }
+//-----------------------------遥控器----------------------------------
+
+
+//--------检测标志位---------
+int is_up=0;
+int is_down=0;
+int is_mid=0;
 
 static void RemoteControlSet(void) {
-    // static gimbal_mode_e last_gimbal_mode = GIMBAL_ZERO_FORCE;
-    // last_robot_state                      = robot_state;
-    // if (switch_is_up(rc_data[TEMP].rc.switch_right)) // ???????[??],??????????
-    // {
-    //     chassis_cmd_send.chassis_mode = (uint8_t)CHASSIS_FOLLOW_GIMBAL_YAW;
-    //     gimbal_cmd_send.gimbal_mode   = GIMBAL_GYRO_MODE;
-    //     if (switch_is_up(rc_data[TEMP].rc.switch_left)) {
-    //         chassis_cmd_send.chassis_mode = (uint8_t)CHASSIS_ROTATE;
-    //         chassis_cmd_send.wz           = 50;
-    //     }
-    // }
-    // else if (switch_is_mid(rc_data[TEMP].rc.switch_right)) //
-    // ???????[??],????????????,???????????
-    // {
-    //     chassis_cmd_send.chassis_mode = (uint8_t)CHASSIS_NO_FOLLOW;
-    //     gimbal_cmd_send.gimbal_mode   = GIMBAL_FREE_MODE;
-    //     if (switch_is_up(rc_data[TEMP].rc.switch_left)) {
-    //         speed_mode                  = SPEEDMODE_ABSOLUTE;
-    //         gimbal_cmd_send.gimbal_mode = GIMBAL_SCAN_MODE;
-    //         if (last_gimbal_mode != gimbal_cmd_send.gimbal_mode)
-    //             speed_offset_angle = DM_ins_data->yaw;
-    //         // chassis_cmd_send.chassis_mode = (uint8_t)CHASSIS_ROTATE;
-    //         // chassis_cmd_send.wz           = -50;
-    //     }
-    //     else {
-    //         speed_mode = SPEEDMODE_NORMAL;
-    //     }
-    // }
-    // if (switch_is_down(rc_data[TEMP].rc.switch_right)) // ???????[??],????
-    // {
-    //     robot_state                   = ROBOT_STOP;
-    //     gimbal_cmd_send.gimbal_mode   = GIMBAL_ZERO_FORCE;
-    //     chassis_cmd_send.chassis_mode = (uint8_t)CHASSIS_ZERO_FORCE;
-    // }
-    // else {
-    //     robot_state = ROBOT_READY;
-    // }
+     static gimbal_mode_e last_gimbal_mode = GIMBAL_ZERO_FORCE;
+    last_robot_state                      = robot_state;
+	//---------------无力模式下测试函数---------------------
+/*	 robot_state                   = ROBOT_STOP;
+        gimbal_cmd_send.gimbal_mode   = GIMBAL_ZERO_FORCE;
+        chassis_cmd_send.chassis_mode = (uint8_t)CHASSIS_ZERO_FORCE;
+	 shoot_cmd_send.friction_mode = FRICTION_OFF;
+ shoot_cmd_send.load_mode = LOAD_STOP;
+//拨杆三挡位
+					  if(rc_data[TEMP].rc.sw_a==RC_SW_UP)
+						{
+			is_up=1;
+	
+						}
+						else 	is_up=0;
+						 if(rc_data[TEMP].rc.sw_a==RC_SW_MID)
+						{
+		is_mid=1;
+	
+						}
+						else 	is_mid=0;
 
-    // if (switch_is_down(rc_data[TEMP].rc.switch_left) &&
-    //     switch_is_down(rc_data[TEMP].rc.switch_right)) // ?????????,???��?????
-    // {
-    //     CalibrateTask(rc_data);
-    // }
 
-    // // ???????,??????????????
-    // gimbal_cmd_send.pitch += PitchLimit(0.00001f * (float)rc_data[TEMP].rc.rocker_l1);
-    // gimbal_cmd_send.yaw =
-    //     theta_format(gimbal_cmd_send.yaw - 0.001f * (float)rc_data[TEMP].rc.rocker_l_);
-    // float raw_vx = 20.0f * (float)rc_data[TEMP].rc.rocker_r_; // _??????
-    // float raw_vy = 20.0f * (float)rc_data[TEMP].rc.rocker_r1; // 1???????
-    // // ???????,????��???��????(????????????��??),??????????
-    // // chassis_cmd_send.vx = 20.0f * (float)rc_data[TEMP].rc.rocker_r_; // _??????
-    // // chassis_cmd_send.vy = 20.0f * (float)rc_data[TEMP].rc.rocker_r1; // 1???????
-    // float sin_theta, cos_theta;
-    // if (speed_mode == SPEEDMODE_ABSOLUTE) {
-    //     cos_theta = cosf(theta_format(speed_offset_angle - DM_ins_data->yaw) * DEGREE_2_RAD);
-    //     sin_theta = sinf(theta_format(speed_offset_angle - DM_ins_data->yaw) * DEGREE_2_RAD);
-    //     chassis_cmd_send.vx = raw_vx * cos_theta - raw_vy * sin_theta;
-    //     chassis_cmd_send.vy = raw_vx * sin_theta + raw_vy * cos_theta;
-    // }
-    // else if (speed_mode == SPEEDMODE_NORMAL) {
-    //     chassis_cmd_send.vx = raw_vx;
-    //     chassis_cmd_send.vy = raw_vy;
-    // }
-    // if (last_gimbal_mode != gimbal_cmd_send.gimbal_mode) {
-    //     switch (gimbal_cmd_send.gimbal_mode) {
-    //     case GIMBAL_FREE_MODE:
-    //         gimbal_cmd_send.yaw   = ins_data->Yaw * RAD_2_DEGREE;
-    //         gimbal_cmd_send.pitch = ins_data->Pitch;
-    //         break;
-    //     case GIMBAL_GYRO_MODE:
-    //         gimbal_cmd_send.yaw   = ins_data->Yaw * RAD_2_DEGREE;
-    //         gimbal_cmd_send.pitch = ins_data->Pitch;
-    //     case GIMBAL_SCAN_MODE:
-    //         gimbal_cmd_send.yaw   = ins_data->Yaw * RAD_2_DEGREE;
-    //         gimbal_cmd_send.pitch = ins_data->Pitch;
-    //     default:
-    //         break;
-    //     }
-    // }
-    // last_gimbal_mode = gimbal_cmd_send.gimbal_mode;
+		
+				  if(rc_data[TEMP].rc.sw_a==RC_SW_DOWN)
+						{
+		is_down=1;
+	
+						}
+            else 	is_down=0;
+  */     
+			
 
-    // // ???????
-    // // ????????,????????????,???????
-    // if (rc_data[TEMP].rc.dial < -100 || rc_data[TEMP].rc.dial > 100) // ????(??)????100,???????
-    // {
-    //     shoot_cmd_send.friction_mode = FRICTION_ON;
-    // }
-    // else {
-    //     shoot_cmd_send.friction_mode = FRICTION_OFF;
-    // }
-    // // ????????,?????????????????,?????????
-    // if (rc_data[TEMP].rc.dial > 500) {
-    //     shoot_cmd_send.bullet_speed = TEST;
-    //     shoot_cmd_send.load_mode    = LOAD_BURSTFIRE;
-    //     shoot_cmd_send.shoot_mode   = SHOOT_ON;
-    // }
-    // else if (rc_data[TEMP].rc.dial < -500) {
-    //     shoot_cmd_send.load_mode  = LOAD_REVERSE;
-    //     shoot_cmd_send.shoot_mode = SHOOT_ON;
-    // }
-    // else {
-    //     shoot_cmd_send.load_mode = LOAD_STOP;
-    // }
-    // if (switch_is_down(rc_data[TEMP].rc.switch_left) &&
-    //     robot_state != ROBOT_STOP) // ????????[??],?????
-    // {
-    //     VisionControlSet();
-    // }
-    // // ???????,??????1??,????????????????????��?��????,
-    // shoot_cmd_send.shoot_rate = 2;
+
+	
+	if(rc_data[TEMP].rc.sw_a ==RC_SW_DOWN )
+	{
+		robot_state =ROBOT_STOP ;
+		if(rc_data[TEMP].rc.sw_d ==RC_SW_DOWN )
+		{
+			CalibrateTask(rc_data);
+		}
+	}
+	
+	else if(rc_data[TEMP].rc.sw_a ==RC_SW_MID )
+	{
+		if(rc_data[TEMP].rc.sw_d ==RC_SW_UP)
+		{
+			gimbal_cmd_send.gimbal_mode =GIMBAL_GYRO_MODE ;
+			chassis_cmd_send.chassis_mode =CHASSIS_FOLLOW_GIMBAL_YAW ;
+		}
+		
+		else
+		{
+			gimbal_cmd_send.gimbal_mode =GIMBAL_FREE_MODE ;
+			chassis_cmd_send.chassis_mode =CHASSIS_NO_FOLLOW ;
+			
+		    if(rc_data[TEMP].rc.sw_c  ==RC_SW_UP )
+			{
+				speed_mode =SPEEDMODE_ABSOLUTE ;
+				gimbal_cmd_send.gimbal_mode =GIMBAL_SCAN_MODE ;
+				
+
+			}
+			else if(rc_data[TEMP].rc.sw_c ==RC_SW_DOWN )
+			{
+				speed_mode =SPEEDMODE_NORMAL;
+				gimbal_cmd_send.gimbal_mode =GIMBAL_VISION_MODE ;
+
+			}
+			
+		}
+		
+		if(rc_data[TEMP].rc.sw_b ==RC_SW_MID )
+		{
+			chassis_cmd_send.wz =0;
+		}
+		else if(rc_data[TEMP].rc.sw_b ==RC_SW_DOWN )
+		{
+			chassis_cmd_send.chassis_mode =CHASSIS_ROTATE ;
+			chassis_cmd_send.wz =-50 ;
+			
+		}
+		else
+		{
+			chassis_cmd_send.chassis_mode =CHASSIS_ROTATE ;
+			chassis_cmd_send.wz =50 ;
+		}
+		
+		if (last_gimbal_mode != gimbal_cmd_send.gimbal_mode) 
+		{
+        switch (gimbal_cmd_send.gimbal_mode) {
+        case GIMBAL_FREE_MODE:
+            gimbal_cmd_send.yaw   = ins_data->Yaw * RAD_2_DEGREE;
+            gimbal_cmd_send.pitch = ins_data->Pitch;
+            break;
+        case GIMBAL_GYRO_MODE:
+            gimbal_cmd_send.yaw   = ins_data->Yaw * RAD_2_DEGREE;
+            gimbal_cmd_send.pitch = ins_data->Pitch;
+        case GIMBAL_SCAN_MODE:
+            gimbal_cmd_send.yaw   = ins_data->Yaw * RAD_2_DEGREE;
+            gimbal_cmd_send.pitch = ins_data->Pitch;
+        default:
+            break;
+			}
+        }
+	last_gimbal_mode = gimbal_cmd_send.gimbal_mode;		
+			
+	gimbal_cmd_send.pitch += PitchLimit(0.00001f * (float)rc_data[TEMP].rc.rocker_l1);
+    gimbal_cmd_send.yaw =
+         theta_format(gimbal_cmd_send.yaw - 0.001f * (float)rc_data[TEMP].rc.rocker_l_);
+    float raw_vx = 20.0f * (float)rc_data[TEMP].rc.rocker_r_; // _??????
+    float raw_vy = 20.0f * (float)rc_data[TEMP].rc.rocker_r1; // 1???????
+    // chassis_cmd_send.vx = 20.0f * (float)rc_data[TEMP].rc.rocker_r_; // _??????
+    // chassis_cmd_send.vy = 20.0f * (float)rc_data[TEMP].rc.rocker_r1; // 1???????
+	
+    float sin_theta, cos_theta;
+    if (speed_mode == SPEEDMODE_ABSOLUTE) {
+        cos_theta = cosf(theta_format(speed_offset_angle - DM_ins_data->yaw) * DEGREE_2_RAD);
+        sin_theta = sinf(theta_format(speed_offset_angle - DM_ins_data->yaw) * DEGREE_2_RAD);
+        chassis_cmd_send.vx = raw_vx * cos_theta - raw_vy * sin_theta;
+        chassis_cmd_send.vy = raw_vx * sin_theta + raw_vy * cos_theta;
+    }
+    else if (speed_mode == SPEEDMODE_NORMAL) {
+        chassis_cmd_send.vx = raw_vx;
+        chassis_cmd_send.vy = raw_vy;
+	}
+	if(gimbal_cmd_send.gimbal_mode ==GIMBAL_VISION_MODE )
+	{
+						
+				chassis_cmd_send.vx = guidence_fetch_data.vx;
+				chassis_cmd_send.vy = guidence_fetch_data.vy;
+				chassis_cmd_send.wz = guidence_fetch_data.wz;
+	}
+			
+		static shoot_mode_e last_shoot_mode =SHOOT_OFF;
+		if(rc_data[TEMP].rc.vr_c <=166)
+		{
+			if(last_shoot_mode !=SHOOT_OFF )
+			{
+				shoot_cmd_send.shoot_mode =SHOOT_STOP ;
+			}
+			shoot_cmd_send.friction_mode =FRICTION_OFF ;
+			shoot_cmd_send.load_mode =LOAD_STOP;
+		}
+		else if(rc_data[TEMP].rc.vr_c >166&&rc_data[TEMP].rc.vr_a <1166)
+		{
+			shoot_cmd_send.shoot_mode =SHOOT_ON ;
+			shoot_cmd_send.friction_mode =FRICTION_ON ;
+			shoot_cmd_send.load_mode =LOAD_STOP ;
+		}
+		else
+		{
+			shoot_cmd_send.shoot_mode =SHOOT_ON ;
+			shoot_cmd_send.friction_mode =FRICTION_ON ;
+			if(rc_data[TEMP].rc.vr_d <=166)
+			{
+				shoot_cmd_send.load_mode =LOAD_1_BULLET ;
+			}
+			else if(rc_data[TEMP].rc.vr_d >=1166)
+			{
+				shoot_cmd_send.load_mode =LOAD_BURSTFIRE ;
+			}
+			else
+			{
+				shoot_cmd_send.load_mode =LOAD_STOP ;
+			}
+		}
+		last_shoot_mode = shoot_cmd_send.shoot_mode ;
+	}
+	
+	else 
+	{
+		VisionControlSet();
+	}
+	
+    shoot_cmd_send.shoot_rate = 2;
 }
 
+
+//----------------------dbus协议-------------------------------------------------
 /**
  * @brief ???????????????????????
  *
@@ -462,24 +516,24 @@ static void MouseKeySet(void) {
  */
 static void EmergencyHandler(void) {
     // ?????????????
-    // if (rc_data->rc_state == 0) {
-    //     robot_state = ROBOT_STOP;
-    // }
-    // if (robot_state == ROBOT_STOP) // ?????????????��??????????��?
-    // {
-    //     gimbal_cmd_send.gimbal_mode   = GIMBAL_ZERO_FORCE;
-    //     chassis_cmd_send.chassis_mode = (uint8_t)CHASSIS_ZERO_FORCE;
-    //     shoot_cmd_send.shoot_mode     = SHOOT_OFF;
-    //     shoot_cmd_send.friction_mode  = FRICTION_OFF;
-    //     shoot_cmd_send.load_mode      = LOAD_STOP;
-    //     // LOGERROR("[CMD] emergency stop!");
-    // }
-    // // ???????????[??],?????s??????
-    // if (switch_is_up(rc_data[TEMP].rc.switch_right)) {
-    //     robot_state               = ROBOT_READY;
-    //     shoot_cmd_send.shoot_mode = SHOOT_ON;
-    //     // LOGINFO("[CMD] reinstate, robot ready");
-    // }
+    if (rc_data->rc_state == 0) {
+        robot_state = ROBOT_STOP;
+    }
+    if (robot_state == ROBOT_STOP) // ?????????????��??????????��?
+    {
+        gimbal_cmd_send.gimbal_mode   = GIMBAL_ZERO_FORCE;
+        chassis_cmd_send.chassis_mode = (uint8_t)CHASSIS_ZERO_FORCE;
+        shoot_cmd_send.shoot_mode     = SHOOT_OFF;
+        shoot_cmd_send.friction_mode  = FRICTION_OFF;
+        shoot_cmd_send.load_mode      = LOAD_STOP;
+        // LOGERROR("[CMD] emergency stop!");
+    }
+    // ???????????[??],?????s??????
+    if (rc_data[TEMP].rc.sw_d==RC_SW_UP) {
+        robot_state               = ROBOT_READY;
+        shoot_cmd_send.shoot_mode = SHOOT_ON;
+        // LOGINFO("[CMD] reinstate, robot ready");
+    }
 }
 
 void RobotCmdInit(void) {
