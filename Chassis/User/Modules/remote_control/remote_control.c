@@ -8,7 +8,7 @@
 #include "referee_task.h"
 // #include "gimbal_referee.h"
 
-#define REMOTE_CONTROL_FRAME_SIZE 18u // 遥控器接收的buffer大小
+#define REMOTE_CONTROL_FRAME_SIZE 25u // 遥控器接收的buffer大小
 
 // 遥控器数据
 RC_ctrl_t rc_ctrl[2]; //[0]:当前数据TEMP,[1]:上一次的数据LAST.用于按键持续按下和切换的判断
@@ -115,7 +115,7 @@ static void sbus_to_rc(const uint8_t *sbus_buf) {
         if ((key_with_shift & j) && !(key_last_with_shift & j))
             rc_ctrl[TEMP].key_count[KEY_PRESS_WITH_SHIFT][i]++;
     }
-		de_rc_ctrl =sbus_buf[0];
+    de_rc_ctrl = sbus_buf[0];
     memcpy(&rc_ctrl[LAST], &rc_ctrl[TEMP],
            sizeof(RC_ctrl_t)); // 保存上一次的数据,用于按键持续按下和切换的判断
 }

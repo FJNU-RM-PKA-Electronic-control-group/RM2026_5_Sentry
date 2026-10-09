@@ -399,111 +399,112 @@ static void RemoteControlSet(void) {
  * @brief ???????????????????????
  *
  */
-//static void MouseKeySet(void) {
-//    chassis_cmd_send.vy =
-//        rc_data[TEMP].key[KEY_PRESS].w * 15000 - rc_data[TEMP].key[KEY_PRESS].s * 15000; // ???????
-//    chassis_cmd_send.vx =
-//        rc_data[TEMP].key[KEY_PRESS].d * 15000 - rc_data[TEMP].key[KEY_PRESS].a * 15000;
+static void MouseKeySet(void) {
+    // chassis_cmd_send.vy =
+    //     rc_data[TEMP].key[KEY_PRESS].w * 15000 - rc_data[TEMP].key[KEY_PRESS].s * 15000; //
+    //     ???????
+    // chassis_cmd_send.vx =
+    //     rc_data[TEMP].key[KEY_PRESS].d * 15000 - rc_data[TEMP].key[KEY_PRESS].a * 15000;
 
-//    rc_data[TEMP].mouse.x *= -1;
-//    rc_data[TEMP].mouse.y *= -1;
-//    gimbal_cmd_send.yaw =
-//        RadFormat(gimbal_cmd_send.yaw + (float)rc_data[TEMP].mouse.x / 10000); // ???????
-//    gimbal_cmd_send.pitch += PitchLimit((float)rc_data[TEMP].mouse.y / 10000);
+    // rc_data[TEMP].mouse.x *= -1;
+    // rc_data[TEMP].mouse.y *= -1;
+    // gimbal_cmd_send.yaw =
+    //     RadFormat(gimbal_cmd_send.yaw + (float)rc_data[TEMP].mouse.x / 10000); // ???????
+    // gimbal_cmd_send.pitch += PitchLimit((float)rc_data[TEMP].mouse.y / 10000);
 
-//    switch (rc_data[TEMP].key_count[KEY_PRESS][Key_Z] % 3) // Z?????????
-//    {
-//    case 0:
-//        shoot_cmd_send.bullet_speed = TEST;
-//        break;
-//    case 1:
-//        shoot_cmd_send.bullet_speed = TEST;
-//        break;
-//    default:
-//        shoot_cmd_send.bullet_speed = TEST;
-//        break;
-//    }
-//    switch (rc_data[TEMP].key_count[KEY_PRESS][Key_E] % 2) // E?????��?????
-//    {
-//    case 0:
-//        shoot_cmd_send.load_mode = LOAD_1_BULLET;
-//        break;
-//    default:
-//        shoot_cmd_send.load_mode = LOAD_BURSTFIRE;
-//        break;
-//    }
-//    switch (rc_data[TEMP].key_count[KEY_PRESS][Key_F] % 2) // F???????????
-//    {
-//    case 0:
-//        shoot_cmd_send.friction_mode = FRICTION_OFF;
-//        break;
-//    default:
-//        shoot_cmd_send.friction_mode = FRICTION_ON;
-//        break;
-//    }
-//    switch (rc_data[TEMP].key_count[KEY_PRESS][Key_V] % 3) // V???��??????
-//    {
-//    case 0:
-//        robot_state = ROBOT_STOP;
-//        break;
-//    case 1:
-//        robot_state                   = ROBOT_READY;
-//        gimbal_cmd_send.gimbal_mode   = GIMBAL_FREE_MODE;
-//        chassis_cmd_send.chassis_mode = (uint8_t)CHASSIS_NO_FOLLOW;
-//        shoot_cmd_send.shoot_mode     = SHOOT_ON;
-//        break;
-//    default:
-//        robot_state                   = ROBOT_READY;
-//        gimbal_cmd_send.gimbal_mode   = GIMBAL_GYRO_MODE;
-//        chassis_cmd_send.chassis_mode = (uint8_t)CHASSIS_FOLLOW_GIMBAL_YAW;
-//        shoot_cmd_send.shoot_mode     = SHOOT_ON;
-//        break;
-//    }
-//    switch (rc_data[TEMP].key[KEY_PRESS].ctrl) // ctrl��????
-//    {
-//    case 1:
-//        chassis_cmd_send.chassis_mode = (uint8_t)CHASSIS_ROTATE;
-//        break;
+    // switch (rc_data[TEMP].key_count[KEY_PRESS][Key_Z] % 3) // Z?????????
+    // {
+    // case 0:
+    //     shoot_cmd_send.bullet_speed = TEST;
+    //     break;
+    // case 1:
+    //     shoot_cmd_send.bullet_speed = TEST;
+    //     break;
+    // default:
+    //     shoot_cmd_send.bullet_speed = TEST;
+    //     break;
+    // }
+    // switch (rc_data[TEMP].key_count[KEY_PRESS][Key_E] % 2) // E?????��?????
+    // {
+    // case 0:
+    //     shoot_cmd_send.load_mode = LOAD_1_BULLET;
+    //     break;
+    // default:
+    //     shoot_cmd_send.load_mode = LOAD_BURSTFIRE;
+    //     break;
+    // }
+    // switch (rc_data[TEMP].key_count[KEY_PRESS][Key_F] % 2) // F???????????
+    // {
+    // case 0:
+    //     shoot_cmd_send.friction_mode = FRICTION_OFF;
+    //     break;
+    // default:
+    //     shoot_cmd_send.friction_mode = FRICTION_ON;
+    //     break;
+    // }
+    // switch (rc_data[TEMP].key_count[KEY_PRESS][Key_V] % 3) // V???��??????
+    // {
+    // case 0:
+    //     robot_state = ROBOT_STOP;
+    //     break;
+    // case 1:
+    //     robot_state                   = ROBOT_READY;
+    //     gimbal_cmd_send.gimbal_mode   = GIMBAL_FREE_MODE;
+    //     chassis_cmd_send.chassis_mode = (uint8_t)CHASSIS_NO_FOLLOW;
+    //     shoot_cmd_send.shoot_mode     = SHOOT_ON;
+    //     break;
+    // default:
+    //     robot_state                   = ROBOT_READY;
+    //     gimbal_cmd_send.gimbal_mode   = GIMBAL_GYRO_MODE;
+    //     chassis_cmd_send.chassis_mode = (uint8_t)CHASSIS_FOLLOW_GIMBAL_YAW;
+    //     shoot_cmd_send.shoot_mode     = SHOOT_ON;
+    //     break;
+    // }
+    // switch (rc_data[TEMP].key[KEY_PRESS].ctrl) // ctrl��????
+    // {
+    // case 1:
+    //     chassis_cmd_send.chassis_mode = (uint8_t)CHASSIS_ROTATE;
+    //     break;
 
-//    default:
+    // default:
 
-//        break;
-//    }
-//    switch (rc_data[TEMP].key[KEY_PRESS].shift) // ?????? ??shift?????????? ???????????
-//    {
-//    case 1:
-//        //        chassis_cmd_send.chassis_mode = (uint8_t)CHASSIS_MAXSPEED;
-//        break;
+    //     break;
+    // }
+    // switch (rc_data[TEMP].key[KEY_PRESS].shift) // ?????? ??shift?????????? ???????????
+    // {
+    // case 1:
+    //     //        chassis_cmd_send.chassis_mode = (uint8_t)CHASSIS_MAXSPEED;
+    //     break;
 
-//    default:
+    // default:
 
-//        break;
-//    }
-//    switch (rc_data[TEMP].mouse.press_l) {
-//    case 1:
-//        shoot_cmd_send.load_mode = LOAD_BURSTFIRE;
-//        break;
-//    default:
-//        shoot_cmd_send.load_mode = LOAD_STOP;
-//        break;
-//    }
-//    switch (rc_data[TEMP].mouse.press_r) {
-//    case 1:
-//        VisionControlSet();
-//        break;
-//    default:
-//        break;
-//    }
-//    switch (rc_data[TEMP].key_count[KEY_PRESS][Key_B] % 4) // B??reset
-//    {
-//    case 3:
-//        __disable_irq();
-//        NVIC_SystemReset();
-//        break;
-//    default:
-//        break;
-//    }
-//}
+    //     break;
+    // }
+    // switch (rc_data[TEMP].mouse.press_l) {
+    // case 1:
+    //     shoot_cmd_send.load_mode = LOAD_BURSTFIRE;
+    //     break;
+    // default:
+    //     shoot_cmd_send.load_mode = LOAD_STOP;
+    //     break;
+    // }
+    // switch (rc_data[TEMP].mouse.press_r) {
+    // case 1:
+    //     VisionControlSet();
+    //     break;
+    // default:
+    //     break;
+    // }
+    // switch (rc_data[TEMP].key_count[KEY_PRESS][Key_B] % 4) // B??reset
+    // {
+    // case 3:
+    //     __disable_irq();
+    //     NVIC_SystemReset();
+    //     break;
+    // default:
+    //     break;
+    // }
+}
 
 /**
  * @brief  ??????,???????????????????/??????????/???????��??
@@ -536,7 +537,7 @@ static void EmergencyHandler(void) {
 }
 
 void RobotCmdInit(void) {
-    rc_data        = RemoteControlInit(&huart3);
+    rc_data        = RemoteControlInit(&huart3, RCTYPE_T12D);
     ins_data       = GetInsData();
     calibrate_data = CalibrateInit();
 

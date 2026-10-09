@@ -1,76 +1,77 @@
 #ifndef __BSP_USART_H
 #define __BSP_USART_H
 
-#include "stdint.h"
 #include "main.h"
+#include "stdint.h"
 
-#define DEVICE_USART_MAX_CNT 3     // C°åÖÁ¶à·ÖÅä3¸ö´®¿Ú
-#define USART_RXBUFF_LIMIT 256 // Èç¹ûĞ­ÒéĞèÒª¸ü´óµÄbuff,ÇëĞŞ¸ÄÕâÀï
+#define DEVICE_USART_MAX_CNT 3   // Cæ¿è‡³å¤šåˆ†é…3ä¸ªä¸²å£
+#define USART_RXBUFF_LIMIT   256 // å¦‚æœåè®®éœ€è¦æ›´å¤§çš„buff,è¯·ä¿®æ”¹è¿™é‡Œ
 
-// Ä£¿é»Øµ÷º¯Êı,ÓÃÓÚ½âÎöĞ­Òé
+// æ¨¡å—å›è°ƒå‡½æ•°,ç”¨äºè§£æåè®®
 typedef void (*usart_module_callback)();
 
-/* ·¢ËÍÄ£Ê½Ã¶¾Ù */
+/* å‘é€æ¨¡å¼æšä¸¾ */
 typedef enum
 {
-    USART_TRANSFER_NONE=0,
+    USART_TRANSFER_NONE = 0,
     USART_TRANSFER_BLOCKING,
     USART_TRANSFER_IT,
     USART_TRANSFER_DMA,
 } USART_TRANSFER_MODE;
 
-// ´®¿ÚÊµÀı½á¹¹Ìå,Ã¿¸ömodule¶¼Òª°üº¬Ò»¸öÊµÀı.
-// ÓÉÓÚ´®¿ÚÊÇ¶ÀÕ¼µÄµã¶ÔµãÍ¨ĞÅ,ËùÒÔ²»ĞèÒª¿¼ÂÇ¶à¸ömoduleÍ¬Ê±Ê¹ÓÃÒ»¸ö´®¿ÚµÄÇé¿ö,Òò´Ë²»ÓÃ¼ÓÈëid;µ±È»Ò²¿ÉÒÔÑ¡Ôñ¼ÓÈë,ÕâÑùÔÚbsp²ã¿ÉÒÔ·ÃÎÊµ½moduleµÄÆäËûĞÅÏ¢
-typedef struct
-{
-    uint8_t recv_buff[USART_RXBUFF_LIMIT]; // Ô¤ÏÈ¶¨ÒåµÄ×î´óbuff´óĞ¡,Èç¹ûÌ«Ğ¡ÇëĞŞ¸ÄUSART_RXBUFF_LIMIT
-    uint8_t recv_buff_size;                // Ä£¿é½ÓÊÕÒ»°üÊı¾İµÄ´óĞ¡
-    UART_HandleTypeDef *usart_handle;      // ÊµÀı¶ÔÓ¦µÄusart_handle
-    usart_module_callback module_callback; // ½âÎöÊÕµ½µÄÊı¾İµÄ»Øµ÷º¯Êı
+// ä¸²å£å®ä¾‹ç»“æ„ä½“,æ¯ä¸ªmoduleéƒ½è¦åŒ…å«ä¸€ä¸ªå®ä¾‹.
+// ç”±äºä¸²å£æ˜¯ç‹¬å çš„ç‚¹å¯¹ç‚¹é€šä¿¡,æ‰€ä»¥ä¸éœ€è¦è€ƒè™‘å¤šä¸ªmoduleåŒæ—¶ä½¿ç”¨ä¸€ä¸ªä¸²å£çš„æƒ…å†µ,å› æ­¤ä¸ç”¨åŠ å…¥id;å½“ç„¶ä¹Ÿå¯ä»¥é€‰æ‹©åŠ å…¥,è¿™æ ·åœ¨bspå±‚å¯ä»¥è®¿é—®åˆ°moduleçš„å…¶ä»–ä¿¡æ¯
+typedef struct {
+    uint8_t
+        recv_buff[USART_RXBUFF_LIMIT]; // é¢„å…ˆå®šä¹‰çš„æœ€å¤§buffå¤§å°,å¦‚æœå¤ªå°è¯·ä¿®æ”¹USART_RXBUFF_LIMIT
+    uint8_t recv_buff_size;            // æ¨¡å—æ¥æ”¶ä¸€åŒ…æ•°æ®çš„å¤§å°
+    UART_HandleTypeDef *usart_handle;  // å®ä¾‹å¯¹åº”çš„usart_handle
+    usart_module_callback module_callback; // è§£ææ”¶åˆ°çš„æ•°æ®çš„å›è°ƒå‡½æ•°
+    uint16_t recved_size;                  // æœ¬æ¬¡æ¥æ”¶çš„åŒ…ä½“é•¿åº¦ï¼Œç”¨äºä»¥åå¯èƒ½ä¼šæœ‰çš„é¥æ§å™¨åˆ†åŒ…æ ¡éªŒ
+
 } USARTInstance;
 
-/* usart ³õÊ¼»¯ÅäÖÃ½á¹¹Ìå */
-typedef struct
-{
-    uint8_t recv_buff_size;                // Ä£¿é½ÓÊÕÒ»°üÊı¾İµÄ´óĞ¡
-    UART_HandleTypeDef *usart_handle;      // ÊµÀı¶ÔÓ¦µÄusart_handle
-    usart_module_callback module_callback; // ½âÎöÊÕµ½µÄÊı¾İµÄ»Øµ÷º¯Êı
+/* usart åˆå§‹åŒ–é…ç½®ç»“æ„ä½“ */
+typedef struct {
+    uint8_t recv_buff_size;                // æ¨¡å—æ¥æ”¶ä¸€åŒ…æ•°æ®çš„å¤§å°
+    UART_HandleTypeDef *usart_handle;      // å®ä¾‹å¯¹åº”çš„usart_handle
+    usart_module_callback module_callback; // è§£ææ”¶åˆ°çš„æ•°æ®çš„å›è°ƒå‡½æ•°
 } USART_Init_Config_s;
 
 /**
- * @brief ×¢²áÒ»¸ö´®¿ÚÊµÀı,·µ»ØÒ»¸ö´®¿ÚÊµÀıÖ¸Õë
+ * @brief æ³¨å†Œä¸€ä¸ªä¸²å£å®ä¾‹,è¿”å›ä¸€ä¸ªä¸²å£å®ä¾‹æŒ‡é’ˆ
  *
- * @param init_config ´«Èë´®¿Ú³õÊ¼»¯½á¹¹Ìå
+ * @param init_config ä¼ å…¥ä¸²å£åˆå§‹åŒ–ç»“æ„ä½“
  */
 USARTInstance *USARTRegister(USART_Init_Config_s *init_config);
 
 /**
- * @brief Æô¶¯´®¿Ú·şÎñ,ĞèÒª´«ÈëÒ»¸öusartÊµÀı.Ò»°ãÓÃÓÚlost callbackµÄÇé¿ö(Ê¹ÓÃ´®¿ÚµÄÄ£¿édaemon)
+ * @brief å¯åŠ¨ä¸²å£æœåŠ¡,éœ€è¦ä¼ å…¥ä¸€ä¸ªusartå®ä¾‹.ä¸€èˆ¬ç”¨äºlost callbackçš„æƒ…å†µ(ä½¿ç”¨ä¸²å£çš„æ¨¡å—daemon)
  *
  * @param _instance
  */
 void USARTServiceInit(USARTInstance *_instance);
 
-
 /**
- * @brief Í¨¹ıµ÷ÓÃ¸Ãº¯Êı¿ÉÒÔ·¢ËÍÒ»Ö¡Êı¾İ,ĞèÒª´«ÈëÒ»¸öusartÊµÀı,·¢ËÍbuffÒÔ¼°ÕâÒ»Ö¡µÄ³¤¶È
- * @note ÔÚ¶ÌÊ±¼äÄÚÁ¬Ğøµ÷ÓÃ´Ë½Ó¿Ú,Èô²ÉÓÃIT/DMA»áµ¼ÖÂÉÏÒ»´ÎµÄ·¢ËÍÎ´Íê³É¶øĞÂµÄ·¢ËÍÈ¡Ïû.
- * @note ÈôÏ£ÍûÁ¬ĞøÊ¹ÓÃDMA/IT½øĞĞ·¢ËÍ,ÇëÅäºÏUSARTIsReady()Ê¹ÓÃ,»ò×ÔĞĞÎªÄãµÄmoduleÊµÏÖÒ»¸ö·¢ËÍ¶ÓÁĞºÍÈÎÎñ.
- * @todo ÊÇ·ñ¿¼ÂÇÎªUSARTInstanceÔö¼Ó·¢ËÍ¶ÓÁĞÒÔ½øĞĞÁ¬Ğø·¢ËÍ?
- * 
- * @param _instance ´®¿ÚÊµÀı
- * @param send_buf ´ı·¢ËÍÊı¾İµÄbuffer
+ * @brief é€šè¿‡è°ƒç”¨è¯¥å‡½æ•°å¯ä»¥å‘é€ä¸€å¸§æ•°æ®,éœ€è¦ä¼ å…¥ä¸€ä¸ªusartå®ä¾‹,å‘é€buffä»¥åŠè¿™ä¸€å¸§çš„é•¿åº¦
+ * @note åœ¨çŸ­æ—¶é—´å†…è¿ç»­è°ƒç”¨æ­¤æ¥å£,è‹¥é‡‡ç”¨IT/DMAä¼šå¯¼è‡´ä¸Šä¸€æ¬¡çš„å‘é€æœªå®Œæˆè€Œæ–°çš„å‘é€å–æ¶ˆ.
+ * @note
+ * è‹¥å¸Œæœ›è¿ç»­ä½¿ç”¨DMA/ITè¿›è¡Œå‘é€,è¯·é…åˆUSARTIsReady()ä½¿ç”¨,æˆ–è‡ªè¡Œä¸ºä½ çš„moduleå®ç°ä¸€ä¸ªå‘é€é˜Ÿåˆ—å’Œä»»åŠ¡.
+ * @todo æ˜¯å¦è€ƒè™‘ä¸ºUSARTInstanceå¢åŠ å‘é€é˜Ÿåˆ—ä»¥è¿›è¡Œè¿ç»­å‘é€?
+ *
+ * @param _instance ä¸²å£å®ä¾‹
+ * @param send_buf å¾…å‘é€æ•°æ®çš„buffer
  * @param send_size how many bytes to send
  */
-void USARTSend(USARTInstance *_instance, uint8_t *send_buf, uint16_t send_size,USART_TRANSFER_MODE mode);
+void USARTSend(USARTInstance *_instance, uint8_t *send_buf, uint16_t send_size,
+               USART_TRANSFER_MODE mode);
 
 /**
- * @brief ÅĞ¶Ï´®¿ÚÊÇ·ñ×¼±¸ºÃ,ÓÃÓÚÁ¬Ğø»òÒì²½µÄIT/DMA·¢ËÍ
+ * @brief åˆ¤æ–­ä¸²å£æ˜¯å¦å‡†å¤‡å¥½,ç”¨äºè¿ç»­æˆ–å¼‚æ­¥çš„IT/DMAå‘é€
  *
- * @param _instance ÒªÅĞ¶ÏµÄ´®¿ÚÊµÀı
+ * @param _instance è¦åˆ¤æ–­çš„ä¸²å£å®ä¾‹
  * @return uint8_t ready 1, busy 0
  */
 uint8_t USARTIsReady(USARTInstance *_instance);
-
 
 #endif
