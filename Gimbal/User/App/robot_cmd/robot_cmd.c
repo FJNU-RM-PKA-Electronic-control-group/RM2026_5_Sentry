@@ -414,14 +414,13 @@ static void RemoteControlSet(void) {
         chassis_cmd_send.vy = guidence_fetch_data.vy;
         chassis_cmd_send.wz = guidence_fetch_data.wz;
     }
-}
 
-else {
-    // 上档，赛场用这个
-    AutoControlSet();
-}
+    else {
+        // 上档，赛场用这个
+        AutoControlSet();
+    }
 
-shoot_cmd_send.shoot_rate = 2;
+    shoot_cmd_send.shoot_rate = 2;
 }
 
 //----------------------dbus协议-------------------------------------------------
