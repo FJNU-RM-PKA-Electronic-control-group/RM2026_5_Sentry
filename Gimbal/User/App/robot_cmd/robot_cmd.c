@@ -197,8 +197,8 @@ void AutoControlSet(void) {
     if (vision_fetch_data.fire_advice == SHOOT_ON) {
         shoot_cmd_send.shoot_mode = SHOOT_ON;
         shoot_cmd_send.load_mode  = LOAD_BURSTFIRE;
-    }
-    // if (vision_fetch_data.fire_advice != SHOOT_ON) {
+	}
+    // if (vision_fetch_data.fire_advice != SHOOT_ON ||guidence_fetch_data.vx!=0 ||guidence_fetch_data.vy!=0){
     //     shoot_cmd_send.shoot_mode = SHOOT_ON;
     //     shoot_cmd_send.load_mode  = LOAD_STOP;
     // }
@@ -413,6 +413,15 @@ static void RemoteControlSet(void) {
         chassis_cmd_send.vx = guidence_fetch_data.vx;
         chassis_cmd_send.vy = guidence_fetch_data.vy;
         chassis_cmd_send.wz = guidence_fetch_data.wz;
+		    shoot_cmd_send.friction_mode = FRICTION_ON;
+		if (vision_fetch_data.fire_advice == SHOOT_ON) {
+			shoot_cmd_send.shoot_mode = SHOOT_ON;
+			shoot_cmd_send.load_mode  = LOAD_BURSTFIRE;
+		}
+		if (vision_fetch_data.fire_advice != SHOOT_ON ||guidence_fetch_data.vx!=0 ||guidence_fetch_data.vy!=0){
+			shoot_cmd_send.shoot_mode = SHOOT_ON;
+			shoot_cmd_send.load_mode  = LOAD_STOP;
+		}
     }
 
     else {
