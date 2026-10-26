@@ -88,9 +88,9 @@ void RCDecodeT12D(const uint8_t *sbus_buf, RC_ctrl_t *rc_ptr) {
 
     // 摇杆,直接解算时减去偏置,通道可能需要根据RTT输出结果和实际摇杆映射关系调整
     rc_ptr->rc.rocker_r_ = T12DScaleBipolar(ch[0]);
-    rc_ptr->rc.rocker_r1 = T12DScaleBipolar(ch[1]);
+    rc_ptr->rc.rocker_r1 = -T12DScaleBipolar(ch[1]);
     rc_ptr->rc.rocker_l_ = T12DScaleBipolar(ch[3]);
-    rc_ptr->rc.rocker_l1 = T12DScaleBipolar(ch[2]);
+    rc_ptr->rc.rocker_l1 = -T12DScaleBipolar(ch[2]);
 
     //------------------四个拨轮----------------------------------
     rc_ptr->rc.vr_a = T12DScaleUnipolar(ch[10]);
