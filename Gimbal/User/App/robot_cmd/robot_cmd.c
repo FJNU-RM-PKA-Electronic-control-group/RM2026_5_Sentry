@@ -290,12 +290,10 @@ static void T12DControlSet(void) {
 
     else if (rc_data[TEMP].rc.sw_a == RC_SW_MID) {
         // 调试模式
-        robot_state = ROBOT_READY;
         if (rc_data[TEMP].rc.sw_d == RC_SW_UP) {
             // 跟随
             gimbal_cmd_send.gimbal_mode   = GIMBAL_GYRO_MODE;
             chassis_cmd_send.chassis_mode = CHASSIS_FOLLOW_GIMBAL_YAW;
-            speed_mode                    = SPEEDMODE_NORMAL;
         }
         else if (rc_data[TEMP].rc.sw_d == RC_SW_DOWN) {
             // 分离
@@ -303,12 +301,11 @@ static void T12DControlSet(void) {
             chassis_cmd_send.chassis_mode = CHASSIS_NO_FOLLOW;
             // 分离模式下，是否开启扫描/自瞄
             if (rc_data[TEMP].rc.sw_c == RC_SW_UP) {
-                // 扫描模式
                 speed_mode                  = SPEEDMODE_ABSOLUTE;
                 gimbal_cmd_send.gimbal_mode = GIMBAL_SCAN_MODE;
             }
             else if (rc_data[TEMP].rc.sw_c == RC_SW_DOWN) {
-                // 启动视觉
+                speed_mode                  = SPEEDMODE_NORMAL;
                 gimbal_cmd_send.gimbal_mode = GIMBAL_VISION_MODE;
             }
         }
@@ -340,7 +337,7 @@ static void T12DControlSet(void) {
             shoot_cmd_send.friction_mode = FRICTION_OFF;
             shoot_cmd_send.load_mode     = LOAD_STOP;
         }
-        else if (rc_data[TEMP].rc.vr_c > 100 && rc_data[TEMP].rc.vr_c <= 900) {
+        else if (rc_data[TEMP].rc.vr_c > 100 && rc_data[TEMP].rc.vr_a < 900) {
             shoot_cmd_send.shoot_mode    = SHOOT_ON;
             shoot_cmd_send.friction_mode = FRICTION_ON;
             shoot_cmd_send.load_mode     = LOAD_STOP;
@@ -373,30 +370,32 @@ static void T12DControlSet(void) {
             chassis_cmd_send.wz           = 50;
         }
     }
-    else if (rc_data[TEMP].rc.sw_a == RC_SW_UP) {
-        robot_state = ROBOT_AUTO;
+	
+    else {
+        // 上档，赛场用这个
+        AutoControlSet();
     }
 }
 
 static void RemoteControlSet(void) {
-    switch (GetRCType()) {
-    case RCTYPE_DT7:
-        DT7ControlSet();
-        break;
-    case RCTYPE_T12D:
+    //switch (GetRCType()) {
+    //case RCTYPE_DT7:
+        //DT7ControlSet();
+        //break;
+    //case RCTYPE_T12D:
         T12DControlSet();
-        break;
+        //break;
 
-    default:
-        break;
-    }
+    //default:
+        //break;
+    //}
     // 状态机设置结束，以下为根据状态机开始赋值
 
-    gimbal_cmd_send.pitch -= PitchLimit(0.00001f * (float)rc_data[TEMP].rc.rocker_l1);
+    gimbal_cmd_send.pitch += PitchLimit(0.00001f * (float)rc_data[TEMP].rc.rocker_l1);
     gimbal_cmd_send.yaw =
         theta_format(gimbal_cmd_send.yaw - 0.001f * (float)rc_data[TEMP].rc.rocker_l_);
-    float raw_vx = 20.0f * (float)rc_data[TEMP].rc.rocker_r_;  // _水平方向
-    float raw_vy = -20.0f * (float)rc_data[TEMP].rc.rocker_r1; // 1竖直方向
+    float raw_vx = 20.0f * (float)rc_data[TEMP].rc.rocker_r_; // _水平方向
+    float raw_vy = 20.0f * (float)rc_data[TEMP].rc.rocker_r1; // 1竖直方向
 
     float sin_theta, cos_theta;
     if (speed_mode == SPEEDMODE_ABSOLUTE) {
@@ -419,7 +418,7 @@ static void RemoteControlSet(void) {
         chassis_cmd_send.vx = guidence_fetch_data.vx;
         chassis_cmd_send.vy = guidence_fetch_data.vy;
         chassis_cmd_send.wz = guidence_fetch_data.wz;
-		    shoot_cmd_send.friction_mode = FRICTION_ON;
+		    //shoot_cmd_send.friction_mode = FRICTION_ON;
 		if (vision_fetch_data.fire_advice == SHOOT_ON) {
 			shoot_cmd_send.shoot_mode = SHOOT_ON;
 			shoot_cmd_send.load_mode  = LOAD_BURSTFIRE;
@@ -429,10 +428,7 @@ static void RemoteControlSet(void) {
 			shoot_cmd_send.load_mode  = LOAD_STOP;
 		}
     }
-    if (robot_state == ROBOT_AUTO) {
-        // 上档，赛场用这个
-        AutoControlSet();
-    }
+
 
     shoot_cmd_send.shoot_rate = 2;
 }
