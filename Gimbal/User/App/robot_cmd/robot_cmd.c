@@ -62,6 +62,7 @@ speed_mode_e speed_mode = SPEEDMODE_NORMAL;
 float speed_offset_angle;
 Sentry_State_e sentry_state = STATE_MOVING;
 
+
 static void CalcOffsetAngle() {
     // ????angle???????,????????????,??????????????????
     static float angle;
@@ -198,10 +199,10 @@ void AutoControlSet(void) {
         shoot_cmd_send.shoot_mode = SHOOT_ON;
         shoot_cmd_send.load_mode  = LOAD_BURSTFIRE;
 	}
-    // if (vision_fetch_data.fire_advice != SHOOT_ON ||guidence_fetch_data.vx!=0 ||guidence_fetch_data.vy!=0){
-    //     shoot_cmd_send.shoot_mode = SHOOT_ON;
-    //     shoot_cmd_send.load_mode  = LOAD_STOP;
-    // }
+     if (vision_fetch_data.fire_advice != SHOOT_ON ||guidence_fetch_data.vx!=0 ||guidence_fetch_data.vy!=0){
+         shoot_cmd_send.shoot_mode = SHOOT_ON;
+		 shoot_cmd_send.load_mode  = LOAD_STOP;
+   }
     //  #endif
 }
 //-----------------------------遥控器----------------------------------
@@ -289,6 +290,7 @@ static void T12DControlSet(void) {
     }
 
     else if (rc_data[TEMP].rc.sw_a == RC_SW_MID) {
+		speed_mode                  = SPEEDMODE_NORMAL;
         // 调试模式
         if (rc_data[TEMP].rc.sw_d == RC_SW_UP) {
             // 跟随
@@ -390,7 +392,7 @@ static void RemoteControlSet(void) {
         //break;
     //}
     // 状态机设置结束，以下为根据状态机开始赋值
-
+    if(rc_data[TEMP].rc.sw_a == RC_SW_MID){
     gimbal_cmd_send.pitch += PitchLimit(0.00001f * (float)rc_data[TEMP].rc.rocker_l1);
     gimbal_cmd_send.yaw =
         theta_format(gimbal_cmd_send.yaw - 0.001f * (float)rc_data[TEMP].rc.rocker_l_);
@@ -408,12 +410,13 @@ static void RemoteControlSet(void) {
         chassis_cmd_send.vx = raw_vx;
         chassis_cmd_send.vy = raw_vy;
     }
-    if (gimbal_cmd_send.gimbal_mode == GIMBAL_VISION_MODE) {
+    if (gimbal_cmd_send.gimbal_mode == GIMBAL_VISION_MODE ){
         if (vision_fetch_data.vision_state == NO_TARGET) {
         }
         else {
             gimbal_cmd_send.pitch = vision_fetch_data.aim_pitch; // 0.027;
             gimbal_cmd_send.yaw   = vision_fetch_data.aim_yaw;
+			
         }
         chassis_cmd_send.vx = guidence_fetch_data.vx;
         chassis_cmd_send.vy = guidence_fetch_data.vy;
@@ -428,6 +431,7 @@ static void RemoteControlSet(void) {
 			shoot_cmd_send.load_mode  = LOAD_STOP;
 		}
     }
+ }
 
 
     shoot_cmd_send.shoot_rate = 2;
