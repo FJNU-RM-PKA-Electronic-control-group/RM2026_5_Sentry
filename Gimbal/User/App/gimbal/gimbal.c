@@ -276,13 +276,13 @@ static void YawSetTarget(float recv_yaw, gimbal_mode_e mode) {
             }
             break;
         case YAW1_TURNLEFT:
-            target_yaw[YAW1] = DM_IMU_data->yaw + float_constrain(yaw2_ecd_err - 48.5f, 0.0f, 2.0f);
+            target_yaw[YAW1] = DM_IMU_data->yaw + 3*float_constrain(yaw2_ecd_err - 48.5f, 0.0f, 2.0f);
             if (yaw2_ecd_err < 48)
                 yaw1_mode = YAW1_NOMOVE;
             break;
         case YAW1_TURNRIGHT:
             target_yaw[YAW1] =
-                DM_IMU_data->yaw + float_constrain(yaw2_ecd_err + 48.5f, -2.0f, 0.0f);
+                DM_IMU_data->yaw + 3*float_constrain(yaw2_ecd_err + 48.5f, -2.0f, 0.0f);
             if (yaw2_ecd_err > -48)
                 yaw1_mode = YAW1_NOMOVE;
             break;
