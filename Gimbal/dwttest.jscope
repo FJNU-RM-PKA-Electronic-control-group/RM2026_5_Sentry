@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<JScopeProject>
+    <FileVersion major="1" minor="1" />
+    <Project>
+        <Configuration>
+            <JLink>
+                <Options Connection="1" IsRTTSession="0" IsRTTWithTimeStamp="0" IsRTTPlus="0" SamplingPeriod="100" SerialNo="0" JTAG_IRPre="0" JTAG_DRPre="0" IP="" TargetDevice="STM32F407IG" TargetInterface="SWD" InterfaceSpeed="4000" />
+            </JLink>
+            <ElfFile Name="D:\HalProject\RM2026_5_Sentry\Gimbal\MDK-ARM\Hero\Hero.axf" />
+            <Scope>
+                <Options TimeResolutionUs="1000000" />
+            </Scope>
+            <Trigger>
+                <Options Level="0" Symbol="s" On="0" Auto="0" Rise="0" Fall="0" />
+            </Trigger>
+        </Configuration>
+        <Windows>
+            <Graph Show="1" />
+            <Watch Show="1" />
+        </Windows>
+        <SelectedSymbols>
+            <Symbol>
+                <Options Name="s" Address="0x20000178" Type="unsigned int" TypeID="8" Size="4" GraphColorRed="0" GraphColorGreen="0" GraphColorBlue="255" YMinSampled="513" YMaxSampled="513" YAvgSampled="513" Offset="4" ShowInGraph="1" YOffset="0" IsAutoConfig="0" YResolution="2000" MaxValue="-2147483648" File="d:\HalProject\RM2026_5_Sentry\Gimbal\MDK-ARM/..\User\Bsp\dwt\bsp_dwt.h" DrawStyle="0" NameWithParents=".SysTime.s" />
+            </Symbol>
+            <Symbol>
+                <Options Name="ms" Address="0x2000017C" Type="unsigned short" TypeID="7" Size="2" GraphColorRed="0" GraphColorGreen="255" GraphColorBlue="0" YMinSampled="0" YMaxSampled="0" YAvgSampled="0" Offset="8" ShowInGraph="1" YOffset="0" IsAutoConfig="0" YResolution="200" MaxValue="65535" File="d:\HalProject\RM2026_5_Sentry\Gimbal\MDK-ARM/..\User\Bsp\dwt\bsp_dwt.h" DrawStyle="0" NameWithParents=".SysTime.ms" />
+            </Symbol>
+            <Symbol>
+                <Options Name="us" Address="0x2000017E" Type="unsigned short" TypeID="7" Size="2" GraphColorRed="255" GraphColorGreen="0" GraphColorBlue="0" YMinSampled="0" YMaxSampled="0" YAvgSampled="0" Offset="10" ShowInGraph="1" YOffset="0" IsAutoConfig="0" YResolution="200" MaxValue="65535" File="d:\HalProject\RM2026_5_Sentry\Gimbal\MDK-ARM/..\User\Bsp\dwt\bsp_dwt.h" DrawStyle="0" NameWithParents=".SysTime.us" />
+            </Symbol>
+            <Symbol>
+                <Options Name="CYCCNT_RountCount" Address="0x2000018C" Type="unsigned int" TypeID="8" Size="4" GraphColorRed="255" GraphColorGreen="255" GraphColorBlue="0" YMinSampled="314" YMaxSampled="314" YAvgSampled="314" Offset="12" ShowInGraph="1" YOffset="0" IsAutoConfig="0" YResolution="100" MaxValue="-2147483648" File="d:\HalProject\RM2026_5_Sentry\Gimbal\MDK-ARM/..\User\Bsp\dwt\bsp_dwt.c" DrawStyle="0" NameWithParents=".CYCCNT_RountCount" />
+            </Symbol>
+            <Symbol>
+                <Options Name="CYCCNT_LAST" Address="0x20000190" Type="unsigned int" TypeID="8" Size="4" GraphColorRed="0" GraphColorGreen="255" GraphColorBlue="255" YMinSampled="4.08069e+09" YMaxSampled="4.08069e+09" YAvgSampled="4.08069e+09" Offset="16" ShowInGraph="1" YOffset="0" IsAutoConfig="0" YResolution="1000000000" MaxValue="-2147483648" File="d:\HalProject\RM2026_5_Sentry\Gimbal\MDK-ARM/..\User\Bsp\dwt\bsp_dwt.c" DrawStyle="0" NameWithParents=".CYCCNT_LAST" />
+            </Symbol>
+        </SelectedSymbols>
+    </Project>
+</JScopeProject>

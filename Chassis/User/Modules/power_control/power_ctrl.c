@@ -13,27 +13,6 @@
 float DEBUG_total_power;
 PowerControlInstance *local_ins;
 
-// #define CMD_RAW_MAX         16384.0f
-// #define WHEEL_CURRENT_A_MAX 20.0f
-
-// static __inline float WheelCmdRawToCurrentA(float cmd_raw) {
-//     return cmd_raw / CMD_RAW_MAX * WHEEL_CURRENT_A_MAX;
-// }
-
-// static __inline float WheelCurrentAToCmdRaw(float current_a) {
-//     return current_a / WHEEL_CURRENT_A_MAX * CMD_RAW_MAX;
-// }
-
-// #define STEER_CURRENT_A_MAX 3.0f // 舵向电机电流范围 ±3A
-
-// static __inline float SteerCurrentRawToAmp(float current_raw) {
-//     return current_raw / CMD_RAW_MAX * STEER_CURRENT_A_MAX;
-// }
-
-// static __inline float SteerCurrentAmpToRaw(float current_a) {
-//     return current_a / STEER_CURRENT_A_MAX * CMD_RAW_MAX;
-// }·
-
 static __inline void MotorPowerCalculate(motor_power_t *motor, Motor_Power_Predict_Mode_e mode) {
     motor->real_current =
         fabsf(*motor->power_input_data.I_cmd) / motor->arg.real_current_conversion;
@@ -62,15 +41,6 @@ static __inline void MotorPowerCalculate(motor_power_t *motor, Motor_Power_Predi
             motor->arg.k5 * w_rpm * w_rpm);//*power_sign;
     // clang-format on
     *output_ptr = power;
-    // switch (mode) {
-    // case MOTORPOWER_PREDICT_DEFAULT:
-    //     motor->predict_power = power;
-    //     break;
-
-    // case MOTORPOWER_PREDOCT_LIMITED:
-    //     motor->managed_power = power;
-    //     break;
-    // }
 }
 
 static __inline void PowerAllocateByErr(motor_power_t *motor, float total_power_limit) {
