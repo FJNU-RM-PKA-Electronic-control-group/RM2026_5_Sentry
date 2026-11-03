@@ -88,6 +88,8 @@ static float chassis_vx_feedback[4], chassis_vy_feedback[4];
 float vx_output, vy_output, wz_output;
 float force_wz, force_vx, force_vy;
 float force_ff[4];
+float DEBUG_target_angle;
+float DEBUG_angle;
 /* 用于自旋变速策略的时间变量 */
 // static float t;
 
@@ -146,7 +148,7 @@ void ChassisInit(void) {
                 .angle_PID =
                     {
                         .Kp            = 40,   // 4.5
-                        .Ki            = 0,    // 0
+                        .Ki            = 0.01,    // 0
                         .Kd            = 0.05, // 0
                         .IntegralLimit = 3000,
                         .Improve =
@@ -157,10 +159,10 @@ void ChassisInit(void) {
                     },
                 .speed_PID =
                     {
-                        .Kp            = 20.0f, // 0.4
-                        .Ki            = 0.0f,  // 0
-                        .Kd            = 0.10f,
-                        .IntegralLimit = 3000.0f,
+                        .Kp            = 30.0f, // 0.4
+                        .Ki            = 20.0f,  // 0
+                        .Kd            = 0.150f,
+                        .IntegralLimit = 3500.0f,
                         .Improve =
                             (PID_Improvement_e)(PID_Trapezoid_Intergral | PID_Integral_Limit |
                                                 PID_Derivative_On_Measurement),
@@ -581,7 +583,7 @@ void ChassisTask(void) {
     // 获取新的控制信息
     SubGetMessage(chassis_sub, &chassis_cmd_recv);
     SubGetMessage(referee_chassis_sub, &referee_chassis_recv);
-    DEBUG_CHASSIS = *speed_motor[LF];
+    DEBUG_CHASSIS = *vector_motor[LF];
 
     // VectorFeedbackCheck();
 
@@ -656,4 +658,6 @@ void ChassisTask(void) {
 
     // 推送反馈消息
     // PubPushMessage(chassis_pub, (void *)&chassis_feedback_data);
+	
+	DEBUG_target_angle =   anglet[LF];
 }
