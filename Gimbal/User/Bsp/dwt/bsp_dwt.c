@@ -17,7 +17,6 @@ static uint32_t CPU_FREQ_Hz, CPU_FREQ_Hz_ms, CPU_FREQ_Hz_us;
 static uint32_t CYCCNT_RountCount;
 static uint32_t CYCCNT_LAST;
 uint64_t CYCCNT64;
-uint32_t t0_dwt, dt_dwt;
 
 #define DWT_CYCCNT_CYCLE 4294967296ULL // 32位CYCCNT回绕一圈的周期数(2^32)
 
@@ -32,9 +31,7 @@ void DWT_Init(uint32_t CPU_Freq_mHz) {
 
     /* 使能Cortex-M DWT CYCCNT寄存器 */
     DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
-    t0_dwt = DWT->CYCCNT;
-    HAL_Delay(1000); // 等 1 秒
-    dt_dwt            = DWT->CYCCNT - t0_dwt;
+
     CPU_FREQ_Hz       = CPU_Freq_mHz * 1000000;
     CPU_FREQ_Hz_ms    = CPU_FREQ_Hz / 1000;
     CPU_FREQ_Hz_us    = CPU_FREQ_Hz / 1000000;
