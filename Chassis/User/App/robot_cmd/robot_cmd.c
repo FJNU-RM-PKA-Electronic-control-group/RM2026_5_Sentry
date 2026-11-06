@@ -358,7 +358,7 @@ void RobotCMDTask(void) {
     // ���޸ģ����������У׼����������
     CalcOffsetAngle();
 
-    RemoteControlSet();
+    // RemoteControlSet();
     CalibrateTask(rc_data);
     EmergencyHandler(); // ����ģ�����ߺ�ң������ͣ�Ƚ������
     RefereeDataTransmit();
@@ -367,6 +367,6 @@ void RobotCMDTask(void) {
     // ����Ӧ������Ŀ���������remotecontrolsetmode��mousekeysetmode���������
     PubPushMessage(chassis_feed_pub, (void *)&chassis_fetch_data);
     // PubPushMessage(chassis_cmd_pub, (void *)&chassis_cmd_send);
-    PubPushMessage(robotarm_cmd_pub, (void *)&robotarm_cmd_send);
+    // PubPushMessage(robotarm_cmd_pub, (void *)&robotarm_cmd_send);
     PubPushMessage(referee_info_pub, (void *)&referee_chassis_send);
 }
