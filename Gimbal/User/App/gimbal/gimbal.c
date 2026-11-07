@@ -111,7 +111,6 @@ void GimbalInit(void) {
                 .close_loop_type    = (Closeloop_Type_e)(ANGLE_LOOP | SPEED_LOOP),
                 .motor_reverse_flag = MOTOR_DIRECTION_NORMAL,
                 .pid_mode           = MOTOR_PID_SINGLELOOP,
-                .angle_rad_format_flag = FORMAT_ENABLE,
             },
         .motor_type = GM6020,
     };
@@ -251,14 +250,14 @@ static void YawSetTarget(float recv_yaw, gimbal_mode_e mode) {
     static Yaw1_mode_e yaw1_mode   = YAW1_NOMOVE;
     static Yaw2_mode_e yaw2_mode   = YAW2_NOSCAN;
     static pitch_mode_e pitch_mode = PITCH_NOMOVE;
-    // float current_yaw           = IMU_data_rad->Yaw * RAD_2_DEGREE;
+    // float current_yaw           = IMU_data_rad->Yaw;
     static gimbal_mode_e last_mode = GIMBAL_ZERO_FORCE;
     float yaw2_ecd_err             = theta_format(DJIMotorGetAngle(yaw2_motor));
     // float yaw_err               = -NearbyErrFormat(recv_yaw - current_yaw, 180);
 
     if (last_mode != mode) {
         target_yaw[YAW1] = DM_IMU_data->yaw;
-        target_yaw[YAW2] = IMU_data_rad->Yaw * RAD_2_DEGREE;
+        target_yaw[YAW2] = IMU_data_rad->Yaw;
     }
     if (mode != GIMBAL_SCAN_MODE) {
         pitch_mode = PITCH_NOMOVE;
@@ -299,7 +298,7 @@ static void YawSetTarget(float recv_yaw, gimbal_mode_e mode) {
             target_yaw[YAW2] += 0.50f;
             if (yaw2_ecd_err > 50) {
                 yaw2_mode        = YAW2_TURNRIGHT;
-                target_yaw[YAW2] = IMU_data_rad->Yaw * RAD_2_DEGREE;
+                target_yaw[YAW2] = IMU_data_rad->Yaw;
             }
             break;
         case YAW2_TURNRIGHT:
@@ -307,7 +306,7 @@ static void YawSetTarget(float recv_yaw, gimbal_mode_e mode) {
             if (yaw2_ecd_err < -50) {
 
                 yaw2_mode        = YAW2_TURNLEFT;
-                target_yaw[YAW2] = IMU_data_rad->Yaw * RAD_2_DEGREE;
+                target_yaw[YAW2] = IMU_data_rad->Yaw;
             }
             break;
         case YAW2_NOSCAN:
@@ -488,7 +487,7 @@ void GimbalTask(void) {
     gimbal_feedback_data.yaw1_motor_single_round_angle = DMMotorGetAngle(yaw1_motor) * RAD_2_DEGREE;
     gimbal_feedback_data.pitch_ecd_angle               = pitch_motor->measure.position;
     DEBUG_pitch_rad                                    = -(IMU_data_rad->Pitch);
-    DEBUG_IMU_yaw                                      = IMU_data_rad->Yaw * RAD_2_DEGREE;
+    DEBUG_IMU_yaw                                      = IMU_data_rad->Yaw;
     DEBUG_Pitch_target                                 = gimbal_cmd_recv.pitch;
     DEBUG_Yaw2_target                                  = gimbal_cmd_recv.yaw;
     DEBUG_yaw1_speed                                   = IMU_data_rad->Gyro[1];

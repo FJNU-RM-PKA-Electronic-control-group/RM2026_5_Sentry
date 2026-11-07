@@ -62,7 +62,6 @@ speed_mode_e speed_mode = SPEEDMODE_NORMAL;
 float speed_offset_angle;
 Sentry_State_e sentry_state = STATE_MOVING;
 
-
 static void CalcOffsetAngle() {
     // ????angle???????,????????????,??????????????????
     static float angle;
@@ -140,9 +139,9 @@ void StateControlSet() {
         chassis_cmd_send.chassis_mode = (uint8_t)CHASSIS_ROTATE;
         shoot_cmd_send.shoot_mode     = SHOOT_STOP;
         shoot_cmd_send.friction_mode  = FRICTION_ON;
-        chassis_cmd_send.vx *= 0.3;
-        chassis_cmd_send.vy *= 0.3;
-        chassis_cmd_send.wz = 100;
+        chassis_cmd_send.vx *= 0.3f;
+        chassis_cmd_send.vy *= 0.3f;
+        chassis_cmd_send.wz = 100.0f;
     case STATE_NULL:
     default:
         break;
@@ -198,11 +197,12 @@ void AutoControlSet(void) {
     if (vision_fetch_data.fire_advice == SHOOT_ON) {
         shoot_cmd_send.shoot_mode = SHOOT_ON;
         shoot_cmd_send.load_mode  = LOAD_BURSTFIRE;
-	}
-     if (vision_fetch_data.fire_advice != SHOOT_ON ||guidence_fetch_data.vx!=0 ||guidence_fetch_data.vy!=0){
-         shoot_cmd_send.shoot_mode = SHOOT_ON;
-		 shoot_cmd_send.load_mode  = LOAD_STOP;
-   }
+    }
+    if (vision_fetch_data.fire_advice != SHOOT_ON || guidence_fetch_data.vx != 0 ||
+        guidence_fetch_data.vy != 0) {
+        shoot_cmd_send.shoot_mode = SHOOT_ON;
+        shoot_cmd_send.load_mode  = LOAD_STOP;
+    }
     //  #endif
 }
 //-----------------------------遥控器----------------------------------
@@ -290,7 +290,7 @@ static void T12DControlSet(void) {
     }
 
     else if (rc_data[TEMP].rc.sw_a == RC_SW_MID) {
-		speed_mode                  = SPEEDMODE_NORMAL;
+        speed_mode = SPEEDMODE_NORMAL;
         // 调试模式
         if (rc_data[TEMP].rc.sw_d == RC_SW_UP) {
             // 跟随
@@ -315,14 +315,14 @@ static void T12DControlSet(void) {
         if (last_gimbal_mode != gimbal_cmd_send.gimbal_mode) {
             switch (gimbal_cmd_send.gimbal_mode) {
             case GIMBAL_FREE_MODE:
-                gimbal_cmd_send.yaw   = ins_data->Yaw * RAD_2_DEGREE;
+                gimbal_cmd_send.yaw   = ins_data->Yaw;
                 gimbal_cmd_send.pitch = ins_data->Pitch;
                 break;
             case GIMBAL_GYRO_MODE:
-                gimbal_cmd_send.yaw   = ins_data->Yaw * RAD_2_DEGREE;
+                gimbal_cmd_send.yaw   = ins_data->Yaw;
                 gimbal_cmd_send.pitch = ins_data->Pitch;
             case GIMBAL_SCAN_MODE:
-                gimbal_cmd_send.yaw   = ins_data->Yaw * RAD_2_DEGREE;
+                gimbal_cmd_send.yaw   = ins_data->Yaw;
                 gimbal_cmd_send.pitch = ins_data->Pitch;
             default:
                 break;
@@ -372,7 +372,7 @@ static void T12DControlSet(void) {
             chassis_cmd_send.wz           = 50;
         }
     }
-	
+
     else {
         // 上档，赛场用这个
         AutoControlSet();
@@ -380,59 +380,58 @@ static void T12DControlSet(void) {
 }
 
 static void RemoteControlSet(void) {
-    //switch (GetRCType()) {
-    //case RCTYPE_DT7:
-        //DT7ControlSet();
-        //break;
-    //case RCTYPE_T12D:
+    switch (GetRCType()) {
+    case RCTYPE_DT7:
+        DT7ControlSet();
+        break;
+    case RCTYPE_T12D:
         T12DControlSet();
-        //break;
+        break;
 
-    //default:
-        //break;
-    //}
+    default:
+        break;
+    }
     // 状态机设置结束，以下为根据状态机开始赋值
-    if(rc_data[TEMP].rc.sw_a == RC_SW_MID){
-    gimbal_cmd_send.pitch += PitchLimit(0.00001f * (float)rc_data[TEMP].rc.rocker_l1);
-    gimbal_cmd_send.yaw =
-        theta_format(gimbal_cmd_send.yaw - 0.001f * (float)rc_data[TEMP].rc.rocker_l_);
-    float raw_vx = 20.0f * (float)rc_data[TEMP].rc.rocker_r_; // _水平方向
-    float raw_vy = 20.0f * (float)rc_data[TEMP].rc.rocker_r1; // 1竖直方向
+    if (rc_data[TEMP].rc.sw_a == RC_SW_MID) {
+        gimbal_cmd_send.pitch += PitchLimit(0.00001f * (float)rc_data[TEMP].rc.rocker_l1);
+        gimbal_cmd_send.yaw =
+            theta_format(gimbal_cmd_send.yaw - 0.001f * (float)rc_data[TEMP].rc.rocker_l_);
+        float raw_vx = 20.0f * (float)rc_data[TEMP].rc.rocker_r_; // _水平方向
+        float raw_vy = 20.0f * (float)rc_data[TEMP].rc.rocker_r1; // 1竖直方向
 
-    float sin_theta, cos_theta;
-    if (speed_mode == SPEEDMODE_ABSOLUTE) {
-        cos_theta = cosf(theta_format(speed_offset_angle - DM_ins_data->yaw) * DEGREE_2_RAD);
-        sin_theta = sinf(theta_format(speed_offset_angle - DM_ins_data->yaw) * DEGREE_2_RAD);
-        chassis_cmd_send.vx = raw_vx * cos_theta - raw_vy * sin_theta;
-        chassis_cmd_send.vy = raw_vx * sin_theta + raw_vy * cos_theta;
-    }
-    else if (speed_mode == SPEEDMODE_NORMAL) {
-        chassis_cmd_send.vx = raw_vx;
-        chassis_cmd_send.vy = raw_vy;
-    }
-    if (gimbal_cmd_send.gimbal_mode == GIMBAL_VISION_MODE ){
-        if (vision_fetch_data.vision_state == NO_TARGET) {
+        float sin_theta, cos_theta;
+        if (speed_mode == SPEEDMODE_ABSOLUTE) {
+            cos_theta = cosf(theta_format(speed_offset_angle - DM_ins_data->yaw) * DEGREE_2_RAD);
+            sin_theta = sinf(theta_format(speed_offset_angle - DM_ins_data->yaw) * DEGREE_2_RAD);
+            chassis_cmd_send.vx = raw_vx * cos_theta - raw_vy * sin_theta;
+            chassis_cmd_send.vy = raw_vx * sin_theta + raw_vy * cos_theta;
         }
-        else {
-            gimbal_cmd_send.pitch = vision_fetch_data.aim_pitch; // 0.027;
-            gimbal_cmd_send.yaw   = vision_fetch_data.aim_yaw;
-			
+        else if (speed_mode == SPEEDMODE_NORMAL) {
+            chassis_cmd_send.vx = raw_vx;
+            chassis_cmd_send.vy = raw_vy;
         }
-        chassis_cmd_send.vx = guidence_fetch_data.vx;
-        chassis_cmd_send.vy = guidence_fetch_data.vy;
-        chassis_cmd_send.wz = guidence_fetch_data.wz;
-		    //shoot_cmd_send.friction_mode = FRICTION_ON;
-		if (vision_fetch_data.fire_advice == SHOOT_ON) {
-			shoot_cmd_send.shoot_mode = SHOOT_ON;
-			shoot_cmd_send.load_mode  = LOAD_BURSTFIRE;
-		}
-		if (vision_fetch_data.fire_advice != SHOOT_ON ||guidence_fetch_data.vx!=0 ||guidence_fetch_data.vy!=0){
-			shoot_cmd_send.shoot_mode = SHOOT_ON;
-			shoot_cmd_send.load_mode  = LOAD_STOP;
-		}
+        if (gimbal_cmd_send.gimbal_mode == GIMBAL_VISION_MODE) {
+            if (vision_fetch_data.vision_state == NO_TARGET) {
+            }
+            else {
+                gimbal_cmd_send.pitch = vision_fetch_data.aim_pitch; // 0.027;
+                gimbal_cmd_send.yaw   = vision_fetch_data.aim_yaw;
+            }
+            chassis_cmd_send.vx = guidence_fetch_data.vx;
+            chassis_cmd_send.vy = guidence_fetch_data.vy;
+            chassis_cmd_send.wz = guidence_fetch_data.wz;
+            // shoot_cmd_send.friction_mode = FRICTION_ON;
+            if (vision_fetch_data.fire_advice == SHOOT_ON) {
+                shoot_cmd_send.shoot_mode = SHOOT_ON;
+                shoot_cmd_send.load_mode  = LOAD_BURSTFIRE;
+            }
+            if (vision_fetch_data.fire_advice != SHOOT_ON || guidence_fetch_data.vx != 0 ||
+                guidence_fetch_data.vy != 0) {
+                shoot_cmd_send.shoot_mode = SHOOT_ON;
+                shoot_cmd_send.load_mode  = LOAD_STOP;
+            }
+        }
     }
- }
-
 
     shoot_cmd_send.shoot_rate = 2;
 }
