@@ -100,6 +100,14 @@ float RadToDeg(float rad);
 
 float DegToRad(float deg);
 
+float Sqrt(float x);
+
+float *Norm3d(float *v);
+
+float Dot3d(float *v1, float *v2);
+// 三维向量叉乘v1 x v2
+void Cross3d(float *v1, float *v2, float *res);
+
 /**
  * @brief Err闭环
  *
