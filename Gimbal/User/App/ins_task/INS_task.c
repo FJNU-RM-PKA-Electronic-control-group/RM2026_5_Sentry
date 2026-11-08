@@ -13,6 +13,7 @@
  */
 #include "QuaternionEKF.h"
 #include "controller.h"
+#include "dm_imu.h"
 #include "ins_task.h"
 #include "spi.h"
 #include "tim.h"
@@ -77,7 +78,18 @@ attitude_t *INS_Init(void) {
         return (attitude_t *)&INS.Gyro;
 
     HAL_TIM_PWM_Start(&htim10, TIM_CHANNEL_1);
-
+    // ¥ÛyawÕ‚÷√Õ”¬›“«
+    DMIMU_Init_Config_s DMIMU_init_config = {
+        .baudrate = CAN_BAUD_1M,
+        .can_init_config =
+            {
+                .can_handle = &hcan2,
+                .tx_id      = 0x0B,
+                .rx_id      = 0x0C,
+            },
+        .send_mode = ACTIVE_MODE,
+    };
+    DM_IMU_Init(&DMIMU_init_config);
     while (BMI088Init(&hspi1, 1) != BMI088_NO_ERROR)
         ;
     IMU_Param.scale[X] = 1;

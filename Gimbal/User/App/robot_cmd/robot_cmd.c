@@ -393,7 +393,8 @@ static void RemoteControlSet(void) {
     }
     // 状态机设置结束，以下为根据状态机开始赋值
     if (rc_data[TEMP].rc.sw_a == RC_SW_MID) {
-        gimbal_cmd_send.pitch += PitchLimit(0.00001f * (float)rc_data[TEMP].rc.rocker_l1);
+        gimbal_cmd_send.pitch +=
+            PitchLimit(0.00001f * RAD_2_DEGREE * (float)rc_data[TEMP].rc.rocker_l1); // 目标增量换算到角度制
         gimbal_cmd_send.yaw =
             theta_format(gimbal_cmd_send.yaw - 0.001f * (float)rc_data[TEMP].rc.rocker_l_);
         float raw_vx = 20.0f * (float)rc_data[TEMP].rc.rocker_r_; // _水平方向

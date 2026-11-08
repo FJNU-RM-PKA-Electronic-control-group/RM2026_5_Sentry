@@ -188,9 +188,9 @@ void GimbalInit(void) {
             {
                 .angle_PID =
                     {
-                        .Kp = 15.0f,  // 20
-                        .Ki = 25.0f,  // 17
-                        .Kd = 0.001f, // 2
+                        .Kp = 15.0f / RAD_2_DEGREE,  // 原 15，弧度制换算到角度制
+                        .Ki = 25.0f / RAD_2_DEGREE,  // 原 25，弧度制换算到角度制
+                        .Kd = 0.001f / RAD_2_DEGREE, // 原 0.001，弧度制换算到角度制
                         .Improve =
                             (PID_Improvement_e)(PID_Trapezoid_Intergral | PID_Integral_Limit |
                                                 PID_Derivative_On_Measurement |
@@ -318,7 +318,7 @@ static void YawSetTarget(float recv_yaw, gimbal_mode_e mode) {
     }
     switch (pitch_mode) {
     case PITCH_UP:
-        target_pitch += 0.005f;
+        target_pitch += 0.005f * RAD_2_DEGREE; // 原 0.005rad/周期，换算到角度制
         if (pitch_motor->measure.position > PITCH_MAX_ECD) {
             pitch_mode = PITCH_DOWN;
             // target_pitch = IMU_data_rad->Pitch;
@@ -326,7 +326,7 @@ static void YawSetTarget(float recv_yaw, gimbal_mode_e mode) {
 
         break;
     case PITCH_DOWN:
-        target_pitch -= 0.005f;
+        target_pitch -= 0.005f * RAD_2_DEGREE; // 原 0.005rad/周期，换算到角度制
         if (pitch_motor->measure.position < PITCH_MIN_ECD) {
             pitch_mode = PITCH_UP;
             // target_pitch = IMU_data_rad->Pitch;
