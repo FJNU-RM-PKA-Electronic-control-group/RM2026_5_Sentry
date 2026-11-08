@@ -123,7 +123,7 @@ void LKMotorControl() {
                     pid_measure = *motor->other_angle_feedback_ptr;
                 else if (setting->angle_feedback_source ==
                          MOTOR_AND_IMU_FEED) // 大yaw特供，纯堆屎山
-                    pid_measure = (__LK_IMU_data->YawTotalAngle * RAD_2_DEGREE -
+                    pid_measure = (__LK_IMU_data->YawTotalAngle -
                                    DJIMotorGetAngle((DJIMotorInstance *)motor->yaw2_ins_ptr));
 
                 else
@@ -146,7 +146,7 @@ void LKMotorControl() {
                 debug_measure[0] = pid_measure;
                 debug_measure[1] =
                     NearbyErrFormat(DJIMotorGetAngle((DJIMotorInstance *)motor->yaw2_ins_ptr), 180);
-                debug_measure[2] = __LK_IMU_data->Yaw * RAD_2_DEGREE;
+                debug_measure[2] = __LK_IMU_data->Yaw;
                 pid_err          = -NearbyErrFormat((pid_ref - pid_measure), 180.0f);
                 pid_ref          = PIDCalculate(&motor->angle_PID, pid_err, 0.0f);
                 break;

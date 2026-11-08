@@ -110,7 +110,7 @@ void VisionInit(void) {
 
 void VisionTask(float roll, float pitch, float yaw) {
     vision_sendmessage(AIM_BLUE, roll, pitch, yaw);
-    vision_feedback_data.aim_pitch = DegToRad(Data_PC.pitch);
+    vision_feedback_data.aim_pitch = Data_PC.pitch; // 云台角度环已统一为角度制
     vision_feedback_data.aim_yaw   = Data_PC.yaw;
     guidence_feedback_data.vx      = -1000 * Data_PC.linear_y;
     guidence_feedback_data.vy      = 1000 * Data_PC.linear_x;
@@ -192,7 +192,7 @@ void VisionInit(void) {
 
 void VisionTask(float roll, float pitch, float yaw) {
     vision_sendmessage(AIM_RED, roll, pitch, yaw);
-    vision_feedback_data.aim_pitch = DegToRad(Data_PC.pitch);
+    vision_feedback_data.aim_pitch = Data_PC.pitch; // 云台角度环已统一为角度制
     vision_feedback_data.aim_yaw   = Data_PC.yaw;
     guidence_feedback_data.vx      = -5000 * Data_Guidance.vy;
     guidence_feedback_data.vy      = 5000 * Data_Guidance.vx;
