@@ -290,7 +290,8 @@ static void T12DControlSet(void) {
     }
 
     else if (rc_data[TEMP].rc.sw_a == RC_SW_MID) {
-        speed_mode = SPEEDMODE_NORMAL;
+        robot_state =ROBOT_READY;
+		speed_mode                  = SPEEDMODE_NORMAL;
         // 调试模式
         if (rc_data[TEMP].rc.sw_d == RC_SW_UP) {
             // 跟随
@@ -462,11 +463,7 @@ static void EmergencyHandler(void) {
         // LOGERROR("[CMD] emergency stop!");
     }
     // ???????????[??],?????s??????
-    if (rc_data[TEMP].rc.sw_d == RC_SW_UP) {
-        robot_state               = ROBOT_READY;
-        shoot_cmd_send.shoot_mode = SHOOT_ON;
-        // LOGINFO("[CMD] reinstate, robot ready");
-    }
+
 }
 
 void RobotCmdInit(void) {
