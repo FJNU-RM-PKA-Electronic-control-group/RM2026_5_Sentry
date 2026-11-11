@@ -61,7 +61,8 @@ static LPFliterInstance vy_fliter;          // ?????????????
 speed_mode_e speed_mode = SPEEDMODE_NORMAL;
 float speed_offset_angle;
 Sentry_State_e sentry_state = STATE_MOVING;
-
+Robot_Status_e  DEBUG_robotstate;
+Sw_Mode_e DEBUG_SWA;
 
 static void CalcOffsetAngle() {
     // ????angle???????,????????????,??????????????????
@@ -533,4 +534,6 @@ void RobotCMDTask(void) {
     PubPushMessage(chassis_cmd_pub, (void *)&chassis_cmd_send);
     PubPushMessage(shoot_cmd_pub, (void *)&shoot_cmd_send);
     PubPushMessage(gimbal_cmd_pub, (void *)&gimbal_cmd_send);
+	DEBUG_robotstate = robot_state ;
+	DEBUG_SWA =rc_data[TEMP].rc.sw_a;
 }
