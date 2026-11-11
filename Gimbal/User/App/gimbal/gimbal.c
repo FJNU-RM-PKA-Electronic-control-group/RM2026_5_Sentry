@@ -35,7 +35,6 @@ float target_yaw[2], target_pitch;
 float DEBUG_yaw1_angle, DEBUG_yaw1_target, DEBUG_Yaw2_target, DEBUG_yaw1_speed;
 float DEBUG_yaw2_angle, DEBUG_pitch_rad, DEBUG_IMU_yaw, DEBUG_Pitch_target;
 
-
 static Publisher_t *gimbal_pub;            // 云台应用消息发布�?(云台反�?�给cmd)
 static Subscriber_t *gimbal_sub;           // cmd控制消息订阅�?
 Gimbal_Upload_Data_s gimbal_feedback_data; // 回传给cmd的云台状态信�?
@@ -112,7 +111,6 @@ void GimbalInit(void) {
                 .close_loop_type    = (Closeloop_Type_e)(ANGLE_LOOP | SPEED_LOOP),
                 .motor_reverse_flag = MOTOR_DIRECTION_NORMAL,
                 .pid_mode           = MOTOR_PID_SINGLELOOP,
-                .angle_rad_format_flag = FORMAT_ENABLE,
             },
         .motor_type = GM6020,
     };
@@ -190,9 +188,9 @@ void GimbalInit(void) {
             {
                 .angle_PID =
                     {
-                        .Kp = 15.0f,  // 20
-                        .Ki = 25.0f,  // 17
-                        .Kd = 0.001f, // 2
+                        .Kp = 15.0f / RAD_2_DEGREE,  // 原 15，弧度制换算到角度制
+                        .Ki = 25.0f / RAD_2_DEGREE,  // 原 25，弧度制换算到角度制
+                        .Kd = 0.001f / RAD_2_DEGREE, // 原 0.001，弧度制换算到角度制
                         .Improve =
                             (PID_Improvement_e)(PID_Trapezoid_Intergral | PID_Integral_Limit |
                                                 PID_Derivative_On_Measurement |
@@ -252,14 +250,14 @@ static void YawSetTarget(float recv_yaw, gimbal_mode_e mode) {
     static Yaw1_mode_e yaw1_mode   = YAW1_NOMOVE;
     static Yaw2_mode_e yaw2_mode   = YAW2_NOSCAN;
     static pitch_mode_e pitch_mode = PITCH_NOMOVE;
-    // float current_yaw           = IMU_data_rad->Yaw * RAD_2_DEGREE;
+    // float current_yaw           = IMU_data_rad->Yaw;
     static gimbal_mode_e last_mode = GIMBAL_ZERO_FORCE;
     float yaw2_ecd_err             = theta_format(DJIMotorGetAngle(yaw2_motor));
     // float yaw_err               = -NearbyErrFormat(recv_yaw - current_yaw, 180);
 
     if (last_mode != mode) {
         target_yaw[YAW1] = DM_IMU_data->yaw;
-        target_yaw[YAW2] = IMU_data_rad->Yaw * RAD_2_DEGREE;
+        target_yaw[YAW2] = IMU_data_rad->Yaw;
     }
     if (mode != GIMBAL_SCAN_MODE) {
         pitch_mode = PITCH_NOMOVE;
@@ -276,13 +274,14 @@ static void YawSetTarget(float recv_yaw, gimbal_mode_e mode) {
             }
             break;
         case YAW1_TURNLEFT:
-            target_yaw[YAW1] = DM_IMU_data->yaw + 3*float_constrain(yaw2_ecd_err - 48.5f, 0.0f, 2.0f);
+            target_yaw[YAW1] =
+                DM_IMU_data->yaw + 3 * float_constrain(yaw2_ecd_err - 48.5f, 0.0f, 2.0f);
             if (yaw2_ecd_err < 48)
                 yaw1_mode = YAW1_NOMOVE;
             break;
         case YAW1_TURNRIGHT:
             target_yaw[YAW1] =
-                DM_IMU_data->yaw + 3*float_constrain(yaw2_ecd_err + 48.5f, -2.0f, 0.0f);
+                DM_IMU_data->yaw + 3 * float_constrain(yaw2_ecd_err + 48.5f, -2.0f, 0.0f);
             if (yaw2_ecd_err > -48)
                 yaw1_mode = YAW1_NOMOVE;
             break;
@@ -299,7 +298,7 @@ static void YawSetTarget(float recv_yaw, gimbal_mode_e mode) {
             target_yaw[YAW2] += 0.50f;
             if (yaw2_ecd_err > 50) {
                 yaw2_mode        = YAW2_TURNRIGHT;
-                target_yaw[YAW2] = IMU_data_rad->Yaw * RAD_2_DEGREE;
+                target_yaw[YAW2] = IMU_data_rad->Yaw;
             }
             break;
         case YAW2_TURNRIGHT:
@@ -307,7 +306,7 @@ static void YawSetTarget(float recv_yaw, gimbal_mode_e mode) {
             if (yaw2_ecd_err < -50) {
 
                 yaw2_mode        = YAW2_TURNLEFT;
-                target_yaw[YAW2] = IMU_data_rad->Yaw * RAD_2_DEGREE;
+                target_yaw[YAW2] = IMU_data_rad->Yaw;
             }
             break;
         case YAW2_NOSCAN:
@@ -319,7 +318,7 @@ static void YawSetTarget(float recv_yaw, gimbal_mode_e mode) {
     }
     switch (pitch_mode) {
     case PITCH_UP:
-        target_pitch += 0.005f;
+        target_pitch += 0.005f * RAD_2_DEGREE; // 原 0.005rad/周期，换算到角度制
         if (pitch_motor->measure.position > PITCH_MAX_ECD) {
             pitch_mode = PITCH_DOWN;
             // target_pitch = IMU_data_rad->Pitch;
@@ -327,7 +326,7 @@ static void YawSetTarget(float recv_yaw, gimbal_mode_e mode) {
 
         break;
     case PITCH_DOWN:
-        target_pitch -= 0.005f;
+        target_pitch -= 0.005f * RAD_2_DEGREE; // 原 0.005rad/周期，换算到角度制
         if (pitch_motor->measure.position < PITCH_MIN_ECD) {
             pitch_mode = PITCH_UP;
             // target_pitch = IMU_data_rad->Pitch;
@@ -488,13 +487,12 @@ void GimbalTask(void) {
     gimbal_feedback_data.yaw1_motor_single_round_angle = DMMotorGetAngle(yaw1_motor) * RAD_2_DEGREE;
     gimbal_feedback_data.pitch_ecd_angle               = pitch_motor->measure.position;
     DEBUG_pitch_rad                                    = -(IMU_data_rad->Pitch);
-    DEBUG_IMU_yaw                                      = IMU_data_rad->Yaw * RAD_2_DEGREE;
+    DEBUG_IMU_yaw                                      = IMU_data_rad->Yaw;
     DEBUG_Pitch_target                                 = gimbal_cmd_recv.pitch;
     DEBUG_Yaw2_target                                  = gimbal_cmd_recv.yaw;
-	DEBUG_yaw1_speed   								   = IMU_data_rad->Gyro[1];
-	DEBUG_yaw1_angle                                   = DM_IMU_data->yaw;
+    DEBUG_yaw1_speed                                   = IMU_data_rad->Gyro[1];
+    DEBUG_yaw1_angle                                   = DM_IMU_data->yaw;
     // gimbal_feedback_data.pitch_ecd_angle              = pitch_motor->measure.total_angle;
-
 
     // 推送消�?
     PubPushMessage(gimbal_pub, (void *)&gimbal_feedback_data);
