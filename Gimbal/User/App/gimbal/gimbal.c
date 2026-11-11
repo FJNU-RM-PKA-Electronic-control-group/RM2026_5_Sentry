@@ -34,6 +34,7 @@ float DEBUG_dm_pitch, DEBUG_dm_yaw, DEBUG_dm_roll;
 float target_yaw[2], target_pitch;
 float DEBUG_yaw1_angle, DEBUG_yaw1_target, DEBUG_Yaw2_target, DEBUG_yaw1_speed;
 float DEBUG_yaw2_angle, DEBUG_pitch_rad, DEBUG_IMU_yaw, DEBUG_Pitch_target;
+float DEBUG_yaw2_err;
 
 
 static Publisher_t *gimbal_pub;            // 云台应用消息发布�?(云台反�?�给cmd)
@@ -344,6 +345,7 @@ static void YawSetTarget(float recv_yaw, gimbal_mode_e mode) {
     target_yaw[YAW1] = theta_format(target_yaw[YAW1]);
     target_yaw[YAW2] = theta_format(target_yaw[YAW2]);
     last_mode        = mode;
+    DEBUG_yaw2_err   =yaw2_ecd_err;
 
     // if (target_setted == 0) {
     //     if (yaw_err > (50 - yaw2_ecd_err)) {
@@ -468,7 +470,7 @@ void GimbalTask(void) {
         break;
     }
     // DJIMotorStop(yaw2_motor);
-    // DMMotorStop(yaw1_motor);
+     DMMotorStop(yaw1_motor);
     // DEBUG_dm_pitch    = DM_IMU_data->pitch;
     // DEBUG_dm_yaw      = DM_IMU_data->yaw;
     // DEBUG_dm_roll     = DM_IMU_data->roll;
