@@ -35,7 +35,7 @@ void OSTaskInit(void) {
     osThreadDef(instask, StartINSTASK, osPriorityRealtime, 0, 1024);
     insTaskHandle =
         osThreadCreate(osThread(instask),
-                       NULL); // сисзйгвХхШ╤ах║╢╚╦пфВ,н╙вкл╛╫БкЦиХжц╫о╦ъсеох╪╤,х╥╠ёрт1khz╣дф╣бйж╢пп
+                       NULL); // О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫х║О©╫О©╫О©╫О©╫О©╫О©╫,н╙О©╫О©╫л╛О©╫О©╫О©╫О©╫О©╫О©╫О©╫ц╫о╦О©╫О©╫О©╫О©╫х╪О©╫,х╥О©╫О©╫О©╫О©╫1khzО©╫О©╫ф╣О©╫О©╫ж╢О©╫О©╫
 
     osThreadDef(motortask, StartMOTORTASK, osPriorityNormal, 0, 256);
     motorTaskHandle = osThreadCreate(osThread(motortask), NULL);
@@ -50,17 +50,17 @@ void OSTaskInit(void) {
 __attribute__((noreturn)) void StartINSTASK(void const *argument) {
     static float ins_start;
     static float ins_dt;
-    INS_Init(); // х╥╠ёBMI088╠╩уЩх╥ЁУй╪╩╞.
+    INS_Init(); // х╥О©╫О©╫BMI088О©╫О©╫О©╫О©╫х╥О©╫О©╫й╪О©╫О©╫.
     // LOGINFO("[freeRTOS] INS Task Start");
     for (;;) {
         // 1kHz
         ins_start = DWT_GetTimeline_ms();
-        INS_task();
+        INS_Task();
         ins_dt = DWT_GetTimeline_ms() - ins_start;
         // if (ins_dt > 1)
         // LOGERROR("[freeRTOS] INS Task is being DELAY! dt = [%f]", &ins_dt);
         //        VisionSend(); //
-        //        ╫БкЦмЙЁи╨С╥╒кмйс╬УйЩ╬щ,╣╚йг╣╠г╟╣дй╣ож╡╩л╚сеяе,╨СпЬхТлМ╪сс╡╪Ч╢╔╥╒пХр╙жьпб©╪бг╫А╧╧╣двИж╞
+        //        О©╫О©╫О©╫О©╫О©╫О©╫и╨О©╫О©╫О©╫О©╫с╬О©╫О©╫О©╫О©╫О©╫,О©╫О©╫О©╫г╣О©╫г╟О©╫О©╫й╣О©╫ж╡О©╫л╚О©╫О©╫О©╫О©╫,О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫с╡О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫р╙О©╫О©╫О©╫б©О©╫О©╫г╫А╧╧О©╫О©╫О©╫О©╫ж╞
         osDelay(1);
     }
 }
@@ -100,7 +100,7 @@ __attribute__((noreturn)) void StartROBOTTASK(void const *argument) {
     static float robot_dt;
     static float robot_start;
     // LOGINFO("[freeRTOS] ROBOT core Task Start");
-    // 200Hz-500Hz,хТсп╤НмБ╣д©ьжфхннЯхГф╫╨Б╡╫╠Ь©идэпХр╙лАиЩжа1kHz
+    // 200Hz-500Hz,О©╫О©╫О©╫п╤О©╫О©╫О©╫д©О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫ф╫О©╫Б╡╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫р╙О©╫О©╫О©╫О©╫О©╫О©╫1kHz
     for (;;) {
         robot_start = DWT_GetTimeline_ms();
         RobotTask();

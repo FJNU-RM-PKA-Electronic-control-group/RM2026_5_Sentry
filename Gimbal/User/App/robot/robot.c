@@ -19,8 +19,7 @@
 void RobotInit(void) {
     HAL_Delay(100);
     DWT_Init(168);
-    while (BMI088_init(1) != BMI088_NO_ERROR) {
-    };
+    INS_Init();
     BuzzerInit();
     RobotCmdInit();
     GimbalInit();
