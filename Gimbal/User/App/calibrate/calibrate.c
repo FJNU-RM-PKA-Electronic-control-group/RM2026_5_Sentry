@@ -7,12 +7,11 @@
 #include "stdlib.h"
 #include "tim.h"
 
-
 #include "rmd_motor.h"
 
-static Subscriber_t *gimbal_cali_sub;  // ÔÆÌ¨·´À¡ĞÅÏ¢¶©ÔÄÕß
-Gimbal_Upload_Data_s gimbal_cali_data; // ´ÓÔÆÌ¨»ñÈ¡µÄ·´À¡ĞÅÏ¢
-cali_data_t cali_data_save;            // ÔÆÌ¨Ğ£×¼Êı¾İ
+static Subscriber_t *gimbal_cali_sub;  // äº‘å°åé¦ˆä¿¡æ¯è®¢é˜…è€…
+Gimbal_Upload_Data_s gimbal_cali_data; // ä»äº‘å°è·å–çš„åé¦ˆä¿¡æ¯
+cali_data_t cali_data_save;            // äº‘å°æ ¡å‡†æ•°æ®
 cail_mods state = CAIL_OFF;
 
 static void GimbalCalibrateControl(void);
@@ -24,7 +23,7 @@ cali_data_t *CalibrateInit(void) {
     AlarmSetStatus(ALARM_OFF);
 
     flash_read(CALIBRATE_DATA_ADDR, (uint32_t *)&cali_data_save, sizeof(cali_data_t) / 4);
-    if (cali_data_save.cali_status != 1) // ÈôÎŞĞ£×¼Êı¾İÔòÏÈĞ£×¼
+    if (cali_data_save.cali_status != 1) // è‹¥æ— æ ¡å‡†æ•°æ®åˆ™å…ˆæ ¡å‡†
     {
         cali_data_save.max_pitch  = MAX_PITCH_ALTERNATE;
         cali_data_save.min_pitch  = MIN_PITCH_ALTERNATE;
@@ -33,14 +32,16 @@ cali_data_t *CalibrateInit(void) {
         return &cali_data_save;
     }
     else
-        return &cali_data_save; // ÓĞÊı¾İÔò·µ»ØÊı¾İ
+        return &cali_data_save; // æœ‰æ•°æ®åˆ™è¿”å›æ•°æ®
 }
 
 static void CailbrateOffControl(RC_ctrl_t *cail_rc_data) {
     static uint32_t cali_cmd_time;
     static float calibrating_time;
-    if (cail_rc_data[TEMP].rc.rocker_l_ > RC_CALI_VALUE_HOLE && cail_rc_data[TEMP].rc.rocker_l1 < -RC_CALI_VALUE_HOLE &&
-        cail_rc_data[TEMP].rc.rocker_r_ < -RC_CALI_VALUE_HOLE && cail_rc_data[TEMP].rc.rocker_r1 < -RC_CALI_VALUE_HOLE) // ÏÂÄÚ°Ë¿ªÆôĞ£×¼
+    if (cail_rc_data[TEMP].rc.rocker_l_ > RC_CALI_VALUE_HOLE &&
+        cail_rc_data[TEMP].rc.rocker_l1 < -RC_CALI_VALUE_HOLE &&
+        cail_rc_data[TEMP].rc.rocker_r_ < -RC_CALI_VALUE_HOLE &&
+        cail_rc_data[TEMP].rc.rocker_r1 < -RC_CALI_VALUE_HOLE) // ä¸‹å†…å…«å¼€å¯æ ¡å‡†
     {
         if (!cali_cmd_time)
             DWT_GetDeltaT(&cali_cmd_time);
@@ -59,24 +60,28 @@ static void CalibrateReadyControl(RC_ctrl_t *cail_rc_data) {
     static uint32_t cali_cmd_time;
     static float calibrating_time;
 
-    if (cail_rc_data[TEMP].rc.rocker_l_ < -RC_CALI_VALUE_HOLE && cail_rc_data[TEMP].rc.rocker_l1 > RC_CALI_VALUE_HOLE &&
-        cail_rc_data[TEMP].rc.rocker_r_ > RC_CALI_VALUE_HOLE && cail_rc_data[TEMP].rc.rocker_r1 > RC_CALI_VALUE_HOLE) // ÉÏÍâ°ËĞ£×¼ÔÆÌ¨
+    if (cail_rc_data[TEMP].rc.rocker_l_ < -RC_CALI_VALUE_HOLE &&
+        cail_rc_data[TEMP].rc.rocker_l1 > RC_CALI_VALUE_HOLE &&
+        cail_rc_data[TEMP].rc.rocker_r_ > RC_CALI_VALUE_HOLE &&
+        cail_rc_data[TEMP].rc.rocker_r1 > RC_CALI_VALUE_HOLE) // ä¸Šå¤–å…«æ ¡å‡†äº‘å°
     {
         if (!cali_cmd_time)
             DWT_GetDeltaT(&cali_cmd_time);
         calibrating_time += DWT_GetDeltaT(&cali_cmd_time);
-        if (calibrating_time > 2) // ³ÖĞøÊ±¼ä´óÓÚ2s
+        if (calibrating_time > 2) // æŒç»­æ—¶é—´å¤§äº2s
         {
             state = CAIL_GIMBAL;
         }
     }
-    else if (cail_rc_data[TEMP].rc.rocker_l_ < -RC_CALI_VALUE_HOLE && cail_rc_data[TEMP].rc.rocker_l1 < -RC_CALI_VALUE_HOLE &&
-             cail_rc_data[TEMP].rc.rocker_r_ > RC_CALI_VALUE_HOLE && cail_rc_data[TEMP].rc.rocker_r1 < -RC_CALI_VALUE_HOLE) // ÏÂÍâ°ËĞ£×¼IMU
+    else if (cail_rc_data[TEMP].rc.rocker_l_ < -RC_CALI_VALUE_HOLE &&
+             cail_rc_data[TEMP].rc.rocker_l1 < -RC_CALI_VALUE_HOLE &&
+             cail_rc_data[TEMP].rc.rocker_r_ > RC_CALI_VALUE_HOLE &&
+             cail_rc_data[TEMP].rc.rocker_r1 < -RC_CALI_VALUE_HOLE) // ä¸‹å¤–å…«æ ¡å‡†IMU
     {
         if (!cali_cmd_time)
             DWT_GetDeltaT(&cali_cmd_time);
         calibrating_time += DWT_GetDeltaT(&cali_cmd_time);
-        if (calibrating_time > 2) // ³ÖĞøÊ±¼ä´óÓÚ2s
+        if (calibrating_time > 2) // æŒç»­æ—¶é—´å¤§äº2s
         {
             state = CAIL_IMU;
         }
@@ -89,8 +94,8 @@ static void CalibrateReadyControl(RC_ctrl_t *cail_rc_data) {
 
 static void GimbalCalibrateControl(void) {
     static float max_pitch_temp = 0, min_pitch_temp = 0;
-    static float cali_time = 0;      // Ğ£×¼³ÖĞøÊ±¼ä
-    static uint32_t cali_start_time; // Ğ£×¼¿ªÊ¼Ê±¼ä´Á
+    static float cali_time = 0;      // æ ¡å‡†æŒç»­æ—¶é—´
+    static uint32_t cali_start_time; // æ ¡å‡†å¼€å§‹æ—¶é—´æˆ³
 
     AlarmSetOctave(0.5);
     SubGetMessage(gimbal_cali_sub, &gimbal_cali_data);
@@ -98,19 +103,19 @@ static void GimbalCalibrateControl(void) {
         DWT_GetDeltaT(&cali_start_time);
         //		RMDMotorZeroCali();
     }
-    if (!max_pitch_temp && !min_pitch_temp) // ¸³³õÊ¼Öµ
+    if (!max_pitch_temp && !min_pitch_temp) // èµ‹åˆå§‹å€¼
     {
         max_pitch_temp = gimbal_cali_data.pitch_ecd_angle;
         min_pitch_temp = gimbal_cali_data.pitch_ecd_angle;
     }
-    if (cali_time < 10) // Ğ£×¼10s
+    if (cali_time < 10) // æ ¡å‡†10s
     {
         cali_time += DWT_GetDeltaT(&cali_start_time);
-        if (max_pitch_temp < gimbal_cali_data.pitch_ecd_angle) // ¼ÇÂ¼×î´ópitch½Ç¶È
+        if (max_pitch_temp < gimbal_cali_data.pitch_ecd_angle) // è®°å½•æœ€å¤§pitchè§’åº¦
         {
             max_pitch_temp = gimbal_cali_data.pitch_ecd_angle;
         }
-        if (min_pitch_temp > gimbal_cali_data.pitch_ecd_angle) // ¼ÇÂ¼×îĞ¡pitch½Ç¶È
+        if (min_pitch_temp > gimbal_cali_data.pitch_ecd_angle) // è®°å½•æœ€å°pitchè§’åº¦
         {
             min_pitch_temp = gimbal_cali_data.pitch_ecd_angle;
         }
@@ -122,7 +127,8 @@ static void GimbalCalibrateControl(void) {
         cali_data_save.zero_yaw    = gimbal_cali_data.yaw2_motor_single_round_angle;
         cali_data_save.cali_status = 1;
         flash_erase_address(CALIBRATE_DATA_ADDR, 1);
-        flash_write_single_address(CALIBRATE_DATA_ADDR, (uint32_t *)&cali_data_save, sizeof(cali_data_t) / 4); // Ğ´Èëflash
+        flash_write_single_address(CALIBRATE_DATA_ADDR, (uint32_t *)&cali_data_save,
+                                   sizeof(cali_data_t) / 4); // å†™å…¥flash
         AlarmSetStatus(ALARM_OFF);
         state = CAIL_OFF;
     }
