@@ -33,7 +33,7 @@ DJIMotorInstance DEBUG_yaw2_motor;
 float DEBUG_dm_pitch, DEBUG_dm_yaw, DEBUG_dm_roll;
 float target_yaw[2], target_pitch;
 float DEBUG_yaw1_angle, DEBUG_yaw1_target, DEBUG_Yaw2_target, DEBUG_yaw1_speed;
-float DEBUG_yaw2_angle, DEBUG_pitch_rad, DEBUG_IMU_yaw, DEBUG_Pitch_target;
+float DEBUG_yaw2_angle, DEBUG_pitch_rad, DEBUG_IMU_yaw,DEBUG_Pitch_target,DEBUG_Pitch_target_speed,DEBUG_Pitch_speed;
 
 static Publisher_t *gimbal_pub;            // 云台应用消息发布�?(云台反�?�给cmd)
 static Subscriber_t *gimbal_sub;           // cmd控制消息订阅�?
@@ -71,7 +71,7 @@ void GimbalInit(void) {
             },
         .controller_param_init_config =
             {
-                .angle_PID = {.Kp = 0.8f,
+                .angle_PID = {.Kp = 1.1f,
                               .Ki = 0.0f,
                               .Kd = 0.003f,
                               .Improve =
@@ -85,9 +85,9 @@ void GimbalInit(void) {
                               .Derivative_LPF_RC = 0.1f},
                 .speed_PID =
                     {
-                        .Kp = 6000.0f,  //
-                        .Ki = 20000.0f, //
-                        .Kd = 0.0f,
+                        .Kp = 8500.0f,  //
+                        .Ki = 20500.0f, //
+                        .Kd = 5.0f,
                         .Improve =
                             (PID_Improvement_e)(PID_Trapezoid_Intergral | PID_Integral_Limit |
                                                 PID_Derivative_On_Measurement |
@@ -106,7 +106,7 @@ void GimbalInit(void) {
             {
                 .angle_feedback_source = OTHER_FEED,
                 .speed_feedback_source = OTHER_FEED,
-                .feedforward_flag   = (Feedfoward_Type_e)(SPEED_FEEDFORWARD | CURRENT_FEEDFORWARD),
+                //.feedforward_flag   = (Feedfoward_Type_e)(SPEED_FEEDFORWARD | CURRENT_FEEDFORWARD),
                 .outer_loop_type    = ANGLE_LOOP,
                 .close_loop_type    = (Closeloop_Type_e)(ANGLE_LOOP | SPEED_LOOP),
                 .motor_reverse_flag = MOTOR_DIRECTION_NORMAL,
@@ -343,7 +343,6 @@ static void YawSetTarget(float recv_yaw, gimbal_mode_e mode) {
     target_yaw[YAW1] = theta_format(target_yaw[YAW1]);
     target_yaw[YAW2] = theta_format(target_yaw[YAW2]);
     last_mode        = mode;
-    DEBUG_yaw2_err   =yaw2_ecd_err;
 
     // if (target_setted == 0) {
     //     if (yaw_err > (50 - yaw2_ecd_err)) {
@@ -491,8 +490,10 @@ void GimbalTask(void) {
     DEBUG_IMU_yaw                                      = IMU_data_rad->Yaw;
     DEBUG_Pitch_target                                 = gimbal_cmd_recv.pitch;
     DEBUG_Yaw2_target                                  = gimbal_cmd_recv.yaw;
-    DEBUG_yaw1_speed                                   = IMU_data_rad->Gyro[1];
+    DEBUG_yaw1_speed                                   = DM_IMU_data->gyro[2];
     DEBUG_yaw1_angle                                   = DM_IMU_data->yaw;
+	DEBUG_Pitch_speed 								   = IMU_data_rad->Gyro[1];
+	DEBUG_Pitch_target_speed						   = pitch_motor->motor_controller.angle_PID.Output ;
     // gimbal_feedback_data.pitch_ecd_angle              = pitch_motor->measure.total_angle;
 
     // 推送消�?
